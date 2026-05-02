@@ -1,12 +1,12 @@
+
 ---
-const { crumbs = [] } = Astro.props;
+const { crumbs = [] } = Astro.props as { crumbs: { label: string; href?: string }[] };
 ---
 
 <nav>
   <a class="logo" href="/">FragLog<span>.gg</span></a>
 
   <div style="display:flex;align-items:center;gap:1rem">
-    <button id="back-btn" onclick="history.back()" style="display:none">← Back</button>
     <div class="breadcrumb">
       {crumbs.map((crumb, i) => (
         <>
@@ -41,11 +41,4 @@ function handleNavSearch(val) {
   const url = '/search?q=' + encodeURIComponent(val.trim());
   window.location.href = url;
 }
-
-// Show back button if not on home
-(function() {
-  const path = window.location.pathname;
-  const btn = document.getElementById("back-btn");
-  if (btn && path !== '/') btn.style.display = "block";
-})();
 </script>

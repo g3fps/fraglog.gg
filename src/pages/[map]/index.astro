@@ -27,7 +27,7 @@ const description = `Browse Radiant and pro player ${mapData.name} VODs by agent
       return (
         <div class="agent-section">
           <div class="role-header">
-            <div class="role-dot" style={`background:${ROLE_DOTS[role]}`}></div>
+            style={`background:${(ROLE_DOTS as Record<string, string>)[role]}`}
             {role}s
           </div>
           <div class="agent-grid">
