@@ -1,6 +1,5 @@
-
 ---
-const { crumbs = [] } = Astro.props as { crumbs: { label: string; href?: string }[] };
+const { crumbs = [], user = null } = Astro.props as { crumbs: { label: string; href?: string }[], user: any };
 ---
 
 <nav>
@@ -32,10 +31,24 @@ const { crumbs = [] } = Astro.props as { crumbs: { label: string; href?: string 
     >
   </div>
 
- <div class="nav-right" id="nav-right">
-  <button class="auth-btn" style="visibility:hidden">Sign In</button>
-  <button class="auth-btn primary" style="visibility:hidden">Sign Up</button>
-</div>
+  <div class="nav-right" id="nav-right">
+    {user ? (
+      <>
+        <button class="auth-btn" onclick="window.location='/favorites'">♥ Favorites</button>
+        <button class="auth-btn" onclick="window.location='/my-vods'">My VODs</button>
+        <div class="user-pill">
+          <div class="user-avatar">{user.email[0].toUpperCase()}</div>
+          {user.email.split("@")[0]}
+        </div>
+        <button class="auth-btn" onclick="signOut()">Sign Out</button>
+      </>
+    ) : (
+      <>
+        <button class="auth-btn" onclick="openAuth()">Sign In</button>
+        <button class="auth-btn primary" onclick="openAuth('register')">Sign Up</button>
+      </>
+    )}
+  </div>
 </nav>
 
 <script is:inline>

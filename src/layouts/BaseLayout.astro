@@ -1,7 +1,22 @@
 ---
 import '../styles/global.css';
+import { createClient } from '@supabase/supabase-js';
 
 const { title = 'FragLog.gg — Valorant VOD Library', description = 'Watch Radiant and pro player Valorant gameplay VODs filtered by map and agent. Study the best players in the world on FragLog.gg', ogImage = 'https://media.valorant-api.com/maps/7eaecc1b-4337-bbf6-6ab9-04b8f06b3319/splash.png', canonical = 'https://fraglog.gg' } = Astro.props;
+
+const supabase = createClient(
+  "https://cvdtykmkajmhlxydhzzl.supabase.co",
+  "sb_publishable_I16eAnYgsA9fd8ZMlmFQtA_RxepSaXi"
+);
+
+const accessToken = Astro.cookies.get('sb-access-token')?.value;
+const refreshToken = Astro.cookies.get('sb-refresh-token')?.value;
+
+let user = null;
+if (accessToken && refreshToken) {
+  const { data } = await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
+  user = data.session?.user ?? null;
+}
 ---
 <!DOCTYPE html>
 <html lang="en">
@@ -90,10 +105,18 @@ const { title = 'FragLog.gg — Valorant VOD Library', description = 'Watch Radi
     </div>
   </div>
 
+  <!-- Nav right rendered server-side — no shift -->
+  <script is:inline define:vars={{ user }}>
+  // Render nav immediately with server-known auth state
+  (function() {
+    // Nav right is rendered by Nav.astro using server data
+    // This just sets up the global user state for client-side features
+    window.__initialUser = user;
+  })();
+  </script>
+
   <script is:inline>
-  // ── SUPABASE ──────────────────────────────────────────────
   let _supabase;
-  // Wait for supabase SDK to load
   function initSupabase() {
     if (typeof supabase !== 'undefined' && !_supabase) {
       _supabase = supabase.createClient(
@@ -104,7 +127,7 @@ const { title = 'FragLog.gg — Valorant VOD Library', description = 'Watch Radi
     return _supabase;
   }
 
-  let currentUser = null;
+  let currentUser = window.__initialUser || null;
   let authMode = "login";
   let userFavorites = [];
   let userNotes = {};
@@ -112,12 +135,10 @@ const { title = 'FragLog.gg — Valorant VOD Library', description = 'Watch Radi
   async function initAuth() {
     const sb = initSupabase();
     if (!sb) return;
-    const { data: { session } } = await sb.auth.getSession();
-    if (session?.user) {
-      currentUser = session.user;
+    if (currentUser) {
       await loadUserData();
     }
-    renderNav();
+    // No renderNav needed — already rendered server-side
   }
 
   async function loadUserData() {
@@ -167,6 +188,7 @@ const { title = 'FragLog.gg — Valorant VOD Library', description = 'Watch Radi
     document.querySelector(".auth-modal .primary").textContent = mode==="login" ? "Sign In" : "Create Account";
     document.getElementById("auth-error").style.display = "none";
   }
+
   async function submitAuth() {
     const email = document.getElementById("auth-email").value.trim();
     const pass = document.getElementById("auth-password").value;
@@ -208,7 +230,7 @@ const { title = 'FragLog.gg — Valorant VOD Library', description = 'Watch Radi
     userFavorites = [];
     userNotes = {};
     renderNav();
-    if (typeof onAuthChange === 'function') onAuthChange();
+    window.location.reload();
   }
 
   function isFav(videoId) { return userFavorites.includes(videoId); }
@@ -241,7 +263,6 @@ const { title = 'FragLog.gg — Valorant VOD Library', description = 'Watch Radi
     );
   }
 
-  // ── NOTES MODAL ──────────────────────────────────────────
   let currentNoteVideoId = null;
 
   function openNotes(videoId, title, player, adminNote) {
