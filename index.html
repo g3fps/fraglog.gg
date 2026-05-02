@@ -1,0 +1,2584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FragLog.gg</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
+// ── MY VODS ───────────────────────────────────────────────
+function mvExtractId() {
+  const url = document.getElementById("mv-url").value.trim();
+  const match = url.match(/(?:v=|youtu\.be\/|embed\/)([a-zA-Z0-9_-]{11})/);
+  const display = document.getElementById("mv-id-display");
+  if(match) {
+    mvVideoId = match[1];
+    display.textContent = "ID: " + mvVideoId;
+  } else {
+    mvVideoId = "";
+    display.textContent = url.length > 5 ? "No video ID found" : "";
+  }
+}
+
+function goMyVods() {
+  selMap = null; selAgent = null;
+  updateBreadcrumb();
+  renderMyVods();
+  show("s-myvods");
+}
+
+async function submitMyVod() {
+  if(!currentUser) { openAuth(); return; }
+  const mapId = document.getElementById("mv-map").value;
+  const agentId = document.getElementById("mv-agent").value;
+  const title = document.getElementById("mv-title").value.trim();
+  const errEl = document.getElementById("mv-error");
+  const btn = document.getElementById("mv-submit-btn");
+
+  errEl.textContent = "";
+  if(!mvVideoId) { errEl.textContent = "Paste a valid YouTube URL."; return; }
+  if(!mapId) { errEl.textContent = "Select a map."; return; }
+  if(!agentId) { errEl.textContent = "Select an agent."; return; }
+  if(!title) { errEl.textContent = "Enter a title."; return; }
+
+  btn.textContent = "Saving..."; btn.disabled = true;
+
+  const { error } = await _supabase.from("user_vods").insert({
+    user_id: currentUser.id,
+    video_id: mvVideoId,
+    title,
+    map_id: mapId,
+    agent_id: agentId,
+    date: new Date().toISOString().split("T")[0],
+  });
+
+  btn.textContent = "+ Add to My VODs"; btn.disabled = false;
+
+  if(error) { errEl.textContent = "Error saving VOD: " + error.message; return; }
+
+  // Clear form
+  document.getElementById("mv-url").value = "";
+  document.getElementById("mv-id-display").textContent = "";
+  document.getElementById("mv-map").value = "";
+  document.getElementById("mv-agent").value = "";
+  document.getElementById("mv-title").value = "";
+  mvVideoId = "";
+
+  renderMyVods();
+}
+
+async function renderMyVods() {
+  const grid = document.getElementById("mv-grid");
+  const count = document.getElementById("mv-count");
+  if(!currentUser) {
+    grid.innerHTML = '<div class="empty"><strong>Not signed in</strong>Sign in to use My VODs</div>';
+    return;
+  }
+
+  grid.innerHTML = '<div class="empty">Loading...</div>';
+
+  const { data, error } = await _supabase
+    .from("user_vods")
+    .select("*")
+    .eq("user_id", currentUser.id)
+    .order("created_at", { ascending: false });
+
+  if(error || !data) { grid.innerHTML = '<div class="empty"><strong>Error loading VODs</strong></div>'; return; }
+
+  
+
+  if(!data.length) {
+    grid.innerHTML = '<div class="empty"><strong>No VODs yet</strong>Paste a YouTube URL above to add your first one</div>';
+    return;
+  }
+
+  const mapName = id => MAPS.find(m=>m.id===id)?.name || id;
+  const agentName = id => AGENTS.find(a=>a.id===id)?.name || id;
+
+  grid.innerHTML = data.map(v => `
+    <div class="video-card">
+      <div class="video-thumb" data-vid="${v.video_id}" style="cursor:pointer">
+        <img src="https://img.youtube.com/vi/${v.video_id}/mqdefault.jpg" alt="${v.title}">
+        <div class="play-overlay"><div class="play-icon"><div class="play-tri"></div></div></div>
+      </div>
+      <div class="video-info">
+        <div class="video-tag-row">
+          <span class="video-map-tag">${mapName(v.map_id)}</span>
+          <span class="video-agent-tag">${agentName(v.agent_id)}</span>
+        </div>
+        <div class="video-title" data-vid="${v.video_id}" style="cursor:pointer">${v.title}</div>
+        <div class="video-meta-row">
+          <span class="video-date">${v.date ? new Date(v.date).toLocaleDateString('en-US',{month:'short',year:'numeric'}) : ''}</span>
+          <button class="mv-delete-btn" onclick="deleteMyVod('${v.id}')">✕ Remove</button>
+        </div>
+      </div>
+    </div>
+  `).join("");
+
+  // Event delegation for clicks
+  grid.onclick = function(e) {
+    const vid = e.target.closest("[data-vid]")?.dataset.vid;
+    if(vid) window.open("https://youtube.com/watch?v="+vid, "_blank");
+  };
+}
+
+async function deleteMyVod(id) {
+  if(!confirm("Remove this VOD from your collection?")) return;
+  await _supabase.from("user_vods").delete().eq("id", id).eq("user_id", currentUser.id);
+  renderMyVods();
+}
+
+// ── SEARCH ────────────────────────────────────────────────
+
+function openSearch() {
+  const val = document.getElementById("nav-search").value;
+  if(val.trim()) runSearch(val);
+}
+
+function handleSearch(val) {
+  clearTimeout(searchTimeout);
+  if(!val.trim()) {
+    if(document.getElementById("s-search").classList.contains("active")) {
+      show("s-maps");
+    }
+    return;
+  }
+  // Switch to search screen immediately so it feels instant
+  if(!document.getElementById("s-search").classList.contains("active")) {
+    document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+    document.getElementById("s-search").classList.add("active");
+    document.getElementById("back-btn").style.display = "block";
+    const bgLayer = document.getElementById("map-bg-layer");
+    const bgOverlay = document.getElementById("agents-bg-overlay");
+    if(bgLayer) bgLayer.style.opacity = "0";
+    if(bgOverlay) bgOverlay.style.display = "none";
+    document.body.style.background = "";
+  }
+  searchTimeout = setTimeout(() => runSearch(val), 120);
+}
+
+function runSearch(query) {
+  const q = query.toLowerCase().trim();
+  const results = [];
+
+  for(const mapId in VODS) {
+    const map = MAPS.find(m => m.id === mapId);
+    for(const agentId in VODS[mapId]) {
+      const agent = AGENTS.find(a => a.id === agentId);
+      for(const v of VODS[mapId][agentId]) {
+        const searchStr = [v.title, v.player, map?.name, agent?.name].join(" ").toLowerCase();
+        if(searchStr.includes(q)) {
+          results.push({ ...v, mapId, agentId, mapName: map?.name, agentName: agent?.name });
+        }
+      }
+    }
+  }
+
+  // Show search screen
+  document.getElementById("search-title").textContent = results.length + " result" + (results.length !== 1 ? "s" : "");
+  document.getElementById("search-sub").textContent = results.length ? `Showing results for "${query}"` : `No results for "${query}"`;
+
+  const grid = document.getElementById("search-grid");
+
+  if(!results.length) {
+    grid.innerHTML = '<div class="empty"><strong>No results</strong>Try a different player, map, or agent</div>';
+  } else {
+    grid.innerHTML = results.map(v => `
+      <div class="video-card">
+        <div class="video-thumb" data-vid="${v.id}" style="cursor:pointer">
+          <img src="https://img.youtube.com/vi/${v.id}/mqdefault.jpg" alt="${v.title}">
+          <div class="play-overlay"><div class="play-icon"><div class="play-tri"></div></div></div>
+        </div>
+        <div class="video-info">
+          <div class="video-tag-row">
+            <span class="video-map-tag">${v.mapName||''}</span>
+            <span class="video-agent-tag">${v.agentName||''}</span>
+          </div>
+          <div class="video-title" data-vid="${v.id}" style="cursor:pointer">${v.title}</div>
+          <div class="video-meta-row">
+            <span class="video-player">${v.player}</span>
+            ${v.date ? `<span class="video-date">${new Date(v.date).toLocaleDateString('en-US',{month:'short',year:'numeric'})}</span>` : ''}
+          </div>
+          ${currentUser ? `
+          <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);display:flex;gap:6px;align-items:center">
+            <button class="notes-btn ${getUserNote(v.id)?'has-note':''}" onclick="openNotes('${v.id}','${v.title.replace(/'/g,"\'")}','${v.player}'${v.note?`,'${v.note.replace(/'/g,"\'")}'`:''})">
+              📝 ${getUserNote(v.id) ? 'View notes' : 'Add notes'}
+            </button>
+            <button class="notes-btn ${isFav(v.id)?'has-note':''}" onclick="toggleFav('${v.id}',this)" title="Save to favorites">
+              ${isFav(v.id) ? '♥ Saved' : '♡ Save'}
+            </button>
+          </div>` : ''}
+        </div>
+      </div>
+    `).join("");
+
+    // Event delegation
+    grid.onclick = function(e) {
+      const vid = e.target.closest("[data-vid]")?.dataset.vid;
+      if(vid) window.open("https://youtube.com/watch?v="+vid, "_blank");
+    };
+  }
+
+  // Update URL
+  const searchUrl = "/search?q=" + encodeURIComponent(query);
+  if(location.pathname !== "/search") {
+    history.pushState({screen:"s-search", query}, "", searchUrl);
+  } else {
+    history.replaceState({screen:"s-search", query}, "", searchUrl);
+  }
+}
+
+// Close search / clear on escape
+document.addEventListener("keydown", function(e) {
+  if(e.key === "Escape") {
+    document.getElementById("nav-search").value = "";
+    document.getElementById("nav-search").blur();
+    if(document.getElementById("s-search").classList.contains("active")) {
+      selMap=null; selAgent=null; updateBreadcrumb(); show("s-maps");
+    }
+  }
+});
+</script>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --red: #FF4655;
+  --dark: #0F1923;
+  --darker: #080E14;
+  --surface: #151E27;
+  --surface2: #1C2733;
+  --border: rgba(255,255,255,0.07);
+  --text: #ECE8E1;
+  --muted: #7B8FA1;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--darker); color: var(--text); font-family: 'DM Sans', sans-serif; min-height: 100vh; overflow-x: hidden; }
+body::before { content: ''; position: fixed; inset: 0; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E"); pointer-events: none; z-index: 1000; opacity: 0.4; }
+
+nav { display: flex; align-items: center; justify-content: space-between; padding: 0 2rem; height: 56px; border-bottom: 1px solid var(--border); background: rgba(8,14,20,0.92); backdrop-filter: blur(12px); position: sticky; top: 0; z-index: 200; }
+.logo { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 3px; color: var(--text); }
+.logo span { color: var(--red); }
+.breadcrumb { display: flex; align-items: center; gap: 8px; font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; }
+.crumb { cursor: pointer; color: var(--muted); transition: color 0.2s; }
+.crumb:hover { color: var(--text); }
+.sep { color: var(--red); opacity: 0.5; }
+.current { color: var(--text); }
+
+.screen { display: none; padding: 2.5rem 2rem; max-width: 1200px; margin: 0 auto; }
+.screen.active { display: block; animation: fadeUp 0.3s ease; }
+@keyframes fadeUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+
+.hero { margin-bottom: 2.5rem; padding-bottom: 2rem; border-bottom: 1px solid var(--border); }
+.hero-eyebrow { font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: var(--red); margin-bottom: 0.5rem; }
+.hero-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(36px, 6vw, 64px); letter-spacing: 2px; line-height: 1; }
+.hero-sub { font-size: 14px; color: var(--muted); margin-top: 0.5rem; font-weight: 300; }
+.section-label { font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 1rem; }
+
+.map-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 3px; }
+.map-card { position: relative; background: var(--surface); cursor: pointer; overflow: hidden; aspect-ratio: 16/9; transition: transform 0.2s; }
+.map-card:hover { transform: scale(1.02); z-index: 2; }
+.map-card img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.4s; filter: brightness(0.65) saturate(0.8); }
+.map-card:hover img { transform: scale(1.06); filter: brightness(0.8) saturate(1); }
+.map-card-accent { position: absolute; top: 0; left: 0; width: 2px; height: 100%; background: var(--red); transform: scaleY(0); transform-origin: bottom; transition: transform 0.2s; z-index: 3; }
+.map-card:hover .map-card-accent { transform: scaleY(1); }
+.map-card-content { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: flex-end; padding: 10px 12px; background: linear-gradient(to top, rgba(8,14,20,0.95) 0%, transparent 65%); z-index: 2; }
+.map-name { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 1.5px; color: var(--text); line-height: 1; }
+
+
+
+.agents-page-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(28px,4vw,48px); letter-spacing: 2px; margin-bottom: 2rem; }
+.agent-section { margin-bottom: 1.75rem; }
+.role-header { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 3px; text-transform: uppercase; padding: 6px 0; margin-bottom: 8px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; color: var(--muted); }
+.role-dot { width: 6px; height: 6px; border-radius: 50%; }
+.agent-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 4px; }
+.agent-card { background: var(--agent-color, var(--surface)); border: 1px solid var(--border); cursor: pointer; transition: all 0.2s; position: relative; overflow: hidden; aspect-ratio: 3/4; display:flex; flex-direction:column; justify-content:flex-end; }
+.agent-card::before { content:''; position:absolute; inset:0; background:linear-gradient(to top, rgba(8,14,20,0.95) 0%, rgba(8,14,20,0.2) 50%, transparent 100%); z-index:1; }
+.agent-card:hover { transform: scale(1.03); z-index:2; border-color: rgba(255,70,85,0.5); }
+.agent-card.no-vods { opacity: 0.3; cursor: default; pointer-events: none; }
+.agent-portrait-wrap { position:absolute; inset:0; overflow:hidden; }
+.agent-portrait-img { width:100%; height:100%; object-fit:cover; object-position: top center; transition: transform 0.3s; }
+.agent-card:hover .agent-portrait-img { transform: scale(1.06); }
+.agent-portrait-overlay { position:absolute; inset:0; }
+.agent-card-info { position:relative; z-index:2; padding:8px 10px; }
+.agent-icon-placeholder { width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:var(--surface2); color:var(--muted); font-size:32px; font-family:'Bebas Neue',sans-serif; }
+.agent-name { font-family: 'Bebas Neue', sans-serif; font-size: 16px; letter-spacing: 1px; color: var(--text); line-height: 1; }
+
+
+
+.videos-header { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 1.5rem; }
+.videos-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(28px,4vw,48px); letter-spacing: 2px; line-height: 1; }
+.videos-count { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); padding-bottom: 4px; }
+.video-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 3px; }
+.video-card { background: var(--surface); cursor: pointer; overflow: hidden; position: relative; transition: transform 0.15s; }
+.video-card:hover { transform: scale(1.02); z-index: 2; }
+.video-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: var(--red); transform: scaleX(0); transition: transform 0.2s; z-index: 3; }
+.video-card:hover::before { transform: scaleX(1); }
+.video-thumb { width: 100%; aspect-ratio: 16/9; position: relative; overflow: hidden; background: var(--surface2); }
+.video-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.3s; }
+.video-card:hover .video-thumb img { transform: scale(1.05); }
+.play-overlay { position: absolute; inset: 0; background: rgba(8,14,20,0.45); display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s; }
+.video-card:hover .play-overlay { opacity: 1; }
+.play-icon { width: 44px; height: 44px; border: 2px solid rgba(255,255,255,0.9); border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+.play-tri { width: 0; height: 0; border-top: 8px solid transparent; border-bottom: 8px solid transparent; border-left: 14px solid rgba(255,255,255,0.9); margin-left: 3px; }
+.video-card { display:flex; flex-direction:column; }
+.video-info { padding: 10px 12px 12px; border-top: 1px solid var(--border); display:flex; flex-direction:column; flex:1; }
+.video-title { font-size: 12px; font-weight: 500; color: var(--text); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 34px; }
+.video-meta-row { margin-top: auto; padding-top: 6px; }
+.video-meta-row { display: flex; align-items: center; gap: 8px; margin-top: 5px; flex-wrap: wrap; }
+.video-player { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--red); text-transform: uppercase; letter-spacing: 1px; }
+.video-kd { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--text); background: var(--surface2); padding: 1px 6px; border-radius: 2px; }
+.video-date { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); margin-left: auto; }
+.empty { grid-column: 1/-1; padding: 4rem 2rem; text-align: center; color: var(--muted); font-size: 14px; border: 1px dashed var(--border); }
+.empty strong { display: block; font-family: 'Bebas Neue'; font-size: 24px; letter-spacing: 2px; color: var(--text); margin-bottom: 6px; }
+
+/* VIDEO MODAL */
+.modal-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.85);
+  z-index: 500;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(6px);
+  animation: fadeIn 0.2s ease;
+}
+.modal-backdrop.open { display: flex; }
+@keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+.modal-box {
+  width: 90%;
+  max-width: 960px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  animation: scaleIn 0.2s ease;
+}
+@keyframes scaleIn { from { opacity:0; transform:scale(0.95); } to { opacity:1; transform:scale(1); } }
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.modal-title { font-size: 13px; font-weight: 500; color: var(--text); flex: 1; margin-right: 1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.modal-player { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--red); text-transform: uppercase; letter-spacing: 1px; margin-right: 1rem; white-space: nowrap; }
+.modal-close {
+  background: none; border: 1px solid var(--border); color: var(--muted);
+  width: 28px; height: 28px; cursor: pointer; font-size: 16px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  transition: color 0.15s, border-color 0.15s;
+}
+.modal-close:hover { color: var(--text); border-color: var(--text); }
+.modal-video { position: relative; width: 100%; aspect-ratio: 16/9; background: #000; }
+.modal-video iframe { width: 100%; height: 100%; border: none; display: block; }
+
+/* AUTH */
+.nav-right { display:flex; align-items:center; gap:10px; }
+.auth-btn { font-family:'DM Mono',monospace; font-size:11px; letter-spacing:1px; text-transform:uppercase; padding:6px 14px; cursor:pointer; border:1px solid var(--border); background:none; color:var(--muted); transition:all 0.15s; }
+.auth-btn:hover { color:var(--text); border-color:rgba(255,255,255,0.3); }
+.auth-btn.primary { background:var(--red); border-color:var(--red); color:#fff; }
+.auth-btn.primary:hover { background:#e03040; }
+.user-pill { display:flex; align-items:center; gap:8px; font-family:'DM Mono',monospace; font-size:11px; color:var(--muted); }
+.user-avatar { width:26px; height:26px; border-radius:50%; background:var(--red); display:flex; align-items:center; justify-content:center; font-size:11px; color:#fff; font-weight:600; }
+
+/* AUTH MODAL */
+.auth-modal-backdrop { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:600; align-items:center; justify-content:center; backdrop-filter:blur(6px); }
+.auth-modal-backdrop.open { display:flex; }
+.auth-modal { background:var(--surface); border:1px solid var(--border); padding:2rem; width:100%; max-width:380px; }
+.auth-modal h2 { font-family:'Bebas Neue',sans-serif; font-size:28px; letter-spacing:2px; margin-bottom:0.25rem; }
+.auth-modal p { font-size:13px; color:var(--muted); margin-bottom:1.5rem; }
+.auth-tabs { display:flex; gap:0; margin-bottom:1.5rem; border-bottom:1px solid var(--border); }
+.auth-tab { font-family:'DM Mono',monospace; font-size:11px; letter-spacing:1px; text-transform:uppercase; padding:8px 16px; cursor:pointer; border:none; background:none; color:var(--muted); border-bottom:2px solid transparent; margin-bottom:-1px; transition:all 0.15s; }
+.auth-tab.active { color:var(--red); border-bottom-color:var(--red); }
+.auth-field { margin-bottom:1rem; }
+.auth-field label { display:block; font-family:'DM Mono',monospace; font-size:10px; letter-spacing:2px; text-transform:uppercase; color:var(--muted); margin-bottom:6px; }
+.auth-field input { width:100%; background:var(--darker); border:1px solid var(--border); color:var(--text); font-family:'DM Sans',sans-serif; font-size:14px; padding:10px 12px; outline:none; transition:border-color 0.15s; }
+.auth-field input:focus { border-color:rgba(255,70,85,0.5); }
+.auth-error { font-size:12px; color:var(--red); margin-bottom:1rem; display:none; }
+.auth-close { position:absolute; top:1rem; right:1rem; background:none; border:none; color:var(--muted); font-size:20px; cursor:pointer; }
+
+/* FAVORITE BTN */
+
+
+/* NOTES */
+
+.admin-note { font-size:11px; color:var(--muted); font-style:italic; margin-bottom:6px; padding-left:8px; border-left:2px solid var(--red); }
+.note-login-prompt { font-size:11px; color:var(--muted); font-style:italic; }
+.notes-btn { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:1px; text-transform:uppercase; padding:4px 10px; background:none; border:1px solid var(--border); color:var(--muted); cursor:pointer; transition:all 0.15s; display:inline-flex; align-items:center; gap:5px; }
+.notes-btn:hover { color:var(--text); border-color:rgba(255,255,255,0.3); }
+.notes-btn.has-note { color:var(--red); border-color:rgba(255,70,85,0.4); }
+
+/* NOTES MODAL */
+.notes-modal-backdrop { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:600; align-items:center; justify-content:center; backdrop-filter:blur(8px); }
+.notes-modal-backdrop.open { display:flex; animation:fadeIn 0.2s ease; }
+.notes-modal { background:var(--surface); border:1px solid var(--border); width:90%; max-width:640px; display:flex; flex-direction:column; max-height:85vh; }
+.notes-modal-header { padding:16px 20px; border-bottom:1px solid var(--border); display:flex; align-items:flex-start; justify-content:space-between; gap:1rem; flex-shrink:0; }
+.notes-modal-title { font-family:'Bebas Neue',sans-serif; font-size:20px; letter-spacing:1.5px; line-height:1.2; }
+.notes-modal-meta { font-family:'DM Mono',monospace; font-size:10px; color:var(--red); text-transform:uppercase; letter-spacing:1px; margin-top:3px; }
+.notes-modal-close { background:none; border:1px solid var(--border); color:var(--muted); width:30px; height:30px; cursor:pointer; font-size:16px; flex-shrink:0; display:flex; align-items:center; justify-content:center; transition:all 0.15s; }
+.notes-modal-close:hover { color:var(--text); border-color:rgba(255,255,255,0.3); }
+.notes-modal-body { padding:20px; display:flex; flex-direction:column; gap:16px; flex:1; overflow:auto; min-height:0; }
+.notes-admin-box { background:var(--darker); border-left:2px solid var(--red); padding:12px 14px; }
+.notes-admin-label { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:2px; text-transform:uppercase; color:var(--red); margin-bottom:6px; }
+.notes-admin-text { font-size:13px; color:var(--muted); line-height:1.6; font-style:italic; }
+.notes-user-box { display:flex; flex-direction:column; gap:10px; flex:1; }
+.notes-user-label { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:2px; text-transform:uppercase; color:var(--muted); }
+.notes-textarea { flex:1; min-height:220px; background:var(--darker); border:1px solid var(--border); color:var(--text); font-family:'DM Sans',sans-serif; font-size:14px; line-height:1.6; padding:14px; resize:none; outline:none; transition:border-color 0.15s; }
+.notes-textarea:focus { border-color:rgba(255,70,85,0.4); }
+.notes-modal-footer { padding:12px 20px; border-top:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
+.notes-char-count { font-family:'DM Mono',monospace; font-size:10px; color:var(--muted); }
+.notes-save-btn { font-family:'DM Mono',monospace; font-size:11px; letter-spacing:1px; text-transform:uppercase; padding:8px 20px; background:var(--red); border:none; color:#fff; cursor:pointer; transition:background 0.15s; }
+.notes-save-btn:hover { background:#e03040; }
+.notes-saved-msg { font-family:'DM Mono',monospace; font-size:10px; color:#6BCF6B; display:none; }
+
+.video-tag-row { display:flex; gap:5px; margin-bottom:6px; flex-wrap:wrap; }
+.video-map-tag { font-family:'DM Mono',monospace; font-size:9px; letter-spacing:1px; text-transform:uppercase; padding:2px 7px; background:var(--surface2); color:var(--muted); border:1px solid var(--border); }
+.video-agent-tag { font-family:'DM Mono',monospace; font-size:9px; letter-spacing:1px; text-transform:uppercase; padding:2px 7px; background:rgba(255,70,85,0.1); color:var(--red); border:1px solid rgba(255,70,85,0.2); }
+
+/* ROUNDNESS + BREATHING ROOM */
+.map-card { border-radius: 12px; overflow: hidden; }
+.map-grid { gap: 12px; }
+.video-card { border-radius: 12px; overflow: hidden; }
+.video-grid { gap: 12px; }
+.agent-card { border-radius: 14px; overflow: hidden; }
+.agent-grid { gap: 10px; }
+.video-kd { border-radius: 4px; }
+.auth-btn { border-radius: 6px; }
+.notes-btn { border-radius: 6px; }
+.auth-modal { border-radius: 16px; }
+.notes-modal { border-radius: 16px; }
+.auth-modal-backdrop .auth-modal, .notes-modal-backdrop .notes-modal { border-radius: 16px; }
+.modal-box { border-radius: 16px; }
+.hero { padding-bottom: 2.5rem; margin-bottom: 3rem; }
+.agent-section { margin-bottom: 2.5rem; }
+.role-header { margin-bottom: 12px; }
+.screen { padding: 3rem 2.5rem; position: relative; z-index: 2; }
+nav { padding: 0 2.5rem; border-radius: 0; }
+.map-card-accent { border-radius: 0 2px 2px 0; }
+.video-card::before { border-radius: 12px 12px 0 0; }
+.video-meta-row { margin-top: 8px; }
+.video-info { padding: 12px 14px 14px; }
+.video-title { margin-bottom: 2px; }
+
+/* ── MOBILE RESPONSIVE ───────────────────────────────────── */
+@media (max-width: 768px) {
+
+  /* Nav */
+  nav { padding: 0 1rem; height: 52px; }
+  .logo { font-size: 18px; letter-spacing: 2px; }
+  .breadcrumb { font-size: 10px; gap: 4px; max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .nav-right { gap: 6px; }
+  .auth-btn { font-size: 10px; padding: 5px 8px; letter-spacing: 0.5px; }
+  .user-pill { display: none; } /* hide email on mobile, keep avatar */
+  #back-btn { font-size: 10px; padding: 5px 10px; }
+
+  /* Screens */
+  .screen { padding: 1.25rem 1rem; }
+
+  /* Hero */
+  .hero { margin-bottom: 1.5rem; padding-bottom: 1.5rem; }
+  .hero-title { font-size: 36px; }
+  .hero-sub { font-size: 13px; }
+
+  /* Map grid — 2 columns on mobile */
+  .map-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .map-name { font-size: 16px; }
+
+  /* Agent grid — 3 columns on mobile */
+  .agent-grid { grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .agent-name { font-size: 13px; }
+  .agents-page-title { font-size: 28px; margin-bottom: 1.25rem; }
+  .role-header { font-size: 9px; }
+
+  /* Video grid — 1 column on mobile */
+  .video-grid { grid-template-columns: 1fr; gap: 10px; }
+  .videos-title { font-size: 28px; }
+  .videos-header { flex-direction: column; align-items: flex-start; gap: 4px; }
+
+  /* Video cards */
+  .video-thumb { height: auto; }
+  .video-info { padding: 10px 12px 12px; }
+  .video-title { font-size: 13px; }
+
+  /* Notes + fav buttons */
+  .notes-btn { font-size: 9px; padding: 4px 8px; }
+
+  /* Auth modal */
+  .auth-modal { padding: 1.5rem; width: 95%; }
+  .auth-modal h2 { font-size: 24px; }
+
+  /* Notes modal */
+  .notes-modal { width: 95%; max-height: 90vh; }
+  .notes-modal-header { padding: 12px 14px; }
+  .notes-modal-title { font-size: 16px; }
+  .notes-textarea { min-height: 160px; font-size: 13px; }
+  .notes-modal-footer { padding: 10px 14px; }
+
+  /* Favorites page */
+  #fav-grid .video-grid { grid-template-columns: 1fr; }
+
+  /* Section label */
+  .section-label { font-size: 10px; }
+}
+
+@media (max-width: 480px) {
+  /* Tiny phones — 2 col agent grid */
+  .agent-grid { grid-template-columns: repeat(2, 1fr); }
+  .map-grid { grid-template-columns: repeat(2, 1fr); }
+  .hero-title { font-size: 30px; }
+
+  /* Hide favorites text, keep icon */
+  .auth-btn[onclick="goFavorites()"] { font-size: 0; }
+  .auth-btn[onclick="goFavorites()"]::before { content: "♥"; font-size: 14px; }
+}
+
+/* MY VODS */
+.myvods-form { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem; }
+.myvods-fields { display: flex; flex-direction: column; gap: 12px; margin-top: 1rem; }
+.myvods-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+.myvods-field label { display: block; font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+.myvods-field input, .myvods-field select { width: 100%; background: var(--darker); border: 1px solid var(--border); color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 13px; padding: 9px 12px; border-radius: 8px; outline: none; transition: border-color 0.15s; }
+.myvods-field input:focus, .myvods-field select:focus { border-color: rgba(255,70,85,0.5); }
+.mv-id-display { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--red); margin-top: 5px; min-height: 16px; }
+.mv-error { font-size: 12px; color: var(--red); margin-top: 8px; min-height: 16px; }
+.mv-delete-btn { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 1px; text-transform: uppercase; padding: 3px 8px; background: none; border: 1px solid rgba(255,70,85,0.3); color: var(--red); cursor: pointer; border-radius: 4px; transition: all 0.15s; }
+.mv-delete-btn:hover { background: rgba(255,70,85,0.1); }
+
+@media (max-width: 768px) {
+  .myvods-row { grid-template-columns: 1fr; }
+}
+
+/* SEARCH */
+.nav-search-wrap { position: relative; flex: 1; max-width: 320px; }
+.nav-search-input { width: 100%; background: var(--surface); border: 1px solid var(--border); color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 13px; padding: 7px 14px; border-radius: 8px; outline: none; transition: border-color 0.15s; }
+.nav-search-input:focus { border-color: rgba(255,70,85,0.4); }
+.nav-search-input::placeholder { color: var(--muted); }
+.search-empty { padding: 1.5rem; text-align: center; color: var(--muted); font-size: 13px; }
+
+@media (max-width: 768px) {
+  .nav-search-wrap { max-width: 140px; }
+  .nav-search-input { font-size: 12px; padding: 6px 10px; }
+}
+</style>
+</head>
+<body>
+
+<!-- Full-page map background layer -->
+<div id="map-bg-layer" style="position:fixed;inset:0;background-size:cover;background-position:center;background-repeat:no-repeat;opacity:0;transition:opacity 0.4s ease;z-index:0;"></div>
+<div id="agents-bg-overlay" style="position:fixed;inset:0;background:rgba(8,14,20,0.72);z-index:1;display:none;"></div>
+<nav>
+  <div class="logo" onclick="goHome()" style="cursor:pointer">FragLog<span>.gg</span></div>
+  <div style="display:flex;align-items:center;gap:1rem"><button id="back-btn" onclick="goBack()" style="display:none;background:none;border:1px solid rgba(255,255,255,0.15);color:#ECE8E1;font-family:DM Mono,monospace;font-size:11px;letter-spacing:2px;padding:6px 14px;cursor:pointer;text-transform:uppercase">← Back</button><div class="breadcrumb" id="breadcrumb"></div></div>
+  <div class="nav-search-wrap">
+    <input type="text" id="nav-search" class="nav-search-input" placeholder="Search players, maps, agents..." oninput="handleSearch(this.value)" onfocus="openSearch()" autocomplete="off">
+  </div>
+  <div class="nav-right" id="nav-right"></div>
+</nav>
+
+<div class="screen active" id="s-maps">
+  <div class="hero">
+    <div class="hero-title">Study the<br>Best in the World</div>
+    <div class="hero-sub">Radiant &amp; pro player gameplay — filtered by map and agent</div>
+  </div>
+  <div class="section-label">Select a map</div>
+  <div class="map-grid" id="map-grid"></div>
+</div>
+
+<div class="screen" id="s-agents">
+  <div class="agents-page-title" id="agents-title"></div>
+  <div id="agent-grid"></div>
+</div>
+
+<div class="screen" id="s-videos">
+  <div class="videos-header">
+    <div>
+      <div class="hero-eyebrow" id="v-eyebrow"></div>
+      <div class="videos-title" id="v-title"></div>
+    </div>
+    
+  </div>
+  <div class="video-grid" id="video-grid"></div>
+</div>
+
+<script>
+var searchTimeout = null;
+// ============================================================
+// VODS — ADD YOUR VIDEOS HERE
+// Format: { id: "YOUTUBE_ID", title: "Title", player: "playername", kd: "24/8", date: "2025-01-15" }
+// ============================================================
+const VODS = {
+  ascent: {
+    jett: [
+      { id:"7R6AVy9l2u4", title:"ENVY ion Jett Ascent OPERATOR GOAT", player:"ion2x", date:"2026-04-30" },
+      { id:"KM0I4IvErIo", title:"FUR koalanoob Jett Ascent RADIANT RANKED", player:"koalanoob", date:"2026-04-30" },
+    ],
+    reyna: [
+    ],
+    raze: [
+    ],
+    neon: [
+    ],
+    phoenix: [
+    ],
+    yoru: [
+    ],
+    iso: [
+    ],
+    omen: [
+    ],
+    viper: [
+    ],
+    brimstone: [
+    ],
+    astra: [
+    ],
+    harbor: [
+    ],
+    clove: [
+    ],
+    miks: [
+    ],
+    sage: [
+    ],
+    cypher: [
+    ],
+    killjoy: [
+    ],
+    chamber: [
+    ],
+    deadlock: [
+    ],
+    vyse: [
+    ],
+    veto: [
+    ],
+    sova: [
+    ],
+    breach: [
+    ],
+    skye: [
+    ],
+    kayo: [
+    ],
+    fade: [
+    ],
+    gekko: [
+    ],
+    tejo: [
+    ],
+    waylay: [
+    ]
+  },
+  bind: {
+    jett: [
+      { id:"J8uWgFK_aU0", title:"florescent Jett Bind ONE TAPS", player:"florescent", date:"2026-04-23" },
+      { id:"5MnQqTe22Ng", title:"florescent Jett Bind STRETCH RES GOAT", player:"florescent", date:"2026-04-08" },
+      { id:"dxEJFSpu06k", title:"ENVY demon1 Jett Bind RADIANT RANKED", player:"demon1", date:"2026-04-11" },
+      { id:"nXt4SR-lDcA", title:"MIBR aspas Jett Bind RADIANT GOAT", player:"aspas", date:"2026-02-04" },
+
+    ],
+    reyna: [
+      { id:"YvCpKibWrTg", title:"C9 OXY Reyna Bind ONE TAPS", player:"OXY", date:"2026-04-10" },
+      { id:"SOLF1b7zWy8", title:"C9 OXY Reyna Bind REYNA MASTER", player:"OXY", date:"2026-04-07" },
+    ],
+    raze: [
+      { id:"EyMk929uvbw", title:"Meiy Raze Bind RADIANT RANKED", player:"Meiy", date:"2026-04-27" },
+      { id:"ZubGAiJStwQ", title:"Tarik Raze Bind RANKED DOMINATION", player:"Tarik", date:"2026-04-24" },
+      { id:"bWVrVMP2tuE", title:"NRG s0m Raze Bind CHAMPION ENTRY", player:"s0m", date:"2026-04-18" },
+      { id:"Xs1azsao9eQ", title:"DFM meiy Raze Bind APAC DOMINATION", player:"meiy", date:"2026-04-30" },
+      { id:"adXIGnXEhNc", title:"M8 marteen Raze Bind LOW SENS GOD", player:"marteen", date:"2026-02-18" },
+
+    ],
+    neon: [
+      { id:"9hyZXjUtu98", title:"C9 OXY Neon Bind RADIANT RANKED", player:"OXY", date:"2026-04-28" },
+      { id:"K2b9lpVZZ1Q", title:"C9 OXY Neon Bind RADIANT", player:"OXY", date:"2026-04-25" },
+      { id:"c70REF7I5PQ", title:"C9 OXY Neon Bind MVP", player:"OXY", date:"2026-04-26" },
+      { id:"0JR2vWlKaj4", title:"TenZ Neon Bind RADIANT RANKED", player:"TenZ", date:"2026-04-09" },
+      { id:"mbQKhu1V_OA", title:"canezerra Neon Bind RADIANT MVP", player:"canezerra", date:"2026-03-22" },
+      { id:"eVCvhwiCNIs", title:"C9 OXY Neon Bind RADIANT RANKED", player:"OXY", date:"2026-04-10" },
+      { id:"fLj-n6g5Nv0", title:"C9 OXY Neon Bind RADIANT SHOTGUN", player:"OXY", date:"2026-04-11" },
+    ],
+    phoenix: [
+      { id:"5YgWGGvgitM", title:"NRG s0m Phoenix Bind RANKED DOMINATION", player:"s0m", date:"2026-04-23" },
+      { id:"BOs80ecs7aA", title:"DFM akame Phoenix Bind APAC RADIANT MVP", player:"akame", date:"2026-04-27" },
+    ],
+    yoru: [
+      { id:"vCFkSKCOS_k", title:"ENVY Eggsterr Yoru Bind RADIANT MVP", player:"Eggsterr", date:"2026-01-22" },
+    ],
+    iso: [
+    ],
+    omen: [
+    ],
+    viper: [
+      { id:"oXNMqWmByWE", title:"NRG s0m Viper Bind RADIANT RANKED", player:"s0m", date:"2026-04-25" },
+      { id:"r3id0ymV5f8", title:"TL nAts Viper Bind SMOKES", player:"nAts", date:"2026-04-20" },
+      { id:"u8niDrEEYlQ", title:"nAts Viper Bind PRO SMOKES", player:"nAts", date:"2026-04-30" },
+      { id:"8coM4-osiMM", title:"TL nAts Viper Bind RADIANT RANKED", player:"nAts", date:"2026-04-05" },
+      { id:"CGxAXp9Bo7g", title:"TL nAts Viper Bind SMOKES MASTER", player:"nAts", date:"2026-04-14" },
+      { id:"yAW8BRd1ITY", title:"TL nAts Viper Bind SMOKES GOAT", player:"nAts", date:"2026-04-09" },
+    ],
+    brimstone: [
+    ],
+    astra: [
+    ],
+    harbor: [
+    ],
+    clove: [
+      { id:"vFTJnO-7Dj4", title:"Marved Clove Bind RADIANT RANKED", player:"Marved", date:"2026-04-28" },
+    ],
+    miks: [
+    ],
+    sage: [
+    ],
+    cypher: [
+    ],
+    killjoy: [
+    ],
+    chamber: [
+      { id:"7cJSL26ceNY", title:"aleksandar Chamber Bind RADIANT ONE TAPS", player:"aleksandar", date:"2026-04-18" },
+      { id:"p_kNEhm9tBM", title:"NRG s0m Chamber Bind RADIANT AIM", player:"s0m", date:"2026-04-12" },
+    ],
+    deadlock: [
+    ],
+    vyse: [
+    ],
+    veto: [
+    ],
+    sova: [
+      { id:"Mzikz9_mPYg", title:"PRX f0rsaken Sova Bind LATAM RADIANT", player:"f0rsaken", date:"2026-03-11" },
+    ],
+    breach: [
+    ],
+    skye: [
+      { id:"npYkkGSRO-k", title:"aleksandar Skye Bind RADIANT AIMER", player:"aleksandar", date:"2026-04-23" },
+      { id:"RQpkYV17hZ4", title:"NRG s0m Skye Bind RANKED", player:"s0m", date:"2026-04-23" },
+      { id:"p6Z8iDbUGIg", title:"s0m Skye Bind RANKED", player:"s0m", date:"2026-04-23" },
+      { id:"Bikt3AwN-Pg", title:"aleksandar Skye Bind RADIANT UTIL", player:"aleksandar", date:"2026-04-24" },
+      { id:"KCjLPjt7_dE", title:"NRG s0m Skye Bind RADIANT FLASHES", player:"s0m", date:"2026-04-04" },
+
+    ],
+    kayo: [
+    ],
+    fade: [
+    ],
+    gekko: [
+    ],
+    tejo: [
+    ],
+    waylay: [
+      { id:"I_OHZP8iKtw", title:"GEN Karon Waylay Bind INSANE ENTRY", player:"Karon", date:"2026-04-06" },
+    ]
+  },
+  haven: {
+    jett: [
+      { id:"SdQGH21gDvE", title:"ENVY ion Jett Haven RADIANT RANKED w/NRG s0m", player:"ion2x", date:"2026-04-26" },
+    ],
+    reyna: [
+      { id:"GkkolEIngtQ", title:"florescent Reyna Haven RADIANT RANKED", player:"florescent", date:"2026-05-01" },
+      { id:"sgLH4Z8IRpA", title:"C9 OXY Reyna Haven INSANE AIM", player:"OXY", date:"2026-04-12" },
+      { id:"ADCeejaYgFM", title:"florescent Reyna Haven ONE TAP INSANITY", player:"florescent", date:"2026-05-02" },
+    ],
+    raze: [
+    ],
+    neon: [
+      { id:"FoR9881M0lY", title:"100T Asuna Neon Haven RADIANT SHOTGUN", player:"Asuna", date:"2026-04-18" },
+      { id:"s7uUPgHjhuM", title:"C9 OXY Neon Haven TENZ RANKED", player:"OXY", date:"2026-04-18" },
+    ],
+    phoenix: [
+      { id:"kJkmPye26Ew", title:"NRG s0m Phoenix Haven RADIANT RANKED", player:"s0m", date:"2026-04-25" },
+      { id:"UaAUxFETSoI", title:"florescent Phoenix Haven RADIANT RANKED", player:"florescent", date:"2026-04-22" },
+      { id:"I98Ccnia6q0", title:"ENVY demon1 Phoenix Haven RADIANT FLASHES", player:"demon1", date:"2026-04-19" },
+      { id:"HwMnbjWb4Ek", title:"QOR derrek Phoenix Haven RADIANT RANKED", player:"derrek", date:"2026-04-19" },
+      { id:"lsGS9jmCtGQ", title:"NRG brawk Phoenix Haven RADIANT FLASHES", player:"brawk", date:"2026-04-13" },
+    ],
+    yoru: [
+    ],
+    iso: [
+      { id:"2hiEiJjmYPY", title:"canezerra Iso Haven RADIANT RANKED", player:"canezerra", date:"2026-04-08" },
+    ],
+    omen: [
+    ],
+    viper: [
+      { id:"Ao43i-YAfOs", title:"NAVI hiro Viper Haven RADIANT", player:"hiro", date:"2026-04-13" },
+    ],
+    brimstone: [
+    ],
+    astra: [
+    ],
+    harbor: [
+      { id:"1A9M5fk-Lpg", title:"NRG s0m Harbor Haven RADIANT SMOKES", player:"s0m", date:"2026-04-03" },
+    ],
+    clove: [
+      { id:"VQ5eQo_uT64", title:"dapr Clove Haven SMOKES", player:"dapr", date:"2026-04-14" },
+      { id:"PSRZJBmdfZU", title:"NS Xross Clove Haven MASTERS CHAMPION", player:"Xross", date:"2026-04-13" },
+      { id:"u4caHTd04f0", title:"yanyan Clove Haven NO MAP COVER", player:"yanyan", date:"2026-03-18" },
+    ],
+    miks: [
+      { id:"_bLFgur4qNw", title:"TL nAts Miks Haven RADIANT SMOKES", player:"nAts", date:"2026-03-21" },
+      { id:"qrTbIcHXag0", title:"canezerra Miks Haven RADIANT RANKED", player:"canezerra", date:"2026-03-20" },
+    ],
+    sage: [
+    ],
+    cypher: [
+      { id:"CrMu154qGPE", title:"TL nAts Cypher Haven RADIANT", player:"nAts", date:"2026-04-21" },
+      { id:"oqRYPJEkZiY", title:"NRG s0m Cypher Haven RADIANT CAMERAS", player:"s0m", date:"2026-04-19" },
+      { id:"j7apmHfiZWQ", title:"ENVY demon1 Cypher Haven TIER 1 SENTI", player:"demon1", date:"2026-04-20" },
+      { id:"OsVy3UdPijE", title:"NRG s0m Cypher Haven RADIANT RANKED", player:"s0m", date:"2026-04-17" },
+      { id:"QShPW6C0tVQ", title:"NAVI hiro Cypher Haven RADIANT UTIL", player:"hiro", date:"2026-04-19" },
+      { id:"mRaP9dEhSYo", title:"GEN Lakia Cypher Haven RADIANT", player:"Lakia", date:"2026-03-30" },
+
+    ],
+    killjoy: [
+      { id:"Ch76qjFxnqw", title:"TL nAts Killjoy Haven RADIANT MASTER", player:"nAts", date:"2026-04-08" },
+      { id:"3sHMqgBsb1g", title:"DRX Mako Killjoy Haven APAC RADIANT", player:"Mako", date:"2026-04-09" },
+
+    ],
+    chamber: [
+      { id:"w26pYD2WlV8", title:"TS Zeus Chamber Haven APAC RADIANT", player:"Zeus", date:"2026-04-28" },
+      { id:"JDwhPpcwdXc", title:"Victor Chamber Haven ONE TAPS", player:"Victor", date:"2026-04-15" },
+      { id:"V4yVXH2DeTc", title:"N4RRATE Chamber Haven RADIANT", player:"N4RRATE", date:"2026-02-17" },
+      { id:"HGHc8phMAdk", title:"M8 marteen Chamber Haven RADIANT EU", player:"marteen", date:"2026-02-20" },
+    ],
+    deadlock: [
+    ],
+    vyse: [
+    ],
+    veto: [
+    ],
+    sova: [
+      { id:"KpE2EXh9MLE", title:"NRG s0m Sova Haven LINEUP GOD", player:"s0m", date:"2026-04-11" },
+      { id:"wLQVgTS9Dtg", title:"SEN Jerrwin Sova Haven RADIANT", player:"Jerrwin", date:"2026-04-30" },
+      { id:"ksTKkBUwEkg", title:"C9 OXY Sova Haven RADIANT LINEUPS", player:"OXY", date:"2026-05-02" },
+      { id:"HqNC3G8Y6fo", title:"NRG s0m Sova Haven RADIANT RANKED", player:"s0m", date:"2026-04-07" },
+
+    ],
+    breach: [
+    ],
+    skye: [
+    ],
+    kayo: [
+    ],
+    fade: [
+    ],
+    gekko: [
+    ],
+    tejo: [
+    ],
+    waylay: [
+    ]
+  },
+  split: {
+    jett: [
+      { id:"6nlom6x8bjA", title:"florescent Jett Split ENTRY GODDESS", player:"florescent", date:"2026-04-14" },
+      { id:"cQTMElba0UM", title:"florescent Jett Split RADIANT RANKED", player:"florescent", date:"2026-04-16" },
+      { id:"oJlZIxv_6mg", title:"florescent Jett Split RANK 1 AIM", player:"florescent", date:"2026-04-12" },
+      { id:"4zzKmk54rRA", title:"canezerra Jett Split NEXT PRO", player:"canezerra", date:"2026-01-24" },
+      { id:"bPEcMpZU75o", title:"T1 Meteor Jett Split INSANE MVP", player:"Meteor", date:"2026-02-25" },
+    ],
+    reyna: [
+      { id:"dUqa69S5fqY", title:"C9 OXY Reyna Split RADIANT RANKED", player:"OXY", date:"2026-04-26" },
+      { id:"jB0PpYYe89U", title:"canezerra Reyna Split RADIANT", player:"canezerra", date:"2026-04-16" },    
+      { id:"yLMOKJV8gPE", title:"ZETA matto Reyna Split RADIANT RANKED", player:"matto", date:"2026-03-03" },
+      { id:"bUGznAe6tSw", title:"C9 OXY Reyna Split PRO AIMER", player:"OXY", date:"2026-04-05" },
+    ],
+    raze: [
+      { id:"s6F10O6wAuc", title:"100T Asuna Raze Split RADIANT RANKED", player:"Asuna", date:"2026-04-21" },
+      { id:"EmmUDHv1nsY", title:"NRG brawk Raze Split RADIANT MVP", player:"brawk", date:"2026-04-16" },
+      { id:"XIVyVX1h1bg", title:"NRG s0m Raze Split RADIANT ENTRY", player:"s0m", date:"2026-04-12" },
+      { id:"X9y5pPn1Wz8", title:"QOR Derrek Raze Split PRO ENTRY", player:"derrek", date:"2026-02-15" },
+
+    ],
+    neon: [
+      { id:"eScv6iy1afY", title:"MIBR zekken Neon Split RADIANT SHOTGUN", player:"zekken", date:"2026-04-15" },
+    ],
+    phoenix: [
+    ],
+    yoru: [
+      { id:"oMSNtf3bC5U", title:"ENVY Eggsterr Yoru Split RADIANT RANKED", player:"Eggsterr", date:"2026-04-03" },
+    ],
+    iso: [
+    ],
+    omen: [
+    ],
+    viper: [
+      { id:"V_YeZOWRj98", title:"NRG s0m Viper Split WORLD CHAMP", player:"s0m", date:"2026-04-24" },
+      { id:"DD1Soaw_K1I", title:"Zander Viper Split RANKED SMOKES", player:"Zander", date:"2026-04-11" },
+      { id:"C8Bgen8HlT0", title:"Zander Viper Split RADIANT SMOKES", player:"Zander", date:"2026-04-11" },
+    ],
+    brimstone: [
+    ],
+    astra: [
+    ],
+    harbor: [
+    ],
+    clove: [
+      { id:"jliyUlegMd0", title:"haeyoday Clove Split AIM GOAT", player:"haeyoday", date:"2026-04-19" },
+      { id:"Ef1Wz5e7OO4", title:"haeyoday Clove Split BEST AIMER", player:"haeyoday", date:"2026-02-28" },
+      { id:"PybjrQLln0w", title:"ghoul33 Clove Split RADIANT LATAM", player:"ghoul33", date:"2026-03-08" },
+      { id:"EwXLZL9Dw78", title:"florescent Clove Split RADIANT RANKED", player:"florescent", date:"2026-03-01" },
+    ],
+    miks: [
+      { id:"fTS3wO4dswI", title:"ENVY demon1 Miks Split MASTER", player:"demon1", date:"2026-03-22" },
+
+    ],
+    sage: [
+    ],
+    cypher: [
+      { id:"-9cPLzfrBGs", title:"TL nAts Split Cypher RADIANT RANKED", player:"nAts", date:"2026-04-15" },
+    ],
+    killjoy: [
+      { id:"G07s6m6-yJg", title:"TL nAts Killjoy Split RADIANT RANKED", player:"nAts", date:"2026-05-01" },
+    ],
+    chamber: [
+      { id:"F60rN7-Rk3w", title:"Flashback Chamber Split APAC DOMINATION", player:"Flashback", date:"2026-04-25" },
+      { id:"tdNrQ56AKSI", title:"ENVY demon1 Chamber Split", player:"demon1", date:"2026-05-01" },
+    ],
+    deadlock: [
+      { id:"76lek9z4JT0", title:"NRG brawk Deadlock Split RADIANT RANKED", player:"brawk", date:"2026-04-06" },
+    ],
+    vyse: [
+    ],
+    veto: [
+    ],
+    sova: [
+    ],
+    breach: [
+    ],
+    skye: [
+      { id:"85gOCBJ4Ti8", title:"C9 xeppaa Skye Split RADIANT UTIL", player:"xeppaa", date:"2026-03-31" },
+      { id:"yoUXnjaOAHE", title:"NRG s0m Skye Split RADIANT RANKED", player:"s0m", date:"2026-04-09" },
+      { id:"OltrZLDeufA", title:"C9 OXY Skye Split RADIANT RANKED", player:"OXY", date:"2026-04-12" },
+      { id:"dL_gZeNgSFs", title:"SRG Noia Skye Split RADIANT RANKED", player:"Noia", date:"2026-03-05" },
+      { id:"BvvQX13GcXs", title:"C9 OXY Skye Split RADIANT MVPS", player:"OXY", date:"2026-05-02" },
+    ],
+    kayo: [
+    ],
+    fade: [
+      { id:"S25CxLRMcjY", title:"MIBR Sacy Fade Split RADIANT RANKED", player:"Sacy", date:"2026-04-20" },
+      { id:"XkAlWjrgrkM", title:"GEN Ash Fade Split RECON GOAT", player:"Ash", date:"2026-04-01" },
+    ],
+    gekko: [
+      { id:"T-eTP7jMAt0", title:"C9 OXY Gekko Split RADIANT", player:"OXY", date:"2026-04-27" },
+    ],
+    tejo: [
+    ],
+    waylay: [
+    ]
+  },
+  fracture: {
+    jett: [
+      { id:"5MXBs467cI0", title:"florescent Jett Fracture BEST AIM", player:"florescent", date:"2026-04-25" },
+      { id:"JmTkAveTsiI", title:"florescent Jett Fracture RADIANT RANKED", player:"florescent", date:"2026-04-22" },
+      { id:"0Pfv3SMwKaE", title:"florescent Jett Fracture RADIANT MVP", player:"florescent", date:"2026-04-23" },
+    ],
+    reyna: [
+      { id:"C30cgHfSKNE", title:"florescent Reyna Fracture RADIANT AIMER", player:"florescent", date:"2026-04-17" },
+      { id:"lhSkdotlNjk", title:"haeyoday Reyna Fracture INSANE AIM", player:"haeyoday", date:"2026-04-02" },
+      { id:"pROpZL_N--0", title:"Tarik Reyna Fracture ONE TAPS", player:"Tarik", date:"2026-05-01" },
+      { id:"TaGE3NFWeEk", title:"florescent Reyna Fracture RADIANT AIMER", player:"florescent", date:"2026-04-14" },
+      { id:"cxXqcMwx-Ak", title:"florescent Reyna Fracture INSANE AIM", player:"florescent", date:"2026-04-08" },
+      { id:"8iQPx8P0foo", title:"C9 OXY Reyna Fracture RADIANT 200IQ", player:"OXY", date:"2026-04-06" },
+      { id:"kyLJBzrjOp8", title:"florescent Reyna Fracture RADIANT RANKED", player:"florescent", date:"2026-04-07" },
+
+    ],
+    raze: [
+      { id:"1-oWIoRJ2Jk", title:"GEN t3xture Raze Fracture APAC ENTRY", player:"t3xture", date:"2026-04-18" },
+      { id:"59VZSBCY8pw", title:"koalanoob Raze Fracture RADIANT RANKED", player:"koalanoob", date:"2026-05-01" },
+    ],
+    neon: [
+      { id:"dPulIDBZXtA", title:"C9 OXY Neon Fracture RADIANT RANKED", player:"OXY", kd:"23/19", date:"2026-04-28" },
+      { id:"v_q58hRtRK0", title:"MIBR zekken Neon Fracture RADIANT RANKED", player:"zekken", date:"2026-04-24" },
+      { id:"yZ7_46QSW0E", title:"NRG s0m Neon Fracture RADIANT ENTRY", player:"s0m", date:"2026-04-26" },
+      { id:"14Obsv1snNE", title:"NRG s0m Neon Fracture RADIANT RANKED", player:"s0m", date:"2026-04-30" },
+
+    ],
+    phoenix: [
+      { id:"uKvWzlRVBkc", title:"NRG s0m Phoenix Fracture RADIANT RANKED", player:"s0m", date:"2026-04-07" },
+    ],
+    yoru: [
+    ],
+    iso: [
+    ],
+    omen: [
+      { id:"FK0J9WTlePQ", title:"Flexinja Omen Fracture RANKED", player:"Flexinja", date:"2026-04-28" },
+    ],
+    viper: [
+      { id:"NnARslLPPlY", title:"NAVI hiro Viper Fracture RADIANT GAMESENSE", player:"hiro", date:"2026-04-15" },
+    ],
+    brimstone: [
+      { id:"hKJA4B2DfzQ", title:"ENVY demon1 Brimstone Fracture RADIANT SMOKES", player:"demon1", date:"2026-04-20" },
+    ],
+    astra: [
+    ],
+    harbor: [
+    ],
+    clove: [
+      { id:"1vOCS8E2wVc", title:"C9 OXY Clove Fracture RADIANT RANKED", player:"OXY", date:"2026-04-28" },
+      { id:"5liz_r2jRKI", title:"C9 OXY Clove Fracture SMOKES MVP", player:"OXY", date:"2026-04-11" },
+      { id:"goV6fG5WH0U", title:"SEN Jerrwin Clove Fracture PRO CONTROLLER", player:"Jerrwin", date:"2026-03-31" },
+      { id:"tqLuQtaeg0Y", title:"C9 OXY Clove Fracture AGGRESSIVE SMOKES", player:"OXY", date:"2026-04-10" },
+    ],
+    miks: [
+      { id:"n2WgRq8mP-M", title:"aleksandar Miks Fracture SCRIMS DOMINATION", player:"aleksandar", date:"2026-03-16" },
+    ],
+    sage: [
+    ],
+    cypher: [
+      { id:"wIz3sCqXlLA", title:"TL nAts Cypher Fracture RADIANT GAMESENSE", player:"nAts", date:"2026-04-21" },
+      { id:"HCy7RHym_68", title:"TL nAts Cypher Fracture RADIANT SETUPS", player:"nAts", date:"2026-04-15" },
+      { id:"gpLUCGyINTA", title:"ENVY demon1 Cypher Fracture SETUP GOD", player:"demon1", date:"2026-04-13" },
+    ],
+    killjoy: [
+      { id:"9v9iD-WvQ6s", title:"Inspire Killjoy Fracture RADIANT SETUPS", player:"Inspire", date:"2026-04-05" },
+    ],
+    chamber: [
+      { id:"Sego0UGSJRk", title:"LEV Sato Chamber Fracture RADIANT RANKED", player:"sato", date:"2026-04-28" },
+      { id:"f6G6AVh80pY", title:"C9 OXY Chamber Fracture RADIANT ONLY HEADS", player:"OXY", date:"2026-04-21" },
+      { id:"ZxLpo92IIf4", title:"ENVY ion Chamber Fracture PRO AIM", player:"ion2x", date:"2026-03-25" },
+      { id:"zIunHkgYq5Q", title:"ENVY demon1 Chamber Fracture RADIANT NEW ACT", player:"demon1", date:"2026-05-01" },
+      { id:"w9utq_kRY6o", title:"ENVY demon1 Chamber Fracture RADIANT MVP", player:"demon1", date:"2026-05-02" },
+      { id:"BfN0D19Nb58", title:"KRU less Chamber Fracture RADIANT RANKED", player:"less", date:"2026-05-02" },
+    ],
+    deadlock: [
+    ],
+    vyse: [
+    ],
+    veto: [
+    ],
+    sova: [
+    ],
+    breach: [
+      { id:"0INbba0OWNE", title:"NRG s0m Breach Fracture UTIL MASTER", player:"s0m", date:"2026-04-17" },
+      { id:"LXawAs7uKSI", title:"QOR derrek Fracture Breach FLASH GOAT", player:"derrek", date:"2026-04-16" },
+      { id:"oCTPObW6XCg", title:"NRG s0m Breach Fracture RADIANT RANKED", player:"s0m", date:"2026-04-16" },
+      { id:"2DvoWIZfZT4", title:"NRG s0m Breach Fracture RADIANT RANKED", player:"s0m", date:"2026-04-06" },
+
+    ],
+    skye: [
+      { id:"UXqu0RnwgNw", title:"ENVY demon1 Skye Fracture PRO UTIL", player:"demon1", date:"2026-04-13" },
+      { id:"pvjJI6gb2sQ", title:"ENVY POPPIN Skye Fracture TIER 1 RECON", player:"POPPIN", date:"2026-03-21" },
+      { id:"6v7GDjnhq1E", title:"NRG brawk Skye Fracture WORLD MVP", player:"brawk", date:"2026-04-18" },
+    ],
+    kayo: [
+    ],
+    fade: [
+      { id:"3REvnHBdIf4", title:"NRG brawk Fade Fracture RADIANT RANKED", player:"brawk", date:"2026-04-28" },
+      { id:"hF_MJeRDE4U", title:"NRG s0m Fade Fracture RADIANT RANKED", player:"s0m", date:"2026-04-11" },
+    ],
+    gekko: [
+    ],
+    tejo: [
+      { id:"FE3OmMI5Lyw", title:"FUR Nerve Tejo Fracture NA RANKED RADIANT", player:"nerve", date:"2026-04-28" },
+      { id:"M3g-yMQWdqY", title:"C9 OXY Tejo Fracture RADIANT RANKED", player:"OXY", date:"2026-04-24" },
+      { id:"bBzD8QkwjBc", title:"ZETA hatto Tejo Fracture RADIANT MVP", player:"hatto", date:"2026-03-29" },
+    ],
+    waylay: [
+    ]
+  },
+  pearl: {
+    jett: [
+      { id:"V1_TNR0yaao", title:"TenZ Jett Pearl RADIANT GOAT", player:"TenZ", date:"2026-04-23" },
+      { id:"7xKD0ojyGcA", title:"LOUD luk xo Jett Pearl RADIANT AIMER", player:"luk xo", date:"2026-04-23" },
+      { id:"48BArO8rCZE", title:"NRG s0m Jett Pearl RADIANT AIM", player:"s0m", date:"2026-04-08" },
+    ],
+    reyna: [
+      { id:"bFHRVyIIoco", title:"Inspire Reyna Pearl PRO RANKED", player:"Inspire", date:"2026-03-14" },
+    ],
+    raze: [
+      { id:"LP4a3zQsxfw", title:"MIBR zekken Raze Pearl", player:"zekken", date:"2026-04-30" },
+    ],
+    neon: [
+      { id:"o3-doqnC2FI", title:"MIBR zekken Neon Pearl RADIANT", player:"zekken", date:"2026-04-23" },
+      { id:"awft5rh83dQ", title:"C9 OXY Neon Pearl RADIANT RANKED", player:"OXY", date:"2026-04-20" },
+      { id:"H1bDliO3jss", title:"C9 OXY Neon Pearl RADIANT RANKED", player:"OXY", date:"2026-04-16" },
+      
+    ],
+    phoenix: [
+      { id:"9dL4B3C4aEA", title:"aleksandar Phoenix Pearl RADIANT RANKED", player:"aleksandar", date:"2026-04-25" },
+      { id:"ZvTGWJxdcIE", title:"C9 OXY Phoenix Pearl RADIANT RANKED", player:"OXY", date:"2026-04-25" },
+      { id:"vlFIURAn1Wk", title:"C9 OXY Phoenix Pearl RADIANT MASTERCLASS", player:"OXY", date:"2026-04-22" },
+      { id:"W_HBNqpsnu8", title:"DRX Yong Phoenix Pearl FLASH KING", player:"Yong", date:"2026-04-23" },
+      { id:"FD36SpdoCig", title:"NRG s0m Phoenix Pearl RADIANT RANKED", player:"s0m", date:"2026-04-17" },
+      { id:"lglL26mk7sQ", title:"C9 OXY Phoenix Pearl RADIANT MVP", player:"OXY", date:"2026-03-15" },
+
+    ],
+    yoru: [
+      { id:"qujRF2QbAfU", title:"ENVY Eggsterr Yoru Pearl YORU MASTERY", player:"Eggsterr", date:"2026-03-13" },
+      { id:"4y1H4jPrY0U", title:"BBL Larok Yoru Pearl GOAT ", player:"Larok", date:"2026-03-01" },
+
+    ],
+    iso: [
+    ],
+    omen: [
+    ],
+    viper: [
+    ],
+    brimstone: [
+    ],
+    astra: [
+      { id:"pddLuOe9M2k", title:"Xander Astra Pearl RADIANT SMOKES", player:"Xander", date:"2026-04-14" },
+      { id:"_mHTEFp8t4o", title:"Zander Astra Pearl RADIANT SMOKES", player:"Zander", date:"2026-04-21" },
+      { id:"EahHLew5RI0", title:"SEN JohnQT Astra Pearl PRO SMOKES", player:"JohnQT", date:"2026-04-22" },
+    ],
+    harbor: [
+    ],
+    clove: [
+      { id:"1d_y2e3NqS8", title:"NRG s0m Clove Pearl RADIANT SMOKES", player:"s0m", date:"2026-04-03" },
+      { id:"vsW9zyqplQM", title:"aleksandar Clove Pearl MVP", player:"aleksandar", date:"2026-02-07" },
+    ],
+    miks: [
+      { id:"lXoQRdyVTeQ", title:"C9 OXY Miks Pearl RADIANT RANKED NEW", player:"OXY", date:"2026-03-26" },
+      { id:"OWqaXaj2E4M", title:"aleksandar Miks Pearl NEW AGENT MASTERY", player:"aleksandar", date:"2026-04-03" },
+    ],
+    sage: [
+    ],
+    cypher: [
+    ],
+    killjoy: [
+      { id:"dQsUBU-mlS8", title:"TL nAts Killjoy Pearl RADIANT RANKED", player:"nAts", date:"2026-04-30" },
+      { id:"TQrbDrik9pY", title:"TL nAts Killjoy Pearl RADIANT RANKED", player:"nAts", date:"2026-04-08" },
+    ],
+    chamber: [
+      { id:"r583kLoILW0", title:"C9 OXY Chamber Pearl RADIANT AIM", player:"OXY", date:"2026-04-21" },
+      { id:"JveGDMyeSto", title:"ENVY ion Chamber Pearl RANK 1 ONE TAPS", player:"ion2x", date:"2026-04-15" },
+      { id:"PaK7rCarcgA", title:"NRG s0m Chamber Pearl WORLD CHAMP DIFF", player:"s0m", date:"2026-04-09" },
+      { id:"fhqfBZ-Mbds", title:"C9 OXY Chamber Pearl RADIANT RANK 1", player:"OXY", date:"2026-04-22" },
+      { id:"obKb-iokbBU", title:"SEN johnQT Chamber Pearl TIER 1 AIM", player:"johnQT", date:"2026-05-02" },
+
+    ],
+    deadlock: [
+    ],
+    vyse: [
+      { id:"d5OhIxVZli0", title:"NRG s0m Vyse Pearl RADIANT RANKED", player:"s0m", date:"2026-04-23" },
+      
+    ],
+    veto: [
+    ],
+    sova: [
+      { id:"Sn41Z_-NG18", title:"NRG brawk Sova Pearl RADIANT LINEUPS", player:"brawk", date:"2026-04-14" },
+      { id:"XlipvE2uLno", title:"NRG brawk Sova Pearl WORLD CHAMP RANKED", player:"brawk", date:"2026-04-01" },
+    ],
+    breach: [
+    ],
+    skye: [
+      { id:"UAyCwrDNLT8", title:"C9 OXY Skye Pearl RADIANT RANKED", player:"OXY", date:"2026-04-05" },
+    ],
+    kayo: [
+      { id:"i4ytszNJ_C0", title:"ENVY demon1 KAY/O Pearl RADIANT FLASHES", player:"demon1", date:"2026-04-13" },
+    ],
+    fade: [
+      { id:"QGi_UZOitcA", title:"NRG s0m Fade Pearl RADIANT RANKED", player:"s0m", date:"2026-04-22" },
+      { id:"J_ppaEeuBPg", title:"TL nAts Fade Pearl RADIANT EMEA", player:"nAts", date:"2026-04-16" },
+    ],
+    gekko: [
+    ],
+    tejo: [
+      { id:"KN4T9-ccjwU", title:"canezerra Tejo Pearl RADIANT RANKED", player:"canezerra", date:"2026-02-15" },
+    ],
+    waylay: [
+      { id:"Grjvr-N_qXw", title:"SEN nightz Waylay Pearl RADIANT RANKED", player:"nightz", date:"2026-01-29" },
+
+    ]
+  },
+  icebox: {
+    jett: [
+    ],
+    reyna: [
+    ],
+    raze: [
+    ],
+    neon: [
+    ],
+    phoenix: [
+    ],
+    yoru: [
+    ],
+    iso: [
+    ],
+    omen: [
+    ],
+    viper: [
+    ],
+    brimstone: [
+    ],
+    astra: [
+    ],
+    harbor: [
+    ],
+    clove: [
+    ],
+    miks: [
+    ],
+    sage: [
+    ],
+    cypher: [
+    ],
+    killjoy: [
+    ],
+    chamber: [
+    ],
+    deadlock: [
+    ],
+    vyse: [
+    ],
+    veto: [
+    ],
+    sova: [
+    ],
+    breach: [
+    ],
+    skye: [
+    ],
+    kayo: [
+    ],
+    fade: [
+    ],
+    gekko: [
+    ],
+    tejo: [
+    ],
+    waylay: [
+    ]
+  },
+  breeze: {
+    jett: [
+     { id:"ohqg0KpSIpM", title:"ENVY demon1 Jett Breeze RADIANT RANKED", player:"demon1", date:"2026-04-27" },
+     { id:"5QyWONDgI-k", title:"QOR derrek Jett Breeze RADIANT RANKED", player:"derrek", date:"2026-04-27" },
+     { id:"YecrOrVSzQo", title:"Tarik Jett Breeze RADIANT DOMINATION", player:"Tarik", date:"2026-04-19" },
+     { id:"x-1OzTql9oU", title:"ENVY ion Jett Breeze RADIANT ENTRY", player:"ion2x", date:"2026-04-17" },
+     { id:"Wc8BCZ5KVyg", title:"T1 iZu Jett Breeze OP GOAT", player:"iZu", date:"2026-04-17" },
+     { id:"mA5Tj5iAAHI", title:"C9 OXY Jett Breeze RADIANT ENTRY", player:"OXY", date:"2026-04-10" },
+     { id:"tjiDvW7Ed5E", title:"NAVI ComeBack Jett Breeze EU RADIANT", player:"ComeBack", date:"2026-04-14" },
+     { id:"xz8DL_SouCE", title:"florescent Jett Breeze RADIANT ONETAPS", player:"florescent", date:"2026-04-18" },
+     { id:"ri6rxoug4c0", title:"florescent Jett Breeze RADIANT AIM", player:"florescent", date:"2026-05-02" },
+     { id:"Z1ubZoLUNgY", title:"NRG s0m Jett Breeze RADIANT OP", player:"s0m", date:"2026-04-08" },
+    ],
+    reyna: [
+     { id:"HrWzwyCfcZ0", title:"C9 OXY Reyna Breeze RADIANT RANKED", player:"OXY", date:"2026-04-25" },
+     { id:"BNRfiwvK7HI", title:"C9 OXY Reyna Breeze RADIANT", player:"OXY", date:"2026-04-22" },
+     { id:"P6tFzHdcWcw", title:"ENVY ion Reyna Breeze AIM ONLY", player:"ion2x", date:"2026-04-13" },
+     { id:"lhLXHhwOBag", title:"C9 OXY Reyna Breeze RANKED 1", player:"OXY", date:"2026-04-17" },
+     { id:"mpqaNq65JKg", title:"ENVY ion Reyna Breeze RADIANT MVP", player:"ion2x", date:"2026-04-07" },
+     { id:"RpoPdNrPy6s", title:"AG f4ngeer Reyna Breeze RADIANT MVP", player:"f4ngeer", date:"2026-02-07" },
+    ],
+    raze: [
+    ],
+    neon: [
+      { id:"smjMBKaOhQU", title:"C9 OXY Neon Breeze RADIANT RANKED", player:"OXY", date:"2026-04-25" },
+      { id:"AtBRUr7KMQ8", title:"FNATIC kaajak Neon Breeze EU DOMINATION", player:"kaajak", date:"2026-04-11" },
+      { id:"a5i9sjEA400", title:"C9 OXY Neon Breeze RADIANT MVP", player:"OXY", date:"2026-04-27" },
+      { id:"U0gVTKHVYGc", title:"NRG s0m Neon Breeze SHOTGUN GOD", player:"s0m", date:"2026-04-16" },
+
+    ],
+    phoenix: [
+    ],
+    yoru: [
+      { id:"mxmOTIpW-dQ", title:"Eggsterr Yoru Breeze RADIANT YORU", player:"Eggsterr", date:"2026-04-03" },
+      { id:"65L7SB16j5I", title:"NRG s0m Yoru Breeze RANKED ENTRY", player:"s0m", date:"2026-04-10" },
+    ],
+    iso: [
+    ],
+    omen: [
+    ],
+    viper: [
+      { id:"_LGITZFzJS8", title:"NRG s0m Viper Breeze CHAMPION SMOKES", player:"s0m", date:"2026-04-27" },
+      { id:"yvx5bRZkT4o", title:"TL nAts Viper Breeze", player:"nAts", date:"2026-04-13" },
+      { id:"qZ1ReQtMf2g", title:"NRG s0m Viper Breeze WORLD CHAMP SMOKES", player:"s0m", date:"2026-04-30" },
+      { id:"lhAy7a3hTmk", title:"NRG s0m Viper Breeze RADIANT SMOKES", player:"s0m", date:"2026-04-21" },
+    ],
+    brimstone: [
+    ],
+    astra: [
+    ],
+    harbor: [
+     { id:"jnrywmGvfCs", title:"Zander Harbor Breeze RADIANT RANKED", player:"Zander", date:"2026-04-25" },
+    ],
+    clove: [
+      { id:"_S7KOeLiqsA", title:"Shunta Clove Breeze RADIANT AIM", player:"Shunta", date:"2026-04-10" },
+    ],
+    miks: [
+      { id:"EoLRzuwTXyQ", title:"Kassielsy Miks Breeze NEW AGENT MVP", player:"Kassielsy", date:"2026-03-20" },
+
+    ],
+    sage: [
+    ],
+    cypher: [
+      { id:"e8BvD_mdVQw", title:"TL nAts Cypher Breeze INSANE SETUPS", player:"nAts", date:"2026-04-08" },
+    ],
+    killjoy: [
+    ],
+    chamber: [
+      { id:"ifS472dStUA", title:"NRG s0m Chamber Breeze MVP", player:"s0m", date:"2026-04-18" },
+      { id:"NTn4tuNaFNI", title:"NRG s0m Chamber Breeze RADIANT RANKED", player:"s0m", date:"2026-04-05" },
+    ],
+    deadlock: [
+    ],
+    vyse: [
+    ],
+    veto: [
+    ],
+    sova: [
+      { id:"Y0iPbJs1krQ", title:"NRG brawk Sova Breeze WORLD CHAMP", player:"brawk", date:"2026-04-27" },
+      { id:"Ne-PRF7vawE", title:"Sacy Sova Breeze PRO RECON", player:"Sacy", date:"2026-03-29" },
+      { id:"cMucLJHGoCs", title:"NRG s0m Sova Breeze RADIANT RANKED", player:"s0m", date:"2026-05-02" },
+    ],
+    breach: [
+    ],
+    skye: [
+    ],
+    kayo: [
+    ],
+    fade: [
+    ],
+    gekko: [
+    ],
+    tejo: [
+    ],
+    waylay: [
+    ]
+  },
+  lotus: {
+    jett: [
+      { id:"tnESIZbDUqo", title:"Tarik Jett Lotus RANKED", player:"Tarik", date:"2026-04-25" },
+      { id:"wKxTSIkgK0k", title:"florescent Jett Lotus RADIANT RANKED", player:"florescent", date:"2026-04-22" },
+      { id:"9m3FIJ7I2gs", title:"TenZ Jett Lotus RADIANT ENTRY", player:"TenZ", date:"2026-04-21" },
+      { id:"QXgw2etu7hw", title:"florescent Jett Lotus RADIANT RANKED", player:"florescent", date:"2026-04-21" },
+      { id:"0FiufGDoGH0", title:"florescent Jett Lotus INSANE ONE TAPS", player:"florescent", date:"2026-04-16" },
+      { id:"0EdNeNq43L0", title:"florescent Jett Lotus RANKED GOAT", player:"florescent", date:"2026-04-15" },
+    ],
+    reyna: [
+      { id:"WiUJIaxH3fo", title:"C9 OXY Reyna Lotus RADIANT RANKED", player:"OXY", date:"2026-04-26" },
+      { id:"6OLNIo-KkJg", title:"C9 OXY Reyna Lotus RADIANT ONE TAPS", player:"OXY", date:"2026-05-01" },
+      { id:"Gcr_A20oEYs", title:"C9 OXY Reyna Lotus RADIANT RANKED", player:"OXY", date:"2026-04-12" },
+      { id:"k_h0P5U0NLc", title:"C9 OXY Reyna Lotus RADIANT RANKED", player:"OXY", date:"2026-04-09" },
+    ],
+    raze: [
+      { id:"Put7KPLtquc", title:"NRG s0m Raze Lotus DOMINATION RADIANT", player:"s0m", date:"2026-05-01" },
+    ],
+    neon: [
+      { id:"diXmbYFTe4c", title:"MIBR zekken Neon Lotus RADIANT RANKED", player:"zekken", date:"2026-04-30" },
+      { id:"3lPciKRKsjg", title:"EG dgzin Neon Lotus PRO GAMEPLAY", player:"dgzin", date:"2026-04-21" },
+      { id:"jOb1LYWwIZg", title:"MIBR zekken Neon Lotus PRO GAMEPLAY", player:"zekken", date:"2026-05-02" },
+      { id:"TuYnOc4eCtM", title:"NRG s0m Neon Lotus TIER 1 RANKED", player:"s0m", date:"2026-04-26" },
+    ],
+    phoenix: [
+    ],
+    yoru: [
+    ],
+    iso: [
+      { id:"_YkehRPdxX0", title:"aleksandar Iso Lotus RADIANT RANKED", player:"aleksandar", date:"2026-03-17" },
+    ],
+    omen: [
+      { id:"PQR-Ieht-M0", title:"Zander Omen Lotus INSANE MVP", player:"Zander", date:"2026-03-30" },
+      { id:"15vZgo4DN9s", title:"SR Zander Omen Lotus RADIANT", player:"Zander", date:"2026-03-28" },
+    ],
+    viper: [
+    ],
+    brimstone: [
+    ],
+    astra: [
+    ],
+    harbor: [
+      { id:"V2pxy1_vatU", title:"PA1NT Harbor Lotus RANKED SMOKES", player:"PA1NT", date:"2026-04-19" },
+    ],
+    clove: [
+      { id:"8VLhxoVf2XY", title:"QOR Notexxd Clove Lotus RANK 1 MVP", player:"Notexxd", date:"2026-04-16" },
+    ],
+    miks: [
+      { id:"-a2poQeawlc", title:"DFM meiy Miks Lotus RADIANT", player:"meiy", date:"2026-03-24" },
+    ],
+    sage: [
+    ],
+    cypher: [
+      { id:"SSqKxEnN_D0", title:"NAVI hiro Cypher Lotus RADIANT RANKED", player:"hiro", date:"2026-04-26" },
+    ],
+    killjoy: [
+    ],
+    chamber: [
+      { id:"EcMf5Nd0k1k", title:"NRG s0m Chamber Lotus RADIANT ONE TAPS", player:"s0m", date:"2026-04-30" },
+    ],
+    deadlock: [
+      { id:"1voPqhkTDX8", title:"ENVY demon1 Deadlock Lotus RADIANT TRAPS", player:"demon1", date:"2026-04-20" },
+    ],
+    vyse: [
+    { id:"i7-CBuv2T1k", title:"TL nAts Vyse Lotus EU RANKED", player:"nAts", date:"2026-03-22" },
+    { id:"YczyJ4_90I0", title:"TL nAts Vyse Lotus RADIANT RANKED", player:"nAts", date:"2026-03-30" },
+    ],
+    veto: [
+    ],
+    sova: [
+      { id:"wZ-h2V3MNPE", title:"QOR derrek Sova Lotus RADIANT LINEUPS", player:"derrek", date:"2026-04-27" },
+    ],
+    breach: [
+    ],
+    skye: [
+      { id:"OcaxbDc1fIU", title:"C9 OXY Skye Lotus RADIANT RANKED", player:"OXY", date:"2026-04-24" }
+    ],
+    kayo: [
+    ],
+    fade: [
+      { id:"zNEL3KulkIQ", title:"ENVY ion Fade Lotus RADIANT UTIL", player:"ion2x", date:"2026-04-14" },
+      { id:"OrgD9kxYiSQ", title:"C9 xeppaa Fade Lotus RADIANT MVP", player:"xeppaa", date:"2026-04-08" },
+      { id:"r-Y3u0Pkjlc", title:"ENVY demon1 Fade Lotus PRO AIM", player:"demon1", date:"2026-04-13" },
+    ],
+    gekko: [
+      { id:"y_2PWdwRMlU", title:"C9 OXY Gekko Lotus WINGMAN MASTER", player:"OXY", date:"2026-04-17" },
+    ],
+    tejo: [
+    ],
+    waylay: [
+    ]
+  },
+  sunset: {
+    jett: [
+    ],
+    reyna: [
+    ],
+    raze: [
+    ],
+    neon: [
+    ],
+    phoenix: [
+    ],
+    yoru: [
+    ],
+    iso: [
+    ],
+    omen: [
+    ],
+    viper: [
+    ],
+    brimstone: [
+    ],
+    astra: [
+    ],
+    harbor: [
+    ],
+    clove: [
+    ],
+    miks: [
+    ],
+    sage: [
+    ],
+    cypher: [
+    ],
+    killjoy: [
+    ],
+    chamber: [
+    ],
+    deadlock: [
+    ],
+    vyse: [
+    ],
+    veto: [
+    ],
+    sova: [
+    ],
+    breach: [
+    ],
+    skye: [
+    ],
+    kayo: [
+    ],
+    fade: [
+    ],
+    gekko: [
+    ],
+    tejo: [
+    ],
+    waylay: [
+    ]
+  },
+  abyss: {
+    jett: [
+    ],
+    reyna: [
+    ],
+    raze: [
+    ],
+    neon: [
+    ],
+    phoenix: [
+    ],
+    yoru: [
+    ],
+    iso: [
+    ],
+    omen: [
+    ],
+    viper: [
+    ],
+    brimstone: [
+    ],
+    astra: [
+    ],
+    harbor: [
+      { id:"RTJKC3TyU7I", title:"Eggsterr Harbor Abyss RADIANT SMOKES", player:"Eggsterr", date:"2026-03-10" },
+    ],
+    clove: [
+      { id:"O9Do103K0K4", title:"ENVY keznit Clove Abyss RADIANT", player:"keznitdeus", date:"2026-02-13" },
+    ],
+    miks: [
+    ],
+    sage: [
+    ],
+    cypher: [
+    ],
+    killjoy: [
+    ],
+    chamber: [
+      { id:"-God72PbmnI", title:"ENVY demon1 Chamber Abyss RANKED", player:"demon1", date:"2026-04-29" },
+    ],
+    deadlock: [
+    ],
+    vyse: [
+    ],
+    veto: [
+      { id:"RTIde3aNHWU", title:"TH benjyfishy Veto Abyss RADIANT SENTI", player:"benjyfishy", date:"2026-03-17" },
+    ],
+    sova: [
+    ],
+    breach: [
+    ],
+    skye: [
+    ],
+    kayo: [
+    ],
+    fade: [
+    ],
+    gekko: [
+    ],
+    tejo: [
+    ],
+    waylay: [
+    ]
+  },
+  corrode: {
+    jett: [
+    ],
+    reyna: [
+      { id:"QmZy1kEDy0E", title:"koalanoob Reyna Corrode INSANE AIM", player:"koalanoob", date:"2026-01-27" },
+    ],
+    raze: [
+    ],
+    neon: [
+    ],
+    phoenix: [
+    ],
+    yoru: [
+    ],
+    iso: [
+    ],
+    omen: [
+    ],
+    viper: [
+    ],
+    brimstone: [
+    ],
+    astra: [
+    ],
+    harbor: [
+    ],
+    clove: [
+    { id:"YnFAmaY9M68", title:"haeyoday Clove Corrode RADIANT MVP", player:"haeyoday", date:"2026-03-09" }
+    ],
+    miks: [
+    ],
+    sage: [
+    ],
+    cypher: [
+    ],
+    killjoy: [
+    ],
+    chamber: [
+      { id:"BjcwuPZ63hE", title:"NAVI hiro Chamber Corrode RADIANT", player:"hiro", date:"2026-04-22" },
+    ],
+    deadlock: [
+    ],
+    vyse: [
+    ],
+    veto: [
+    ],
+    sova: [
+    ],
+    breach: [
+    ],
+    skye: [
+    ],
+    kayo: [
+    ],
+    fade: [
+    ],
+    gekko: [
+    ],
+    tejo: [
+    ],
+    waylay: [
+    ]
+  }
+};
+
+const MAPS = [
+  { id:"ascent",   name:"Ascent",   img:"https://media.valorant-api.com/maps/7eaecc1b-4337-bbf6-6ab9-04b8f06b3319/splash.png" },
+  { id:"bind",     name:"Bind",     img:"https://media.valorant-api.com/maps/2c9d57ec-4431-9c5e-2939-8f9ef6dd5cba/splash.png" },
+  { id:"haven",    name:"Haven",    img:"https://media.valorant-api.com/maps/2bee0dc9-4ffe-519b-1cbd-7fbe763a6047/splash.png" },
+  { id:"split",    name:"Split",    img:"https://media.valorant-api.com/maps/d960549e-485c-e861-8d71-aa9d1aed12a2/splash.png" },
+  { id:"fracture", name:"Fracture", img:"https://media.valorant-api.com/maps/b529448b-4d60-346e-e89e-00a4c527a405/splash.png" },
+  { id:"pearl",    name:"Pearl",    img:"https://media.valorant-api.com/maps/fd267378-4d1d-484f-ff52-77821ed10dc2/splash.png" },
+  { id:"icebox",   name:"Icebox",   img:"https://media.valorant-api.com/maps/e2ad5c54-4114-a870-9641-8ea21279579a/splash.png" },
+  { id:"breeze",   name:"Breeze",   img:"https://media.valorant-api.com/maps/2fb9a4fd-47b8-4e7d-a969-74b4046ebd53/splash.png" },
+  { id:"lotus",    name:"Lotus",    img:"https://media.valorant-api.com/maps/2fe4ed3a-450a-948b-6d6b-e89a78e680a9/splash.png" },
+  { id:"sunset",   name:"Sunset",   img:"https://media.valorant-api.com/maps/92584fbe-486a-b1b2-9faa-39b0f486b498/splash.png" },
+  { id:"abyss",    name:"Abyss",    img:"https://media.valorant-api.com/maps/224b0a95-48b9-f703-1bd8-67aca101a61f/splash.png" },
+  { id:"corrode",  name:"Corrode",  img:"https://media.valorant-api.com/maps/1c18ab1f-420d-0d8b-71d0-77ad3c439115/splash.png" },
+];
+
+// Agent icons loaded dynamically from valorant-api.com
+const ROLE_MAP = {
+  "Duelist":"Duelist","Controller":"Controller",
+  "Sentinel":"Sentinel","Initiator":"Initiator"
+};
+// Fallback agent list (icons replaced by API on load)
+let AGENTS = [
+  {id:"jett",name:"Jett",role:"Duelist",icon:""},
+  {id:"reyna",name:"Reyna",role:"Duelist",icon:""},
+  {id:"raze",name:"Raze",role:"Duelist",icon:""},
+  {id:"neon",name:"Neon",role:"Duelist",icon:""},
+  {id:"phoenix",name:"Phoenix",role:"Duelist",icon:""},
+  {id:"yoru",name:"Yoru",role:"Duelist",icon:""},
+  {id:"iso",name:"Iso",role:"Duelist",icon:""},
+  {id:"omen",name:"Omen",role:"Controller",icon:""},
+  {id:"viper",name:"Viper",role:"Controller",icon:""},
+  {id:"brimstone",name:"Brimstone",role:"Controller",icon:""},
+  {id:"astra",name:"Astra",role:"Controller",icon:""},
+  {id:"harbor",name:"Harbor",role:"Controller",icon:""},
+  {id:"clove",name:"Clove",role:"Controller",icon:""},
+  {id:"sage",name:"Sage",role:"Sentinel",icon:""},
+  {id:"cypher",name:"Cypher",role:"Sentinel",icon:""},
+  {id:"killjoy",name:"Killjoy",role:"Sentinel",icon:""},
+  {id:"chamber",name:"Chamber",role:"Sentinel",icon:""},
+  {id:"deadlock",name:"Deadlock",role:"Sentinel",icon:""},
+  {id:"vyse",name:"Vyse",role:"Sentinel",icon:""},
+  {id:"sova",name:"Sova",role:"Initiator",icon:""},
+  {id:"breach",name:"Breach",role:"Initiator",icon:""},
+  {id:"skye",name:"Skye",role:"Initiator",icon:""},
+  {id:"kayo",name:"KAY/O",role:"Initiator",icon:""},
+  {id:"fade",name:"Fade",role:"Initiator",icon:""},
+  {id:"gekko",name:"Gekko",role:"Initiator",icon:""},
+  {id:"tejo",name:"Tejo",role:"Initiator",icon:""},
+  {id:"miks",name:"Miks",role:"Controller",icon:""},
+  {id:"veto",name:"Veto",role:"Sentinel",icon:""},
+  {id:"waylay",name:"Waylay",role:"Duelist",icon:""},
+];
+
+async function loadAgentIcons() {
+  try {
+    const res = await fetch("https://valorant-api.com/v1/agents?isPlayableCharacter=true");
+    const data = await res.json();
+    data.data.forEach(apiAgent => {
+      const name = apiAgent.displayName.toLowerCase().replace("/","").replace(" ","");
+      const match = AGENTS.find(a => a.name.toLowerCase().replace("/","").replace(" ","") === name);
+      if(match) {
+        match.icon = apiAgent.displayIcon;
+        match.portrait = apiAgent.fullPortrait || apiAgent.bustPortrait || "";
+        match.bg = apiAgent.background || "";
+        // extract gradient color from backgroundGradientColors if available
+        const colors = apiAgent.backgroundGradientColors;
+        match.color = colors && colors[0] ? "#" + colors[0].slice(0,6) : "#1C2733";
+      }
+    });
+  } catch(e) { console.warn("Could not load agent icons", e); }
+}
+
+const ROLE_DOTS = {Duelist:"#FF8C42",Controller:"#4A9EFF",Sentinel:"#6BCF6B",Initiator:"#FF6B9D"};
+const ROLES_ORDER = ["Duelist","Controller","Sentinel","Initiator"];
+
+let selMap=null, selAgent=null;
+
+function vodCount(mapId){ const m=VODS[mapId]; if(!m) return 0; return Object.values(m).reduce((a,v)=>a+v.length,0); }
+function agentVods(mapId,agentId){ return (VODS[mapId]&&VODS[mapId][agentId])||[]; }
+
+function show(id, pushState=true){
+  document.getElementById("back-btn").style.display=(id==="s-maps")?"none":"block";
+  if(pushState) {
+    let path = "/";
+    if(id === "s-agents" && selMap) path = `/${selMap.id}`;
+    if(id === "s-videos" && selMap && selAgent) path = `/${selMap.id}/${selAgent.id}`;
+    if(id === "s-favorites") path = "/favorites";
+    history.pushState({screen:id, map:selMap?.id, agent:selAgent?.id}, "", path);
+  }
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+  window.scrollTo({top:0,behavior:"smooth"});
+
+  // Map background layer
+  const bgLayer = document.getElementById("map-bg-layer");
+  const bgOverlay = document.getElementById("agents-bg-overlay");
+  if(id === "s-agents") {
+    bgLayer.style.opacity = "1";
+    bgOverlay.style.display = "block";
+    document.body.style.background = "transparent";
+  } else {
+    bgLayer.style.opacity = "0";
+    bgOverlay.style.display = "none";
+    document.body.style.background = "";
+  }
+}
+
+function updateBreadcrumb(){
+  const bc=document.getElementById("breadcrumb");
+  const activeScreen = document.querySelector(".screen.active")?.id;
+  if(activeScreen === "s-favorites"){ bc.innerHTML=`<span class="crumb" onclick="goHome()">ALL MAPS</span> <span class="sep">›</span> <span class="current">FAVORITES</span>`; return; }
+  if(activeScreen === "s-myvods"){ bc.innerHTML=`<span class="crumb" onclick="goHome()">ALL MAPS</span> <span class="sep">›</span> <span class="current">MY VODS</span>`; return; }
+  if(activeScreen === "s-search"){ bc.innerHTML=`<span class="crumb" onclick="goHome()">ALL MAPS</span> <span class="sep">›</span> <span class="current">SEARCH</span>`; return; }
+  const parts=[`<span class="crumb" onclick="goHome()">ALL MAPS</span>`];
+  if(selMap) parts.push(`<span class="sep">›</span><span class="crumb" onclick="goAgents()">${selMap.name.toUpperCase()}</span>`);
+  if(selAgent) parts.push(`<span class="sep">›</span><span class="current">${selAgent.name.toUpperCase()}</span>`);
+  bc.innerHTML=parts.join(" ");
+}
+
+function goBack(){
+  const active = document.querySelector(".screen.active")?.id;
+  if(active === "s-favorites" || active === "s-myvods" || active === "s-search") { document.getElementById("nav-search").value=""; selMap=null; selAgent=null; updateBreadcrumb(); show("s-maps"); }
+  else if(selAgent){ selAgent=null; updateBreadcrumb(); show("s-agents"); }
+  else if(selMap){ selMap=null; updateBreadcrumb(); show("s-maps"); }
+} function goHome(){ selMap=null; selAgent=null; updateBreadcrumb(); show("s-maps"); }
+function goAgents(){ selAgent=null; updateBreadcrumb(); show("s-agents"); }
+
+function renderMaps(){
+  document.getElementById("map-grid").innerHTML=MAPS.map(m=>{
+    const n=vodCount(m.id);
+    return `<div class="map-card ${n>0?'has-vods':''}" onclick="selectMap('${m.id}')">
+      <div class="map-card-accent"></div>
+      <img src="${m.img}" alt="${m.name}" onerror="this.style.display='none'">
+      <div class="map-card-content">
+        <div class="map-name">${m.name}</div>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+function selectMap(id){
+  selMap=MAPS.find(m=>m.id===id);
+  updateBreadcrumb();
+  document.getElementById("agents-title").textContent=selMap.name;
+  // Set map background as a full-page fixed layer
+  document.getElementById("map-bg-layer").style.backgroundImage = `url(${selMap.img})`;
+  renderAgents();
+  show("s-agents");
+}
+
+function renderAgents(){
+  const container=document.getElementById("agent-grid");
+  container.innerHTML="";
+  ROLES_ORDER.forEach(role=>{
+    const roleAgents=AGENTS.filter(a=>a.role===role);
+    const sec=document.createElement("div");
+    sec.className="agent-section";
+    sec.innerHTML=`<div class="role-header"><div class="role-dot" style="background:${ROLE_DOTS[role]}"></div>${role}s</div>
+      <div class="agent-grid">${roleAgents.map(a=>{
+        const vods=agentVods(selMap.id,a.id);
+        return `<div class="agent-card ${vods.length>0?'has-vods':'no-vods'}" ${vods.length>0?`onclick="selectAgent('${a.id}')"`:''} style="--agent-color:${a.color||'#1C2733'}">
+          <div class="agent-portrait-wrap">
+            ${a.portrait ? `<img class="agent-portrait-img" src="${a.portrait}" alt="${a.name}">` : `<div class="agent-icon-placeholder">${a.name[0]}</div>`}
+            <div class="agent-portrait-overlay"></div>
+          </div>
+          <div class="agent-card-info">
+            <div class="agent-name">${a.name}</div>
+            <div class="agent-count"></div>
+          </div>
+        </div>`;
+      }).join("")}</div>`;
+    container.appendChild(sec);
+  });
+}
+
+function selectAgent(id){
+  selAgent=AGENTS.find(a=>a.id===id);
+  updateBreadcrumb();
+  renderVideos();
+  show("s-videos");
+}
+
+function renderVideos(){
+  const vods=agentVods(selMap.id,selAgent.id);
+  document.getElementById("v-eyebrow").textContent=selMap.name+" · Radiant VODs";
+  document.getElementById("v-title").textContent=selAgent.name;
+  const grid = document.getElementById("video-grid");
+  grid.onclick = function(e) {
+    const vid = e.target.closest("[data-vid]")?.dataset.vid;
+    if(vid) window.open("https://youtube.com/watch?v="+vid, "_blank");
+  };
+  grid.innerHTML=vods.length?vods.map(v=>`
+    <div class="video-card" id="vc-${v.id}">
+      <div class="video-thumb" data-vid="${v.id}" style="cursor:pointer">
+        <img src="https://img.youtube.com/vi/${v.id}/mqdefault.jpg" alt="${v.title}">
+        <div class="play-overlay"><div class="play-icon"><div class="play-tri"></div></div></div>
+      </div>
+      <div class="video-info">
+        <div class="video-title" data-vid="${v.id}" style="cursor:pointer">${v.title}</div>
+        <div class="video-meta-row">
+          <span class="video-player">${v.player}</span>
+          ${v.kd ? `<span class="video-kd">${v.kd}</span>` : ''}
+          ${v.date ? `<span class="video-date">${new Date(v.date).toLocaleDateString('en-US',{month:'short',year:'numeric'})}</span>` : ''}
+        </div>
+        <div class="notes-section visible" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);display:flex;gap:6px;align-items:center">
+          ${currentUser
+            ? `<button class="notes-btn ${getUserNote(v.id)?'has-note':''}" onclick="openNotes('${v.id}','${v.title.replace(/'/g,"\'")}','${v.player}'${v.note?`,'${v.note.replace(/'/g,"\'")}'`:''})">
+                📝 ${getUserNote(v.id) ? 'View notes' : 'Add notes'}
+               </button>
+               <button class="notes-btn ${isFav(v.id)?'has-note':''}" onclick="toggleFav('${v.id}',this);renderVideos()" title="Save to favorites">
+                ${isFav(v.id) ? '♥ Saved' : '♡ Save'}
+               </button>`
+            : `<div class="note-login-prompt"><span onclick="openAuth()" style="color:var(--red);cursor:pointer">Sign in</span> to save &amp; add notes</div>`
+          }
+        </div>
+      </div>
+    </div>`).join(""):
+    `<div class="empty"><strong>No VODs Yet</strong>Check back soon.</div>`;
+}
+
+async function init() {
+  try { await loadAgentIcons(); } catch(e) { console.warn("Agent icons failed", e); }
+
+  // Parse URL so refreshing and direct links work
+  const params = new URLSearchParams(location.search);
+  const parts = location.pathname.replace(/^\//, "").split("/").filter(Boolean);
+  if(parts[0] === "search" && params.get("q")) {
+    const q = params.get("q");
+    renderMaps(); updateBreadcrumb();
+    document.getElementById("nav-search").value = q;
+    runSearch(q);
+  } else if(parts[0] === "favorites") {
+    renderMaps(); updateBreadcrumb(); goFavorites();
+  } else if(parts[0] && parts[1]) {
+    selMap = MAPS.find(m => m.id === parts[0]) || null;
+    selAgent = AGENTS.find(a => a.id === parts[1]) || null;
+    if(selMap && selAgent) { renderMaps(); renderVideos(); updateBreadcrumb(); show("s-videos", false); }
+    else { renderMaps(); updateBreadcrumb(); }
+  } else if(parts[0]) {
+    selMap = MAPS.find(m => m.id === parts[0]) || null;
+    if(selMap) { renderMaps(); renderAgents(); updateBreadcrumb(); show("s-agents", false); }
+    else { renderMaps(); updateBreadcrumb(); }
+  } else {
+    renderMaps(); updateBreadcrumb();
+  }
+
+  try { await initAuth(); } catch(e) { console.warn("Auth init failed", e); }
+}
+init();
+window.addEventListener("popstate", function(e) {
+  // Always navigate based on the current URL
+  const parts = location.pathname.replace(/^\//, "").split("/").filter(Boolean);
+  const searchParams = new URLSearchParams(location.search);
+  if(parts[0] === "search" && searchParams.get("q")) {
+    const q = searchParams.get("q");
+    document.getElementById("nav-search").value = q;
+    runSearch(q);
+  } else if(parts[0] === "favorites") {
+    selMap=null; selAgent=null; updateBreadcrumb(); renderFavorites(); show("s-favorites", false);
+  } else if(parts[0] && parts[1]) {
+    selMap = MAPS.find(m=>m.id===parts[0])||null;
+    selAgent = AGENTS.find(a=>a.id===parts[1])||null;
+    updateBreadcrumb();
+    if(selMap && selAgent) { renderVideos(); show("s-videos", false); }
+    else { selMap=null; selAgent=null; show("s-maps", false); }
+  } else if(parts[0]) {
+    selMap = MAPS.find(m=>m.id===parts[0])||null;
+    selAgent = null;
+    updateBreadcrumb();
+    if(selMap) { renderAgents(); show("s-agents", false); }
+    else { selMap=null; show("s-maps", false); }
+  } else {
+    selMap=null; selAgent=null; updateBreadcrumb(); show("s-maps", false);
+  }
+});
+
+
+function openVideo(id, title, player) {
+  document.getElementById("modal-title").textContent = title;
+  document.getElementById("modal-player").textContent = player;
+  document.getElementById("modal-iframe").src = `https://www.youtube.com/embed/${id}?autoplay=1`;
+  document.getElementById("modal").classList.add("open");
+  document.body.style.overflow = "hidden";
+}
+
+function closeModalDirect() {
+  document.getElementById("modal").classList.remove("open");
+  document.getElementById("modal-iframe").src = "";
+  document.body.style.overflow = "";
+}
+
+function closeModal(e) {
+  if(e.target === document.getElementById("modal")) closeModalDirect();
+}
+
+document.addEventListener("keydown", e => { if(e.key === "Escape") closeModalDirect(); });
+
+// ── SUPABASE SETUP ────────────────────────────────────────
+const _supabase = supabase.createClient(
+  "https://cvdtykmkajmhlxydhzzl.supabase.co",
+  "sb_publishable_I16eAnYgsA9fd8ZMlmFQtA_RxepSaXi"
+);
+
+let currentUser = null;
+let authMode = "login";
+let userFavorites = []; // cache
+let userNotes = {};     // cache
+
+// Load session on page load
+async function initAuth() {
+  const { data: { session } } = await _supabase.auth.getSession();
+  if(session?.user) {
+    currentUser = session.user;
+    await loadUserData();
+  }
+  renderNav();
+}
+
+async function loadUserData() {
+  if(!currentUser) return;
+  // Load favorites
+  const { data: favs } = await _supabase.from("favorites").select("video_id").eq("user_id", currentUser.id);
+  userFavorites = (favs||[]).map(f => f.video_id);
+  // Load notes
+  const { data: notes } = await _supabase.from("notes").select("video_id, content").eq("user_id", currentUser.id);
+  userNotes = {};
+  (notes||[]).forEach(n => userNotes[n.video_id] = n.content);
+}
+
+function renderNav() {
+  const nr = document.getElementById("nav-right");
+  if(currentUser) {
+    const email = currentUser.email;
+    nr.innerHTML = `<button class="auth-btn" onclick="goFavorites()">♥ Favorites</button>
+      <button class="auth-btn" onclick="goMyVods()">My VODs</button>
+      <div class="user-pill"><div class="user-avatar">${email[0].toUpperCase()}</div>${email.split("@")[0]}</div>
+      <button class="auth-btn" onclick="signOut()">Sign Out</button>`;
+  } else {
+    nr.innerHTML = `<button class="auth-btn" onclick="openAuth()">Sign In</button>
+      <button class="auth-btn primary" onclick="openAuth('register')">Sign Up</button>`;
+  }
+}
+
+function openAuth(mode="login") {
+  authMode = mode;
+  switchTab(mode);
+  document.getElementById("auth-modal").classList.add("open");
+}
+function closeAuthModalDirect() {
+  document.getElementById("auth-modal").classList.remove("open");
+  document.getElementById("auth-error").style.display="none";
+  document.getElementById("auth-email").value="";
+  document.getElementById("auth-password").value="";
+  document.getElementById("auth-confirm").value="";
+}
+function closeAuthModal(e) { if(e.target===document.getElementById("auth-modal")) closeAuthModalDirect(); }
+
+function switchTab(mode) {
+  authMode = mode;
+  document.querySelectorAll(".auth-tab").forEach((t,i)=>t.classList.toggle("active",(mode==="login"?i===0:i===1)));
+  document.getElementById("confirm-field").style.display = mode==="register"?"block":"none";
+  document.querySelector(".auth-modal .primary").textContent = mode==="login"?"Sign In":"Create Account";
+  document.getElementById("auth-error").style.display="none";
+}
+
+async function submitAuth() {
+  const email = document.getElementById("auth-email").value.trim();
+  const pass = document.getElementById("auth-password").value;
+  const confirm = document.getElementById("auth-confirm").value;
+  const errEl = document.getElementById("auth-error");
+  const btn = document.querySelector(".auth-modal .primary");
+
+  if(!email || !pass) { errEl.textContent="Please fill in all fields."; errEl.style.display="block"; return; }
+  btn.textContent = "Please wait..."; btn.disabled = true;
+
+  let error;
+  if(authMode === "register") {
+    if(pass !== confirm) { errEl.textContent="Passwords don't match."; errEl.style.display="block"; btn.textContent="Create Account"; btn.disabled=false; return; }
+    if(pass.length < 6) { errEl.textContent="Password must be at least 6 characters."; errEl.style.display="block"; btn.textContent="Create Account"; btn.disabled=false; return; }
+    const { data, error: e } = await _supabase.auth.signUp({ email, password: pass });
+    error = e;
+    if(!e) currentUser = data.user;
+  } else {
+    const { data, error: e } = await _supabase.auth.signInWithPassword({ email, password: pass });
+    error = e;
+    if(!e) currentUser = data.user;
+  }
+
+  btn.disabled = false;
+  btn.textContent = authMode==="login" ? "Sign In" : "Create Account";
+
+  if(error) { errEl.textContent = error.message; errEl.style.display="block"; return; }
+
+  await loadUserData();
+  closeAuthModalDirect();
+  renderNav();
+  if(selMap && selAgent) renderVideos();
+}
+
+async function signOut() {
+  await _supabase.auth.signOut();
+  currentUser = null;
+  userFavorites = [];
+  userNotes = {};
+  renderNav();
+  if(selMap && selAgent) renderVideos();
+}
+
+// ── FAVORITES ─────────────────────────────────────────────
+function isFav(videoId) {
+  return userFavorites.includes(videoId);
+}
+
+async function toggleFav(videoId, btn) {
+  if(!currentUser) { openAuth(); return; }
+  if(isFav(videoId)) {
+    userFavorites = userFavorites.filter(id => id !== videoId);
+    btn.classList.remove("active");
+    btn.textContent = "♡ Save";
+    await _supabase.from("favorites").delete().eq("user_id", currentUser.id).eq("video_id", videoId);
+  } else {
+    userFavorites.push(videoId);
+    btn.classList.add("active");
+    btn.textContent = "♥ Saved";
+    await _supabase.from("favorites").insert({ user_id: currentUser.id, video_id: videoId });
+  }
+}
+
+// ── NOTES ─────────────────────────────────────────────────
+function getUserNote(videoId) {
+  return userNotes[videoId] || "";
+}
+
+async function saveNote(videoId, text) {
+  if(!currentUser) return;
+  userNotes[videoId] = text;
+  await _supabase.from("notes").upsert(
+    { user_id: currentUser.id, video_id: videoId, content: text, updated_at: new Date().toISOString() },
+    { onConflict: "user_id,video_id" }
+  );
+}
+
+initAuth();
+
+// ── NOTES MODAL ───────────────────────────────────────────
+let currentNoteVideoId = null;
+
+function openNotes(videoId, title, player, adminNote) {
+  currentNoteVideoId = videoId;
+  document.getElementById("notes-modal-title").textContent = title;
+  document.getElementById("notes-modal-meta").textContent = player;
+  const adminBox = document.getElementById("notes-admin-box");
+  if(adminNote) {
+    adminBox.style.display = "block";
+    document.getElementById("notes-admin-text").textContent = adminNote;
+  } else {
+    adminBox.style.display = "none";
+  }
+  const ta = document.getElementById("notes-textarea");
+  ta.value = getUserNote(videoId);
+  document.getElementById("notes-char-count").textContent = ta.value.length + " characters";
+  document.getElementById("notes-saved-msg").style.display = "none";
+  document.getElementById("notes-modal").classList.add("open");
+  document.body.style.overflow = "hidden";
+  setTimeout(() => ta.focus(), 100);
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  const ta = document.getElementById("notes-textarea");
+  if(ta) ta.addEventListener("input", () => {
+    document.getElementById("notes-char-count").textContent = ta.value.length + " characters";
+    document.getElementById("notes-saved-msg").style.display = "none";
+  });
+});
+
+async function saveNoteFromModal() {
+  const text = document.getElementById("notes-textarea").value;
+  await saveNote(currentNoteVideoId, text);
+  document.getElementById("notes-saved-msg").style.display = "inline";
+  if(selMap && selAgent) renderVideos();
+  setTimeout(() => openNotes(
+    currentNoteVideoId,
+    document.getElementById("notes-modal-title").textContent,
+    document.getElementById("notes-modal-meta").textContent,
+    document.getElementById("notes-admin-box").style.display !== "none"
+      ? document.getElementById("notes-admin-text").textContent : null
+  ), 10);
+}
+
+function closeNotesDirect() {
+  document.getElementById("notes-modal").classList.remove("open");
+  document.body.style.overflow = "";
+  currentNoteVideoId = null;
+}
+function closeNotesModal(e) {
+  if(e.target === document.getElementById("notes-modal")) closeNotesDirect();
+}
+document.addEventListener("keydown", e => { if(e.key==="Escape" && currentNoteVideoId) closeNotesDirect(); });
+
+// ── FAVORITES PAGE ────────────────────────────────────────
+function goFavorites() {
+  selMap = null; selAgent = null;
+  updateBreadcrumb();
+  renderFavorites();
+  show("s-favorites");
+}
+
+function renderFavorites() {
+  const container = document.getElementById("fav-grid");
+  if(!currentUser) { container.innerHTML = '<div class="empty"><strong>Not signed in</strong>Sign in to see your saved VODs</div>'; return; }
+
+  const favIds = userFavorites;
+
+  if(!favIds.length) {
+    container.innerHTML = '<div class="empty"><strong>No favorites yet</strong>Hit the ♥ on any video to save it here</div>';
+    return;
+  }
+
+  // Collect all matching VODs from VODS data
+  const found = [];
+  for(const mapId in VODS) {
+    for(const agentId in VODS[mapId]) {
+      for(const v of VODS[mapId][agentId]) {
+        if(favIds.includes(v.id)) {
+          const map = MAPS.find(m=>m.id===mapId);
+          const agent = AGENTS.find(a=>a.id===agentId);
+          found.push({...v, mapId, agentId, mapName:map?.name, agentName:agent?.name});
+        }
+      }
+    }
+  }
+
+  if(!found.length) {
+    container.innerHTML = '<div class="empty"><strong>No favorites found</strong>Some saved videos may have been removed</div>';
+    return;
+  }
+
+  container.innerHTML = `<div class="video-grid" style="grid-template-columns:repeat(auto-fill,minmax(220px,1fr))">${found.map(v => `
+    <div class="video-card" id="vc-${v.id}">
+      <div class="video-thumb" data-vid="${v.id}" style="cursor:pointer">
+        <img src="https://img.youtube.com/vi/${v.id}/mqdefault.jpg" alt="${v.title}">
+        <div class="play-overlay"><div class="play-icon"><div class="play-tri"></div></div></div>
+      </div>
+      <button class="fav-btn active" onclick="toggleFav('${v.id}',this);renderFavorites()" title="Remove from favorites">♥</button>
+      <div class="video-info">
+        <div class="video-tag-row">
+          <span class="video-map-tag">${v.mapName}</span>
+          <span class="video-agent-tag">${v.agentName}</span>
+        </div>
+        <div class="video-title" data-vid="${v.id}" style="cursor:pointer">${v.title}</div>
+        <div class="video-meta-row">
+          <span class="video-player">${v.player}</span>
+          ${v.kd ? `<span class="video-kd">${v.kd}</span>` : ''}
+          ${v.date ? `<span class="video-date">${new Date(v.date).toLocaleDateString('en-US',{month:'short',year:'numeric'})}</span>` : ''}
+        </div>
+        <div class="notes-section visible" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
+          <button class="notes-btn ${getUserNote(v.id)?'has-note':''}" onclick="openNotes('${v.id}','${v.title.replace(/'/g,"\'")}','${v.player}'${v.note?`,'${v.note.replace(/'/g,"\'")}'`:''})">
+            📝 ${getUserNote(v.id) ? 'View notes' : 'Add notes'}
+          </button>
+        </div>
+      </div>
+    </div>
+  `).join("")}</div>`;
+}
+
+// ── MY VODS ───────────────────────────────────────────────
+let mvVideoId = "";
+
+function mvExtractId() {
+  const url = document.getElementById("mv-url").value.trim();
+  const match = url.match(/(?:v=|youtu\.be\/|embed\/)([a-zA-Z0-9_-]{11})/);
+  const display = document.getElementById("mv-id-display");
+  if(match) {
+    mvVideoId = match[1];
+    display.textContent = "ID: " + mvVideoId;
+  } else {
+    mvVideoId = "";
+    display.textContent = url.length > 5 ? "No video ID found" : "";
+  }
+}
+
+function goMyVods() {
+  selMap = null; selAgent = null;
+  updateBreadcrumb();
+  renderMyVods();
+  show("s-myvods");
+}
+
+async function submitMyVod() {
+  if(!currentUser) { openAuth(); return; }
+  const mapId = document.getElementById("mv-map").value;
+  const agentId = document.getElementById("mv-agent").value;
+  const title = document.getElementById("mv-title").value.trim();
+  const errEl = document.getElementById("mv-error");
+  const btn = document.getElementById("mv-submit-btn");
+
+  errEl.textContent = "";
+  if(!mvVideoId) { errEl.textContent = "Paste a valid YouTube URL."; return; }
+  if(!mapId) { errEl.textContent = "Select a map."; return; }
+  if(!agentId) { errEl.textContent = "Select an agent."; return; }
+  if(!title) { errEl.textContent = "Enter a title."; return; }
+
+  btn.textContent = "Saving..."; btn.disabled = true;
+
+  const { error } = await _supabase.from("user_vods").insert({
+    user_id: currentUser.id,
+    video_id: mvVideoId,
+    title,
+    map_id: mapId,
+    agent_id: agentId,
+    date: new Date().toISOString().split("T")[0],
+  });
+
+  btn.textContent = "+ Add to My VODs"; btn.disabled = false;
+
+  if(error) { errEl.textContent = "Error saving VOD: " + error.message; return; }
+
+  // Clear form
+  document.getElementById("mv-url").value = "";
+  document.getElementById("mv-id-display").textContent = "";
+  document.getElementById("mv-map").value = "";
+  document.getElementById("mv-agent").value = "";
+  document.getElementById("mv-title").value = "";
+  mvVideoId = "";
+
+  renderMyVods();
+}
+
+async function renderMyVods() {
+  const grid = document.getElementById("mv-grid");
+  const count = document.getElementById("mv-count");
+  if(!currentUser) {
+    grid.innerHTML = '<div class="empty"><strong>Not signed in</strong>Sign in to use My VODs</div>';
+    return;
+  }
+
+  grid.innerHTML = '<div class="empty">Loading...</div>';
+
+  const { data, error } = await _supabase
+    .from("user_vods")
+    .select("*")
+    .eq("user_id", currentUser.id)
+    .order("created_at", { ascending: false });
+
+  if(error || !data) { grid.innerHTML = '<div class="empty"><strong>Error loading VODs</strong></div>'; return; }
+
+  
+
+  if(!data.length) {
+    grid.innerHTML = '<div class="empty"><strong>No VODs yet</strong>Paste a YouTube URL above to add your first one</div>';
+    return;
+  }
+
+  const mapName = id => MAPS.find(m=>m.id===id)?.name || id;
+  const agentName = id => AGENTS.find(a=>a.id===id)?.name || id;
+
+  grid.innerHTML = data.map(v => `
+    <div class="video-card">
+      <div class="video-thumb" data-vid="${v.video_id}" style="cursor:pointer">
+        <img src="https://img.youtube.com/vi/${v.video_id}/mqdefault.jpg" alt="${v.title}">
+        <div class="play-overlay"><div class="play-icon"><div class="play-tri"></div></div></div>
+      </div>
+      <div class="video-info">
+        <div class="video-tag-row">
+          <span class="video-map-tag">${mapName(v.map_id)}</span>
+          <span class="video-agent-tag">${agentName(v.agent_id)}</span>
+        </div>
+        <div class="video-title" data-vid="${v.video_id}" style="cursor:pointer">${v.title}</div>
+        <div class="video-meta-row">
+          <span class="video-date">${v.date ? new Date(v.date).toLocaleDateString('en-US',{month:'short',year:'numeric'}) : ''}</span>
+          <button class="mv-delete-btn" onclick="deleteMyVod('${v.id}')">✕ Remove</button>
+        </div>
+      </div>
+    </div>
+  `).join("");
+
+  // Event delegation for clicks
+  grid.onclick = function(e) {
+    const vid = e.target.closest("[data-vid]")?.dataset.vid;
+    if(vid) window.open("https://youtube.com/watch?v="+vid, "_blank");
+  };
+}
+
+async function deleteMyVod(id) {
+  if(!confirm("Remove this VOD from your collection?")) return;
+  await _supabase.from("user_vods").delete().eq("id", id).eq("user_id", currentUser.id);
+  renderMyVods();
+}
+
+// ── SEARCH ────────────────────────────────────────────────
+
+function openSearch() {
+  const val = document.getElementById("nav-search").value;
+  if(val.trim()) runSearch(val);
+}
+
+function handleSearch(val) {
+  clearTimeout(searchTimeout);
+  if(!val.trim()) {
+    if(document.getElementById("s-search").classList.contains("active")) {
+      show("s-maps");
+    }
+    return;
+  }
+  // Switch to search screen immediately so it feels instant
+  if(!document.getElementById("s-search").classList.contains("active")) {
+    document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+    document.getElementById("s-search").classList.add("active");
+    document.getElementById("back-btn").style.display = "block";
+    const bgLayer = document.getElementById("map-bg-layer");
+    const bgOverlay = document.getElementById("agents-bg-overlay");
+    if(bgLayer) bgLayer.style.opacity = "0";
+    if(bgOverlay) bgOverlay.style.display = "none";
+    document.body.style.background = "";
+  }
+  searchTimeout = setTimeout(() => runSearch(val), 120);
+}
+
+function runSearch(query) {
+  const q = query.toLowerCase().trim();
+  const results = [];
+
+  for(const mapId in VODS) {
+    const map = MAPS.find(m => m.id === mapId);
+    for(const agentId in VODS[mapId]) {
+      const agent = AGENTS.find(a => a.id === agentId);
+      for(const v of VODS[mapId][agentId]) {
+        const searchStr = [v.title, v.player, map?.name, agent?.name].join(" ").toLowerCase();
+        if(searchStr.includes(q)) {
+          results.push({ ...v, mapId, agentId, mapName: map?.name, agentName: agent?.name });
+        }
+      }
+    }
+  }
+
+  // Show search screen
+  document.getElementById("search-title").textContent = results.length + " result" + (results.length !== 1 ? "s" : "");
+  document.getElementById("search-sub").textContent = results.length ? `Showing results for "${query}"` : `No results for "${query}"`;
+
+  const grid = document.getElementById("search-grid");
+
+  if(!results.length) {
+    grid.innerHTML = '<div class="empty"><strong>No results</strong>Try a different player, map, or agent</div>';
+  } else {
+    grid.innerHTML = results.map(v => `
+      <div class="video-card">
+        <div class="video-thumb" data-vid="${v.id}" style="cursor:pointer">
+          <img src="https://img.youtube.com/vi/${v.id}/mqdefault.jpg" alt="${v.title}">
+          <div class="play-overlay"><div class="play-icon"><div class="play-tri"></div></div></div>
+        </div>
+        <div class="video-info">
+          <div class="video-tag-row">
+            <span class="video-map-tag">${v.mapName||''}</span>
+            <span class="video-agent-tag">${v.agentName||''}</span>
+          </div>
+          <div class="video-title" data-vid="${v.id}" style="cursor:pointer">${v.title}</div>
+          <div class="video-meta-row">
+            <span class="video-player">${v.player}</span>
+            ${v.date ? `<span class="video-date">${new Date(v.date).toLocaleDateString('en-US',{month:'short',year:'numeric'})}</span>` : ''}
+          </div>
+          ${currentUser ? `
+          <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);display:flex;gap:6px;align-items:center">
+            <button class="notes-btn ${getUserNote(v.id)?'has-note':''}" onclick="openNotes('${v.id}','${v.title.replace(/'/g,"\'")}','${v.player}'${v.note?`,'${v.note.replace(/'/g,"\'")}'`:''})">
+              📝 ${getUserNote(v.id) ? 'View notes' : 'Add notes'}
+            </button>
+            <button class="notes-btn ${isFav(v.id)?'has-note':''}" onclick="toggleFav('${v.id}',this)" title="Save to favorites">
+              ${isFav(v.id) ? '♥ Saved' : '♡ Save'}
+            </button>
+          </div>` : ''}
+        </div>
+      </div>
+    `).join("");
+
+    // Event delegation
+    grid.onclick = function(e) {
+      const vid = e.target.closest("[data-vid]")?.dataset.vid;
+      if(vid) window.open("https://youtube.com/watch?v="+vid, "_blank");
+    };
+  }
+
+  // Update URL
+  const searchUrl = "/search?q=" + encodeURIComponent(query);
+  if(location.pathname !== "/search") {
+    history.pushState({screen:"s-search", query}, "", searchUrl);
+  } else {
+    history.replaceState({screen:"s-search", query}, "", searchUrl);
+  }
+}
+
+// Close search / clear on escape
+document.addEventListener("keydown", function(e) {
+  if(e.key === "Escape") {
+    document.getElementById("nav-search").value = "";
+    document.getElementById("nav-search").blur();
+    if(document.getElementById("s-search").classList.contains("active")) {
+      selMap=null; selAgent=null; updateBreadcrumb(); show("s-maps");
+    }
+  }
+});
+</script>
+
+<!-- VIDEO MODAL -->
+<div class="modal-backdrop" id="modal" onclick="closeModal(event)">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title"></div>
+      <div class="modal-player" id="modal-player"></div>
+      <button class="modal-close" onclick="closeModalDirect()">✕</button>
+    </div>
+    <div class="modal-video">
+      <iframe id="modal-iframe" allowfullscreen allow="autoplay; encrypted-media"></iframe>
+    </div>
+  </div>
+</div>
+
+<!-- AUTH MODAL -->
+<div class="auth-modal-backdrop" id="auth-modal" onclick="closeAuthModal(event)">
+  <div class="auth-modal" style="position:relative">
+    <button class="auth-close" onclick="closeAuthModalDirect()">✕</button>
+    <h2>FragLog<span style="color:var(--red)">.gg</span></h2>
+    <p>Sign in to save favorites and add notes</p>
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="switchTab('login')">Sign In</button>
+      <button class="auth-tab" onclick="switchTab('register')">Create Account</button>
+    </div>
+    <div id="auth-error" class="auth-error"></div>
+    <div class="auth-field"><label>Email</label><input type="email" id="auth-email" placeholder="you@email.com"></div>
+    <div class="auth-field"><label>Password</label><input type="password" id="auth-password" placeholder="••••••••"></div>
+    <div class="auth-field" id="confirm-field" style="display:none"><label>Confirm Password</label><input type="password" id="auth-confirm" placeholder="••••••••"></div>
+    <button class="auth-btn primary" style="width:100%;margin-top:0.5rem" onclick="submitAuth()">Sign In</button>
+  </div>
+</div>
+
+
+<div class="screen" id="s-favorites">
+  <div class="hero">
+    <div class="hero-eyebrow">Your Library</div>
+    <div class="hero-title">Saved VODs</div>
+    <div class="hero-sub">All your favorited videos in one place</div>
+  </div>
+  <div id="fav-grid"></div>
+</div>
+
+
+<div class="screen" id="s-myvods">
+  <div class="hero">
+    <div class="hero-eyebrow">Private Library</div>
+    <div class="hero-title">My VODs</div>
+    <div class="hero-sub">Your personal collection — only visible to you</div>
+  </div>
+
+  <!-- Submit form -->
+  <div class="myvods-form">
+    <div class="section-label">Add a VOD</div>
+    <div class="myvods-fields">
+      <div class="myvods-field">
+        <label>YouTube URL</label>
+        <input type="text" id="mv-url" placeholder="https://youtube.com/watch?v=..." oninput="mvExtractId()">
+        <div class="mv-id-display" id="mv-id-display"></div>
+      </div>
+      <div class="myvods-row">
+        <div class="myvods-field">
+          <label>Map</label>
+          <select id="mv-map">
+            <option value="">Select map...</option>
+            <option value="ascent">Ascent</option>
+            <option value="bind">Bind</option>
+            <option value="haven">Haven</option>
+            <option value="split">Split</option>
+            <option value="fracture">Fracture</option>
+            <option value="pearl">Pearl</option>
+            <option value="icebox">Icebox</option>
+            <option value="breeze">Breeze</option>
+            <option value="lotus">Lotus</option>
+            <option value="sunset">Sunset</option>
+            <option value="abyss">Abyss</option>
+            <option value="corrode">Corrode</option>
+          </select>
+        </div>
+        <div class="myvods-field">
+          <label>Agent</label>
+          <select id="mv-agent">
+            <option value="">Select agent...</option>
+            <optgroup label="Duelists">
+              <option value="jett">Jett</option><option value="reyna">Reyna</option>
+              <option value="raze">Raze</option><option value="neon">Neon</option>
+              <option value="phoenix">Phoenix</option><option value="yoru">Yoru</option>
+              <option value="iso">Iso</option><option value="waylay">Waylay</option>
+            </optgroup>
+            <optgroup label="Controllers">
+              <option value="omen">Omen</option><option value="viper">Viper</option>
+              <option value="brimstone">Brimstone</option><option value="astra">Astra</option>
+              <option value="harbor">Harbor</option><option value="clove">Clove</option>
+              <option value="miks">Miks</option>
+            </optgroup>
+            <optgroup label="Sentinels">
+              <option value="sage">Sage</option><option value="cypher">Cypher</option>
+              <option value="killjoy">Killjoy</option><option value="chamber">Chamber</option>
+              <option value="deadlock">Deadlock</option><option value="vyse">Vyse</option>
+              <option value="veto">Veto</option>
+            </optgroup>
+            <optgroup label="Initiators">
+              <option value="sova">Sova</option><option value="breach">Breach</option>
+              <option value="skye">Skye</option><option value="kayo">KAY/O</option>
+              <option value="fade">Fade</option><option value="gekko">Gekko</option>
+              <option value="tejo">Tejo</option>
+            </optgroup>
+          </select>
+        </div>
+        <div class="myvods-field">
+          <label>Title</label>
+          <input type="text" id="mv-title" placeholder="e.g. My Jett Ascent game">
+        </div>
+      </div>
+      <button class="auth-btn primary" onclick="submitMyVod()" id="mv-submit-btn">+ Add to My VODs</button>
+      <div class="mv-error" id="mv-error"></div>
+    </div>
+  </div>
+
+  <!-- VOD list -->
+  <div class="section-label" style="margin-top:2rem">Your collection</div>
+  <div class="video-grid" id="mv-grid"></div>
+</div>
+
+
+<div class="screen" id="s-search">
+  <div class="hero">
+    <div class="hero-eyebrow">Search Results</div>
+    <div class="videos-title" id="search-title">Results</div>
+    <div class="hero-sub" id="search-sub"></div>
+  </div>
+  <div class="video-grid" id="search-grid"></div>
+</div>
+
+<!-- NOTES MODAL -->
+<div class="notes-modal-backdrop" id="notes-modal" onclick="closeNotesModal(event)">
+  <div class="notes-modal">
+    <div class="notes-modal-header">
+      <div>
+        <div class="notes-modal-title" id="notes-modal-title"></div>
+        <div class="notes-modal-meta" id="notes-modal-meta"></div>
+      </div>
+      <button class="notes-modal-close" onclick="closeNotesDirect()">✕</button>
+    </div>
+    <div class="notes-modal-body">
+      <div class="notes-admin-box" id="notes-admin-box" style="display:none">
+        <div class="notes-admin-label">💡 Creator Note</div>
+        <div class="notes-admin-text" id="notes-admin-text"></div>
+      </div>
+      <div class="notes-user-box">
+        <div class="notes-user-label">Your Notes</div>
+        <textarea class="notes-textarea" id="notes-textarea" placeholder="Write anything — timestamps, things to study, key moments..."></textarea>
+      </div>
+    </div>
+    <div class="notes-modal-footer">
+      <span class="notes-char-count" id="notes-char-count">0 characters</span>
+      <div style="display:flex;align-items:center;gap:12px">
+        <span class="notes-saved-msg" id="notes-saved-msg">✓ Saved</span>
+        <button class="notes-save-btn" onclick="saveNoteFromModal()">Save Notes</button>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
