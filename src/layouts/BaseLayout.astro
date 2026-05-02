@@ -1,22 +1,7 @@
 ---
 import '../styles/global.css';
-import { createClient } from '@supabase/supabase-js';
 
-const { title = 'FragLog.gg — Valorant VOD Library', description = 'Watch Radiant and pro player Valorant gameplay VODs filtered by map and agent. Study the best players in the world on FragLog.gg', ogImage = 'https://media.valorant-api.com/maps/7eaecc1b-4337-bbf6-6ab9-04b8f06b3319/splash.png', canonical = 'https://fraglog.gg' } = Astro.props;
-
-const supabase = createClient(
-  "https://cvdtykmkajmhlxydhzzl.supabase.co",
-  "sb_publishable_I16eAnYgsA9fd8ZMlmFQtA_RxepSaXi"
-);
-
-const accessToken = Astro.cookies.get('sb-access-token')?.value;
-const refreshToken = Astro.cookies.get('sb-refresh-token')?.value;
-
-let user = null;
-if (accessToken && refreshToken) {
-  const { data } = await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
-  user = data.session?.user ?? null;
-}
+const { title = 'FragLog.gg — Valorant VOD Library', description = 'Watch Radiant and pro player Valorant gameplay VODs filtered by map and agent. Study the best players in the world on FragLog.gg', ogImage = 'https://media.valorant-api.com/maps/7eaecc1b-4337-bbf6-6ab9-04b8f06b3319/splash.png', canonical = 'https://fraglog.gg', user = null } = Astro.props;
 ---
 <!DOCTYPE html>
 <html lang="en">

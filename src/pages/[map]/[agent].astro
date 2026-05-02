@@ -18,17 +18,6 @@ if (accessToken && refreshToken) {
   const { data } = await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
   user = data.session?.user ?? null;
 }
-
-export function getStaticPaths() {
-  const paths = [];
-  for (const map of MAPS) {
-    for (const agent of AGENTS) {
-      paths.push({ params: { map: map.id, agent: agent.id } });
-    }
-  }
-  return paths;
-}
-
 const { map: mapId, agent: agentId } = Astro.params;
 const mapData = MAPS.find(m => m.id === mapId);
 const agentData = AGENTS.find(a => a.id === agentId);
@@ -39,8 +28,8 @@ const vods = agentVods(mapId, agentId);
 const title = `${agentData.name} ${mapData.name} VODs — FragLog.gg`;
 const description = `Watch ${vods.length} Radiant ${agentData.name} VODs on ${mapData.name}. Pro player POV gameplay on FragLog.gg`;
 ---
-<BaseLayout title={title} description={description} ogImage={mapData.img} canonical={`https://fraglog.gg/${mapId}/${agentId}`}>
-  <Nav />
+<BaseLayout title={title} description={description} ogImage={mapData.img} canonical={`https://fraglog.gg/${mapId}/${agentId}`} user={user}>
+  <Nav crumbs={[{ label: 'ALL MAPS', href: '/' }, { label: mapData.name.toUpperCase(), href: `/${mapId}` }, { label: agentData.name.toUpperCase() }]} user={user} />
   <div class="page-content">
     <div class="videos-header">
       <div>
