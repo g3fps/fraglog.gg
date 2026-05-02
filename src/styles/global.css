@@ -389,7 +389,7 @@ nav {
 }
 
 /* ── AUTH ────────────────────────────────────────────────── */
-.nav-right { display: flex; align-items: center; gap: 10px; }
+.nav-right { display: flex; align-items: center; gap: 10px; min-width: 280px; justify-content: flex-end; }
 .auth-btn {
   font-family: 'DM Mono', monospace;
   font-size: 11px; letter-spacing: 1px;
