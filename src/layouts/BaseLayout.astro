@@ -1,0 +1,301 @@
+---
+import '../styles/global.css';
+
+const { title = 'FragLog.gg — Valorant VOD Library', description = 'Watch Radiant and pro player Valorant gameplay VODs filtered by map and agent. Study the best players in the world on FragLog.gg', ogImage = 'https://media.valorant-api.com/maps/7eaecc1b-4337-bbf6-6ab9-04b8f06b3319/splash.png', canonical = 'https://fraglog.gg' } = Astro.props;
+---
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{title}</title>
+  <meta name="description" content={description}>
+  <meta name="keywords" content="Valorant VODs, Radiant gameplay, pro player POV, Valorant tips, agent guide, map guide">
+  <meta name="author" content="FragLog.gg">
+  <meta name="robots" content="index, follow">
+
+  <meta property="og:type" content="website">
+  <meta property="og:url" content={canonical}>
+  <meta property="og:title" content={title}>
+  <meta property="og:description" content={description}>
+  <meta property="og:image" content={ogImage}>
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content={title}>
+  <meta name="twitter:description" content={description}>
+  <meta name="twitter:image" content={ogImage}>
+
+  <link rel="canonical" href={canonical}>
+
+  <script defer src="https://cdn.vercel-insights.com/v1/script.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" is:inline></script>
+</head>
+<body>
+  <div id="map-bg-layer"></div>
+
+  <slot />
+
+  <!-- Auth Modal -->
+  <div class="auth-modal-backdrop" id="auth-modal" onclick="closeAuthModal(event)">
+    <div class="auth-modal">
+      <h2>FragLog<span style="color:var(--red)">.gg</span></h2>
+      <div class="auth-tabs">
+        <button class="auth-tab active" onclick="switchTab('login')">Sign In</button>
+        <button class="auth-tab" onclick="switchTab('register')">Create Account</button>
+      </div>
+      <div class="auth-field">
+        <label>Email</label>
+        <input type="email" id="auth-email" placeholder="you@example.com" autocomplete="email">
+      </div>
+      <div class="auth-field">
+        <label>Password</label>
+        <input type="password" id="auth-password" placeholder="••••••••" autocomplete="current-password">
+      </div>
+      <div class="auth-field" id="confirm-field" style="display:none">
+        <label>Confirm Password</label>
+        <input type="password" id="auth-confirm" placeholder="••••••••" autocomplete="new-password">
+      </div>
+      <div class="auth-error" id="auth-error"></div>
+      <button class="auth-btn primary" style="width:100%;padding:10px" onclick="submitAuth()">Sign In</button>
+    </div>
+  </div>
+
+  <!-- Notes Modal -->
+  <div class="notes-modal-backdrop" id="notes-modal" onclick="closeNotesModal(event)">
+    <div class="notes-modal">
+      <div class="notes-modal-header">
+        <div>
+          <div class="notes-modal-title" id="notes-modal-title"></div>
+          <div class="notes-modal-meta" id="notes-modal-meta"></div>
+        </div>
+        <button class="notes-modal-close" onclick="closeNotesDirect()">✕</button>
+      </div>
+      <div class="notes-modal-body">
+        <div class="notes-admin-box" id="notes-admin-box" style="display:none">
+          <div class="notes-admin-label">💡 Creator Note</div>
+          <div class="notes-admin-text" id="notes-admin-text"></div>
+        </div>
+        <div class="notes-user-box">
+          <div class="notes-user-label">Your Notes</div>
+          <textarea class="notes-textarea" id="notes-textarea" placeholder="Write anything — timestamps, things to study, key moments..."></textarea>
+        </div>
+      </div>
+      <div class="notes-modal-footer">
+        <span class="notes-char-count" id="notes-char-count">0 characters</span>
+        <div style="display:flex;align-items:center;gap:12px">
+          <span class="notes-saved-msg" id="notes-saved-msg">✓ Saved</span>
+          <button class="notes-save-btn" onclick="saveNoteFromModal()">Save Notes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script is:inline>
+  // ── SUPABASE ──────────────────────────────────────────────
+  let _supabase;
+  // Wait for supabase SDK to load
+  function initSupabase() {
+    if (typeof supabase !== 'undefined' && !_supabase) {
+      _supabase = supabase.createClient(
+        "https://cvdtykmkajmhlxydhzzl.supabase.co",
+        "sb_publishable_I16eAnYgsA9fd8ZMlmFQtA_RxepSaXi"
+      );
+    }
+    return _supabase;
+  }
+
+  let currentUser = null;
+  let authMode = "login";
+  let userFavorites = [];
+  let userNotes = {};
+
+  async function initAuth() {
+    const sb = initSupabase();
+    if (!sb) return;
+    const { data: { session } } = await sb.auth.getSession();
+    if (session?.user) {
+      currentUser = session.user;
+      await loadUserData();
+    }
+    renderNav();
+  }
+
+  async function loadUserData() {
+    if (!currentUser) return;
+    const sb = initSupabase();
+    const { data: favs } = await sb.from("favorites").select("video_id").eq("user_id", currentUser.id);
+    userFavorites = (favs||[]).map(f => f.video_id);
+    const { data: notes } = await sb.from("notes").select("video_id, content").eq("user_id", currentUser.id);
+    userNotes = {};
+    (notes||[]).forEach(n => userNotes[n.video_id] = n.content);
+  }
+
+  function renderNav() {
+    const nr = document.getElementById("nav-right");
+    if (!nr) return;
+    if (currentUser) {
+      const email = currentUser.email;
+      nr.innerHTML = `<button class="auth-btn" onclick="window.location='/favorites'">♥ Favorites</button>
+        <button class="auth-btn" onclick="window.location='/my-vods'">My VODs</button>
+        <div class="user-pill"><div class="user-avatar">${email[0].toUpperCase()}</div>${email.split("@")[0]}</div>
+        <button class="auth-btn" onclick="signOut()">Sign Out</button>`;
+    } else {
+      nr.innerHTML = `<button class="auth-btn" onclick="openAuth()">Sign In</button>
+        <button class="auth-btn primary" onclick="openAuth('register')">Sign Up</button>`;
+    }
+  }
+
+  function openAuth(mode = "login") {
+    authMode = mode;
+    switchTab(mode);
+    document.getElementById("auth-modal").classList.add("open");
+  }
+  function closeAuthModalDirect() {
+    document.getElementById("auth-modal").classList.remove("open");
+    document.getElementById("auth-error").style.display = "none";
+    document.getElementById("auth-email").value = "";
+    document.getElementById("auth-password").value = "";
+    document.getElementById("auth-confirm").value = "";
+  }
+  function closeAuthModal(e) {
+    if (e.target === document.getElementById("auth-modal")) closeAuthModalDirect();
+  }
+  function switchTab(mode) {
+    authMode = mode;
+    document.querySelectorAll(".auth-tab").forEach((t,i) => t.classList.toggle("active", mode==="login" ? i===0 : i===1));
+    document.getElementById("confirm-field").style.display = mode==="register" ? "block" : "none";
+    document.querySelector(".auth-modal .primary").textContent = mode==="login" ? "Sign In" : "Create Account";
+    document.getElementById("auth-error").style.display = "none";
+  }
+  async function submitAuth() {
+    const email = document.getElementById("auth-email").value.trim();
+    const pass = document.getElementById("auth-password").value;
+    const confirm = document.getElementById("auth-confirm").value;
+    const errEl = document.getElementById("auth-error");
+    const btn = document.querySelector(".auth-modal .primary");
+    const sb = initSupabase();
+
+    if (!email || !pass) { errEl.textContent = "Please fill in all fields."; errEl.style.display = "block"; return; }
+    btn.textContent = "Please wait..."; btn.disabled = true;
+
+    let error;
+    if (authMode === "register") {
+      if (pass !== confirm) { errEl.textContent = "Passwords don't match."; errEl.style.display = "block"; btn.textContent = "Create Account"; btn.disabled = false; return; }
+      if (pass.length < 6) { errEl.textContent = "Password must be at least 6 characters."; errEl.style.display = "block"; btn.textContent = "Create Account"; btn.disabled = false; return; }
+      const { data, error: e } = await sb.auth.signUp({ email, password: pass });
+      error = e;
+      if (!e) currentUser = data.user;
+    } else {
+      const { data, error: e } = await sb.auth.signInWithPassword({ email, password: pass });
+      error = e;
+      if (!e) currentUser = data.user;
+    }
+
+    btn.disabled = false;
+    btn.textContent = authMode==="login" ? "Sign In" : "Create Account";
+    if (error) { errEl.textContent = error.message; errEl.style.display = "block"; return; }
+
+    await loadUserData();
+    closeAuthModalDirect();
+    renderNav();
+    if (typeof onAuthChange === 'function') onAuthChange();
+  }
+
+  async function signOut() {
+    const sb = initSupabase();
+    await sb.auth.signOut();
+    currentUser = null;
+    userFavorites = [];
+    userNotes = {};
+    renderNav();
+    if (typeof onAuthChange === 'function') onAuthChange();
+  }
+
+  function isFav(videoId) { return userFavorites.includes(videoId); }
+  function getUserNote(videoId) { return userNotes[videoId] || ""; }
+
+  async function toggleFav(videoId, btn) {
+    if (!currentUser) { openAuth(); return; }
+    const sb = initSupabase();
+    if (isFav(videoId)) {
+      userFavorites = userFavorites.filter(id => id !== videoId);
+      btn.classList.remove("active");
+      btn.textContent = "♡ Save";
+      await sb.from("favorites").delete().eq("user_id", currentUser.id).eq("video_id", videoId);
+    } else {
+      userFavorites.push(videoId);
+      btn.classList.add("active");
+      btn.textContent = "♥ Saved";
+      await sb.from("favorites").insert({ user_id: currentUser.id, video_id: videoId });
+    }
+    if (typeof onFavChange === 'function') onFavChange();
+  }
+
+  async function saveNote(videoId, text) {
+    if (!currentUser) return;
+    const sb = initSupabase();
+    userNotes[videoId] = text;
+    await sb.from("notes").upsert(
+      { user_id: currentUser.id, video_id: videoId, content: text, updated_at: new Date().toISOString() },
+      { onConflict: "user_id,video_id" }
+    );
+  }
+
+  // ── NOTES MODAL ──────────────────────────────────────────
+  let currentNoteVideoId = null;
+
+  function openNotes(videoId, title, player, adminNote) {
+    currentNoteVideoId = videoId;
+    document.getElementById("notes-modal-title").textContent = title;
+    document.getElementById("notes-modal-meta").textContent = player;
+    const adminBox = document.getElementById("notes-admin-box");
+    if (adminNote) {
+      adminBox.style.display = "block";
+      document.getElementById("notes-admin-text").textContent = adminNote;
+    } else {
+      adminBox.style.display = "none";
+    }
+    const ta = document.getElementById("notes-textarea");
+    ta.value = getUserNote(videoId);
+    document.getElementById("notes-char-count").textContent = ta.value.length + " characters";
+    document.getElementById("notes-saved-msg").style.display = "none";
+    document.getElementById("notes-modal").classList.add("open");
+    document.body.style.overflow = "hidden";
+    setTimeout(() => ta.focus(), 100);
+  }
+
+  async function saveNoteFromModal() {
+    const text = document.getElementById("notes-textarea").value;
+    await saveNote(currentNoteVideoId, text);
+    document.getElementById("notes-saved-msg").style.display = "inline";
+    if (typeof onNoteChange === 'function') onNoteChange(currentNoteVideoId);
+  }
+
+  function closeNotesDirect() {
+    document.getElementById("notes-modal").classList.remove("open");
+    document.body.style.overflow = "";
+    currentNoteVideoId = null;
+  }
+  function closeNotesModal(e) {
+    if (e.target === document.getElementById("notes-modal")) closeNotesDirect();
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const ta = document.getElementById("notes-textarea");
+    if (ta) ta.addEventListener("input", () => {
+      document.getElementById("notes-char-count").textContent = ta.value.length + " characters";
+      document.getElementById("notes-saved-msg").style.display = "none";
+    });
+    document.getElementById("footer-year").textContent = `© ${new Date().getFullYear()} FragLog.gg — All rights reserved`;
+    initAuth().catch(e => console.warn("Auth init failed", e));
+  });
+
+  document.addEventListener("keydown", e => {
+    if (e.key === "Escape") {
+      closeNotesDirect();
+      closeAuthModalDirect();
+    }
+  });
+  </script>
+</body>
+</html>

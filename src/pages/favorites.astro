@@ -1,0 +1,97 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Nav from '../components/Nav.astro';
+import Footer from '../components/Footer.astro';
+import { getAllVods } from '../data/data.js';
+
+const allVods = getAllVods();
+---
+<BaseLayout title="Favorites — FragLog.gg" description="Your saved Valorant VODs on FragLog.gg">
+  <Nav />
+  <div class="page-content">
+    <div class="hero">
+      <div class="hero-eyebrow">Your Collection</div>
+      <div class="hero-title">Favorites</div>
+      <div class="hero-sub">VODs you've saved for later study</div>
+    </div>
+    <div id="fav-container">
+      <div class="video-grid">
+        <div class="empty"><strong>Loading...</strong></div>
+      </div>
+    </div>
+  </div>
+  <Footer />
+</BaseLayout>
+
+<script define:vars={{ allVods }}>
+const ALL_VODS = allVods;
+
+function onAuthChange() { renderFavorites(); }
+function onFavChange() { renderFavorites(); }
+
+function renderFavorites() {
+  const container = document.getElementById("fav-container");
+
+  if (typeof currentUser === 'undefined' || !currentUser) {
+    container.innerHTML = '<div class="video-grid"><div class="empty"><strong>Not signed in</strong>Sign in to see your saved VODs</div></div>';
+    return;
+  }
+
+  const favIds = userFavorites;
+  if (!favIds.length) {
+    container.innerHTML = '<div class="video-grid"><div class="empty"><strong>No favorites yet</strong>Hit the ♥ on any video to save it here</div></div>';
+    return;
+  }
+
+  const found = ALL_VODS.filter(v => favIds.includes(v.id));
+
+  if (!found.length) {
+    container.innerHTML = '<div class="video-grid"><div class="empty"><strong>No favorites found</strong>Some saved videos may have been removed</div></div>';
+    return;
+  }
+
+  container.innerHTML = `<div class="video-grid" style="grid-template-columns:repeat(auto-fill,minmax(220px,1fr))">${found.map(v => `
+    <div class="video-card" id="vc-${v.id}">
+      <div class="video-thumb" data-vid="${v.id}" style="cursor:pointer">
+        <img src="https://img.youtube.com/vi/${v.id}/mqdefault.jpg" alt="${v.title}" loading="lazy">
+        <div class="play-overlay"><div class="play-icon"><div class="play-tri"></div></div></div>
+      </div>
+      <button class="fav-btn active" onclick="toggleFav('${v.id}',this)" title="Remove from favorites">♥</button>
+      <div class="video-info">
+        <div class="video-tag-row">
+          <span class="video-map-tag">${v.mapName}</span>
+          <span class="video-agent-tag">${v.agentName}</span>
+        </div>
+        <div class="video-title" data-vid="${v.id}" style="cursor:pointer">${v.title}</div>
+        <div class="video-meta-row">
+          <span class="video-player">${v.player}</span>
+          ${v.date ? `<span class="video-date">${new Date(v.date).toLocaleDateString('en-US',{month:'short',year:'numeric'})}</span>` : ''}
+        </div>
+        <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
+          <button class="notes-btn ${getUserNote(v.id)?'has-note':''}" onclick="openNotes('${v.id}','${v.title.replace(/'/g,"\\'")}','${v.player}')">
+            📝 ${getUserNote(v.id) ? 'View notes' : 'Add notes'}
+          </button>
+        </div>
+      </div>
+    </div>
+  `).join("")}</div>`;
+
+  container.onclick = e => {
+    const el = e.target.closest("[data-vid]");
+    if (el && !e.target.closest("button")) window.open("https://youtube.com/watch?v=" + el.dataset.vid, "_blank");
+  };
+}
+
+// Run after auth loads
+document.addEventListener("DOMContentLoaded", () => {
+  // Poll for auth readiness
+  let tries = 0;
+  const poll = setInterval(() => {
+    if (typeof currentUser !== 'undefined') {
+      clearInterval(poll);
+      renderFavorites();
+    }
+    if (++tries > 50) clearInterval(poll);
+  }, 100);
+});
+</script>

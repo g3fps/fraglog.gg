@@ -1,0 +1,73 @@
+---
+const { currentPath = '/' } = Astro.props;
+
+const isHome = currentPath === '/';
+const isSearch = currentPath.startsWith('/search');
+---
+
+<nav>
+  <a class="logo" href="/">FragLog<span>.gg</span></a>
+
+  <div style="display:flex;align-items:center;gap:1rem">
+    <button id="back-btn" onclick="history.back()" style="display:none">← Back</button>
+    <div class="breadcrumb" id="breadcrumb"></div>
+  </div>
+
+  <div class="nav-search-wrap">
+    <input
+      type="text"
+      id="nav-search"
+      class="nav-search-input"
+      placeholder="Search players, maps, agents..."
+      autocomplete="off"
+      oninput="handleNavSearch(this.value)"
+      onfocus="if(this.value.trim()) handleNavSearch(this.value)"
+    >
+  </div>
+
+  <div class="nav-right" id="nav-right"></div>
+</nav>
+
+<script is:inline>
+function handleNavSearch(val) {
+  if (!val.trim()) return;
+  const url = '/search?q=' + encodeURIComponent(val.trim());
+  window.location.href = url;
+}
+
+// Show back button if not on home
+(function() {
+  const path = window.location.pathname;
+  const btn = document.getElementById("back-btn");
+  if (btn && path !== '/') btn.style.display = "block";
+})();
+
+// Build breadcrumb based on path
+(function() {
+  const parts = window.location.pathname.replace(/^\//, '').split('/').filter(Boolean);
+  const bc = document.getElementById("breadcrumb");
+  if (!bc) return;
+  if (!parts.length) return;
+
+  let html = `<a class="crumb" href="/">ALL MAPS</a>`;
+  if (parts[0] === 'favorites') {
+    html += ` <span class="sep">›</span> <span class="current">FAVORITES</span>`;
+  } else if (parts[0] === 'my-vods') {
+    html += ` <span class="sep">›</span> <span class="current">MY VODS</span>`;
+  } else if (parts[0] === 'search') {
+    html += ` <span class="sep">›</span> <span class="current">SEARCH</span>`;
+  } else if (parts[0] === 'submit') {
+    html += ` <span class="sep">›</span> <span class="current">SUBMIT A VOD</span>`;
+  } else if (parts[0]) {
+    const mapName = parts[0].charAt(0).toUpperCase() + parts[0].slice(1);
+    if (parts[1]) {
+      html += ` <span class="sep">›</span> <a class="crumb" href="/${parts[0]}">${mapName.toUpperCase()}</a>`;
+      const agentName = parts[1].charAt(0).toUpperCase() + parts[1].slice(1);
+      html += ` <span class="sep">›</span> <span class="current">${agentName.toUpperCase()}</span>`;
+    } else {
+      html += ` <span class="sep">›</span> <span class="current">${mapName.toUpperCase()}</span>`;
+    }
+  }
+  bc.innerHTML = html;
+})();
+</script>

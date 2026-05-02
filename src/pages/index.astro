@@ -1,0 +1,35 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Nav from '../components/Nav.astro';
+import Footer from '../components/Footer.astro';
+import { MAPS, vodCount } from '../data/data.js';
+---
+<BaseLayout>
+  <Nav />
+  <div class="page-content">
+    <div class="hero">
+      <div class="hero-title">Study from the best<br><span style="color:var(--red)">beat the rest</span></div>
+      <div class="hero-sub">Radiant &amp; pro player gameplay — filtered by map and agent</div>
+    </div>
+    <div class="section-label">Select a map</div>
+    <div class="map-grid">
+      {MAPS.map(map => {
+        const count = vodCount(map.id);
+        return (
+          <a class={`map-card ${count > 0 ? 'has-vods' : ''}`} href={`/${map.id}`}>
+            <div class="map-card-accent"></div>
+            <img src={map.img} alt={map.name} loading="lazy" />
+            <div class="map-card-content">
+              <div class="map-name">{map.name}</div>
+            </div>
+          </a>
+        );
+      })}
+    </div>
+  </div>
+  <Footer />
+</BaseLayout>
+
+<style>
+.map-card { display: block; text-decoration: none; }
+</style>

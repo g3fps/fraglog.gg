@@ -1,0 +1,97 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Nav from '../../components/Nav.astro';
+import Footer from '../../components/Footer.astro';
+import { MAPS, AGENTS, ROLES_ORDER, ROLE_DOTS, agentVods } from '../../data/data.js';
+
+export function getStaticPaths() {
+  return MAPS.map(map => ({ params: { map: map.id } }));
+}
+
+const { map: mapId } = Astro.params;
+const mapData = MAPS.find(m => m.id === mapId);
+
+if (!mapData) return Astro.redirect('/');
+
+const title = `${mapData.name} VODs — FragLog.gg`;
+const description = `Browse Radiant and pro player ${mapData.name} VODs by agent on FragLog.gg`;
+---
+<BaseLayout title={title} description={description} ogImage={mapData.img} canonical={`https://fraglog.gg/${mapId}`}>
+  <div id="map-bg-layer" style={`background-image:url(${mapData.img});opacity:1`}></div>
+  <div class="agents-bg-overlay"></div>
+  <Nav />
+  <div class="page-content" style="position:relative;z-index:2">
+    <div class="agents-page-title">{mapData.name}</div>
+    {ROLES_ORDER.map(role => {
+      const roleAgents = AGENTS.filter(a => a.role === role);
+      return (
+        <div class="agent-section">
+          <div class="role-header">
+            <div class="role-dot" style={`background:${ROLE_DOTS[role]}`}></div>
+            {role}s
+          </div>
+          <div class="agent-grid">
+            {roleAgents.map(agent => {
+              const vods = agentVods(mapId, agent.id);
+              const hasVods = vods.length > 0;
+              return (
+                <a
+                  class={`agent-card ${hasVods ? 'has-vods' : 'no-vods'}`}
+                  href={hasVods ? `/${mapId}/${agent.id}` : undefined}
+                  data-agent={agent.id}
+                  data-name={agent.name}
+                >
+                  <div class="agent-portrait-wrap">
+                    <div class="agent-icon-placeholder" id={`portrait-${agent.id}`}>{agent.name[0]}</div>
+                    <div class="agent-portrait-overlay"></div>
+                  </div>
+                  <div class="agent-card-info">
+                    <div class="agent-name">{agent.name}</div>
+                  </div>
+                </a>
+              );
+            })}
+          </div>
+        </div>
+      );
+    })}
+  </div>
+  <Footer />
+</BaseLayout>
+
+<style>
+.agent-card { display: flex; text-decoration: none; }
+.agents-bg-overlay { position: fixed; inset: 0; background: rgba(8,14,20,0.72); z-index: 1; }
+</style>
+
+<script is:inline>
+// Load agent portraits from Valorant API
+async function loadAgentPortraits() {
+  try {
+    const res = await fetch("https://valorant-api.com/v1/agents?isPlayableCharacter=true");
+    const data = await res.json();
+    data.data.forEach(apiAgent => {
+      const name = apiAgent.displayName.toLowerCase().replace("/","").replace(" ","");
+      const el = document.getElementById("portrait-" + name);
+      if (el && apiAgent.fullPortrait) {
+        const wrap = el.parentElement;
+        const img = document.createElement("img");
+        img.className = "agent-portrait-img";
+        img.src = apiAgent.fullPortrait;
+        img.alt = apiAgent.displayName;
+        wrap.replaceChild(img, el);
+
+        // Apply gradient color to card
+        const colors = apiAgent.backgroundGradientColors;
+        if (colors && colors[0]) {
+          const card = wrap.closest(".agent-card");
+          if (card) card.style.setProperty("--agent-color", "#" + colors[0].slice(0,6));
+        }
+      }
+    });
+  } catch(e) {
+    console.warn("Could not load agent portraits", e);
+  }
+}
+loadAgentPortraits();
+</script>
