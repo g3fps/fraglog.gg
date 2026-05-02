@@ -1,6 +1,5 @@
 ---
 const { currentPath = '/' } = Astro.props;
-
 const isHome = currentPath === '/';
 const isSearch = currentPath.startsWith('/search');
 ---
@@ -69,10 +68,5 @@ function handleNavSearch(val) {
     }
   }
   bc.innerHTML = html;
-})();
-document.addEventListener("DOMContentLoaded", () => {
-  const params = new URLSearchParams(window.location.search);
-  const q = params.get("q");
-  if (q) document.getElementById("nav-search").value = q;
 });
 </script>
