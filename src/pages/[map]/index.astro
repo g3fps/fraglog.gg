@@ -19,7 +19,7 @@ const description = `Browse Radiant and pro player ${mapData.name} VODs by agent
 <BaseLayout title={title} description={description} ogImage={mapData.img} canonical={`https://fraglog.gg/${mapId}`}>
   <div id="map-bg-layer" style={`background-image:url(${mapData.img});opacity:1`}></div>
   <div class="agents-bg-overlay"></div>
-  <Nav />
+  <Nav crumbs={[{ label: 'ALL MAPS', href: '/' }, { label: mapData.name.toUpperCase() }]} />
   <div class="page-content" style="position:relative;z-index:2">
     <div class="agents-page-title">{mapData.name}</div>
     {ROLES_ORDER.map(role => {

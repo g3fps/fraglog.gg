@@ -7,7 +7,7 @@ import { getAllVods } from '../data/data.js';
 const allVods = getAllVods();
 ---
 <BaseLayout title="Favorites — FragLog.gg" description="Your saved Valorant VODs on FragLog.gg">
-  <Nav />
+  <Nav crumbs={[{ label: 'ALL MAPS', href: '/' }, { label: 'FAVORITES' }]} />
   <div class="page-content">
     <div class="hero">
       <div class="hero-eyebrow">Your Collection</div>

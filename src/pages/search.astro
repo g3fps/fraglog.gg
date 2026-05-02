@@ -7,7 +7,7 @@ import { getAllVods, formatDate } from '../data/data.js';
 const allVods = getAllVods();
 ---
 <BaseLayout title="Search — FragLog.gg" description="Search Valorant VODs by player, map, or agent on FragLog.gg">
-  <Nav />
+  <Nav crumbs={[{ label: 'ALL MAPS', href: '/' }, { label: 'SEARCH' }]} />
   <div class="page-content">
     <div class="hero" style="margin-bottom:1.5rem;padding-bottom:1.5rem">
       <div class="hero-eyebrow">Search Results</div>

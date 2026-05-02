@@ -5,7 +5,7 @@ import Footer from '../components/Footer.astro';
 import { MAPS, AGENTS } from '../data/data.js';
 ---
 <BaseLayout title="My VODs — FragLog.gg" description="Your personal Valorant VOD collection on FragLog.gg">
-  <Nav />
+  <Nav crumbs={[{ label: 'ALL MAPS', href: '/' }, { label: 'MY VODS' }]} />
   <div class="page-content">
     <div class="hero">
       <div class="hero-eyebrow">Personal Collection</div>
