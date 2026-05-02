@@ -32,7 +32,10 @@ const { crumbs = [] } = Astro.props as { crumbs: { label: string; href?: string 
     >
   </div>
 
-  <div class="nav-right" id="nav-right"></div>
+ <div class="nav-right" id="nav-right">
+  <button class="auth-btn" style="visibility:hidden">Sign In</button>
+  <button class="auth-btn primary" style="visibility:hidden">Sign Up</button>
+</div>
 </nav>
 
 <script is:inline>
