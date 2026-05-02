@@ -3,8 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FragLog.gg</title>
+<title>FRAGLOG</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
+  //v0.6 - original release 
 // ── MY VODS ───────────────────────────────────────────────
 function mvExtractId() {
   const url = document.getElementById("mv-url").value.trim();
@@ -84,7 +85,7 @@ async function renderMyVods() {
 
   if(error || !data) { grid.innerHTML = '<div class="empty"><strong>Error loading VODs</strong></div>'; return; }
 
-  
+  count.textContent = data.length;
 
   if(!data.length) {
     grid.innerHTML = '<div class="empty"><strong>No VODs yet</strong>Paste a YouTube URL above to add your first one</div>';
@@ -126,117 +127,6 @@ async function deleteMyVod(id) {
   await _supabase.from("user_vods").delete().eq("id", id).eq("user_id", currentUser.id);
   renderMyVods();
 }
-
-// ── SEARCH ────────────────────────────────────────────────
-
-function openSearch() {
-  const val = document.getElementById("nav-search").value;
-  if(val.trim()) runSearch(val);
-}
-
-function handleSearch(val) {
-  clearTimeout(searchTimeout);
-  if(!val.trim()) {
-    if(document.getElementById("s-search").classList.contains("active")) {
-      show("s-maps");
-    }
-    return;
-  }
-  // Switch to search screen immediately so it feels instant
-  if(!document.getElementById("s-search").classList.contains("active")) {
-    document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
-    document.getElementById("s-search").classList.add("active");
-    document.getElementById("back-btn").style.display = "block";
-    const bgLayer = document.getElementById("map-bg-layer");
-    const bgOverlay = document.getElementById("agents-bg-overlay");
-    if(bgLayer) bgLayer.style.opacity = "0";
-    if(bgOverlay) bgOverlay.style.display = "none";
-    document.body.style.background = "";
-  }
-  searchTimeout = setTimeout(() => runSearch(val), 120);
-}
-
-function runSearch(query) {
-  const q = query.toLowerCase().trim();
-  const results = [];
-
-  for(const mapId in VODS) {
-    const map = MAPS.find(m => m.id === mapId);
-    for(const agentId in VODS[mapId]) {
-      const agent = AGENTS.find(a => a.id === agentId);
-      for(const v of VODS[mapId][agentId]) {
-        const searchStr = [v.title, v.player, map?.name, agent?.name].join(" ").toLowerCase();
-        if(searchStr.includes(q)) {
-          results.push({ ...v, mapId, agentId, mapName: map?.name, agentName: agent?.name });
-        }
-      }
-    }
-  }
-
-  // Show search screen
-  document.getElementById("search-title").textContent = results.length + " result" + (results.length !== 1 ? "s" : "");
-  document.getElementById("search-sub").textContent = results.length ? `Showing results for "${query}"` : `No results for "${query}"`;
-
-  const grid = document.getElementById("search-grid");
-
-  if(!results.length) {
-    grid.innerHTML = '<div class="empty"><strong>No results</strong>Try a different player, map, or agent</div>';
-  } else {
-    grid.innerHTML = results.map(v => `
-      <div class="video-card">
-        <div class="video-thumb" data-vid="${v.id}" style="cursor:pointer">
-          <img src="https://img.youtube.com/vi/${v.id}/mqdefault.jpg" alt="${v.title}">
-          <div class="play-overlay"><div class="play-icon"><div class="play-tri"></div></div></div>
-        </div>
-        <div class="video-info">
-          <div class="video-tag-row">
-            <span class="video-map-tag">${v.mapName||''}</span>
-            <span class="video-agent-tag">${v.agentName||''}</span>
-          </div>
-          <div class="video-title" data-vid="${v.id}" style="cursor:pointer">${v.title}</div>
-          <div class="video-meta-row">
-            <span class="video-player">${v.player}</span>
-            ${v.date ? `<span class="video-date">${new Date(v.date).toLocaleDateString('en-US',{month:'short',year:'numeric'})}</span>` : ''}
-          </div>
-          ${currentUser ? `
-          <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);display:flex;gap:6px;align-items:center">
-            <button class="notes-btn ${getUserNote(v.id)?'has-note':''}" onclick="openNotes('${v.id}','${v.title.replace(/'/g,"\'")}','${v.player}'${v.note?`,'${v.note.replace(/'/g,"\'")}'`:''})">
-              📝 ${getUserNote(v.id) ? 'View notes' : 'Add notes'}
-            </button>
-            <button class="notes-btn ${isFav(v.id)?'has-note':''}" onclick="toggleFav('${v.id}',this)" title="Save to favorites">
-              ${isFav(v.id) ? '♥ Saved' : '♡ Save'}
-            </button>
-          </div>` : ''}
-        </div>
-      </div>
-    `).join("");
-
-    // Event delegation
-    grid.onclick = function(e) {
-      const vid = e.target.closest("[data-vid]")?.dataset.vid;
-      if(vid) window.open("https://youtube.com/watch?v="+vid, "_blank");
-    };
-  }
-
-  // Update URL
-  const searchUrl = "/search?q=" + encodeURIComponent(query);
-  if(location.pathname !== "/search") {
-    history.pushState({screen:"s-search", query}, "", searchUrl);
-  } else {
-    history.replaceState({screen:"s-search", query}, "", searchUrl);
-  }
-}
-
-// Close search / clear on escape
-document.addEventListener("keydown", function(e) {
-  if(e.key === "Escape") {
-    document.getElementById("nav-search").value = "";
-    document.getElementById("nav-search").blur();
-    if(document.getElementById("s-search").classList.contains("active")) {
-      selMap=null; selAgent=null; updateBreadcrumb(); show("s-maps");
-    }
-  }
-});
 </script>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -282,8 +172,8 @@ nav { display: flex; align-items: center; justify-content: space-between; paddin
 .map-card:hover .map-card-accent { transform: scaleY(1); }
 .map-card-content { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: flex-end; padding: 10px 12px; background: linear-gradient(to top, rgba(8,14,20,0.95) 0%, transparent 65%); z-index: 2; }
 .map-name { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 1.5px; color: var(--text); line-height: 1; }
-
-
+.map-vod-count { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); margin-top: 2px; }
+.map-card.has-vods .map-vod-count { color: var(--red); }
 
 .agents-page-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(28px,4vw,48px); letter-spacing: 2px; margin-bottom: 2rem; }
 .agent-section { margin-bottom: 1.75rem; }
@@ -301,8 +191,8 @@ nav { display: flex; align-items: center; justify-content: space-between; paddin
 .agent-card-info { position:relative; z-index:2; padding:8px 10px; }
 .agent-icon-placeholder { width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:var(--surface2); color:var(--muted); font-size:32px; font-family:'Bebas Neue',sans-serif; }
 .agent-name { font-family: 'Bebas Neue', sans-serif; font-size: 16px; letter-spacing: 1px; color: var(--text); line-height: 1; }
-
-
+.agent-count { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--muted); margin-top: 2px; }
+.agent-card.has-vods .agent-count { color: var(--red); }
 
 .videos-header { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 1.5rem; }
 .videos-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(28px,4vw,48px); letter-spacing: 2px; line-height: 1; }
@@ -486,6 +376,7 @@ nav { padding: 0 2.5rem; border-radius: 0; }
   /* Agent grid — 3 columns on mobile */
   .agent-grid { grid-template-columns: repeat(3, 1fr); gap: 6px; }
   .agent-name { font-size: 13px; }
+  .agent-count { font-size: 8px; }
   .agents-page-title { font-size: 28px; margin-bottom: 1.25rem; }
   .role-header { font-size: 9px; }
 
@@ -546,18 +437,6 @@ nav { padding: 0 2.5rem; border-radius: 0; }
 @media (max-width: 768px) {
   .myvods-row { grid-template-columns: 1fr; }
 }
-
-/* SEARCH */
-.nav-search-wrap { position: relative; flex: 1; max-width: 320px; }
-.nav-search-input { width: 100%; background: var(--surface); border: 1px solid var(--border); color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 13px; padding: 7px 14px; border-radius: 8px; outline: none; transition: border-color 0.15s; }
-.nav-search-input:focus { border-color: rgba(255,70,85,0.4); }
-.nav-search-input::placeholder { color: var(--muted); }
-.search-empty { padding: 1.5rem; text-align: center; color: var(--muted); font-size: 13px; }
-
-@media (max-width: 768px) {
-  .nav-search-wrap { max-width: 140px; }
-  .nav-search-input { font-size: 12px; padding: 6px 10px; }
-}
 </style>
 </head>
 <body>
@@ -566,18 +445,15 @@ nav { padding: 0 2.5rem; border-radius: 0; }
 <div id="map-bg-layer" style="position:fixed;inset:0;background-size:cover;background-position:center;background-repeat:no-repeat;opacity:0;transition:opacity 0.4s ease;z-index:0;"></div>
 <div id="agents-bg-overlay" style="position:fixed;inset:0;background:rgba(8,14,20,0.72);z-index:1;display:none;"></div>
 <nav>
-  <div class="logo" onclick="goHome()" style="cursor:pointer">FragLog<span>.gg</span></div>
-  <div style="display:flex;align-items:center;gap:1rem"><button id="back-btn" onclick="goBack()" style="display:none;background:none;border:1px solid rgba(255,255,255,0.15);color:#ECE8E1;font-family:DM Mono,monospace;font-size:11px;letter-spacing:2px;padding:6px 14px;cursor:pointer;text-transform:uppercase">← Back</button><div class="breadcrumb" id="breadcrumb"></div></div>
-  <div class="nav-search-wrap">
-    <input type="text" id="nav-search" class="nav-search-input" placeholder="Search players, maps, agents..." oninput="handleSearch(this.value)" onfocus="openSearch()" autocomplete="off">
-  </div>
-  <div class="nav-right" id="nav-right"></div>
+  <div class="logo" onclick="goHome()" style="cursor:pointer">FRAGLOG</div>
+  <div style="display:flex;align-items:center;gap:1rem"><button id="back-btn" onclick="goBack()" style="display:none;background:none;border:1px solid rgba(255,255,255,0.15);color:#ECE8E1;font-family:DM Mono,monospace;font-size:11px;letter-spacing:2px;padding:6px 14px;cursor:pointer;text-transform:uppercase">← Back</button><div class="breadcrumb" id="breadcrumb"></div></div><div class="nav-right" id="nav-right"></div>
 </nav>
 
 <div class="screen active" id="s-maps">
   <div class="hero">
+    <div class="hero-eyebrow">Valorant VOD Library</div>
     <div class="hero-title">Study the<br>Best in the World</div>
-    <div class="hero-sub">Radiant &amp; pro player gameplay — filtered by map and agent</div>
+    <div class="hero-sub">Radiant &amp; pro player POV gameplay — filtered by map and agent</div>
   </div>
   <div class="section-label">Select a map</div>
   <div class="map-grid" id="map-grid"></div>
@@ -594,13 +470,12 @@ nav { padding: 0 2.5rem; border-radius: 0; }
       <div class="hero-eyebrow" id="v-eyebrow"></div>
       <div class="videos-title" id="v-title"></div>
     </div>
-    
+    <div class="videos-count" id="v-count"></div>
   </div>
   <div class="video-grid" id="video-grid"></div>
 </div>
 
 <script>
-var searchTimeout = null;
 // ============================================================
 // VODS — ADD YOUR VIDEOS HERE
 // Format: { id: "YOUTUBE_ID", title: "Title", player: "playername", kd: "24/8", date: "2025-01-15" }
@@ -608,8 +483,6 @@ var searchTimeout = null;
 const VODS = {
   ascent: {
     jett: [
-      { id:"7R6AVy9l2u4", title:"ENVY ion Jett Ascent OPERATOR GOAT", player:"ion2x", date:"2026-04-30" },
-      { id:"KM0I4IvErIo", title:"FUR koalanoob Jett Ascent RADIANT RANKED", player:"koalanoob", date:"2026-04-30" },
     ],
     reyna: [
     ],
@@ -671,38 +544,23 @@ const VODS = {
   bind: {
     jett: [
       { id:"J8uWgFK_aU0", title:"florescent Jett Bind ONE TAPS", player:"florescent", date:"2026-04-23" },
-      { id:"5MnQqTe22Ng", title:"florescent Jett Bind STRETCH RES GOAT", player:"florescent", date:"2026-04-08" },
-      { id:"dxEJFSpu06k", title:"ENVY demon1 Jett Bind RADIANT RANKED", player:"demon1", date:"2026-04-11" },
-      { id:"nXt4SR-lDcA", title:"MIBR aspas Jett Bind RADIANT GOAT", player:"aspas", date:"2026-02-04" },
-
     ],
     reyna: [
-      { id:"YvCpKibWrTg", title:"C9 OXY Reyna Bind ONE TAPS", player:"OXY", date:"2026-04-10" },
-      { id:"SOLF1b7zWy8", title:"C9 OXY Reyna Bind REYNA MASTER", player:"OXY", date:"2026-04-07" },
     ],
     raze: [
       { id:"EyMk929uvbw", title:"Meiy Raze Bind RADIANT RANKED", player:"Meiy", date:"2026-04-27" },
       { id:"ZubGAiJStwQ", title:"Tarik Raze Bind RANKED DOMINATION", player:"Tarik", date:"2026-04-24" },
-      { id:"bWVrVMP2tuE", title:"NRG s0m Raze Bind CHAMPION ENTRY", player:"s0m", date:"2026-04-18" },
-      { id:"Xs1azsao9eQ", title:"DFM meiy Raze Bind APAC DOMINATION", player:"meiy", date:"2026-04-30" },
-      { id:"adXIGnXEhNc", title:"M8 marteen Raze Bind LOW SENS GOD", player:"marteen", date:"2026-02-18" },
 
     ],
     neon: [
       { id:"9hyZXjUtu98", title:"C9 OXY Neon Bind RADIANT RANKED", player:"OXY", date:"2026-04-28" },
       { id:"K2b9lpVZZ1Q", title:"C9 OXY Neon Bind RADIANT", player:"OXY", date:"2026-04-25" },
       { id:"c70REF7I5PQ", title:"C9 OXY Neon Bind MVP", player:"OXY", date:"2026-04-26" },
-      { id:"0JR2vWlKaj4", title:"TenZ Neon Bind RADIANT RANKED", player:"TenZ", date:"2026-04-09" },
-      { id:"mbQKhu1V_OA", title:"canezerra Neon Bind RADIANT MVP", player:"canezerra", date:"2026-03-22" },
-      { id:"eVCvhwiCNIs", title:"C9 OXY Neon Bind RADIANT RANKED", player:"OXY", date:"2026-04-10" },
-      { id:"fLj-n6g5Nv0", title:"C9 OXY Neon Bind RADIANT SHOTGUN", player:"OXY", date:"2026-04-11" },
     ],
     phoenix: [
       { id:"5YgWGGvgitM", title:"NRG s0m Phoenix Bind RANKED DOMINATION", player:"s0m", date:"2026-04-23" },
-      { id:"BOs80ecs7aA", title:"DFM akame Phoenix Bind APAC RADIANT MVP", player:"akame", date:"2026-04-27" },
     ],
     yoru: [
-      { id:"vCFkSKCOS_k", title:"ENVY Eggsterr Yoru Bind RADIANT MVP", player:"Eggsterr", date:"2026-01-22" },
     ],
     iso: [
     ],
@@ -711,10 +569,7 @@ const VODS = {
     viper: [
       { id:"oXNMqWmByWE", title:"NRG s0m Viper Bind RADIANT RANKED", player:"s0m", date:"2026-04-25" },
       { id:"r3id0ymV5f8", title:"TL nAts Viper Bind SMOKES", player:"nAts", date:"2026-04-20" },
-      { id:"u8niDrEEYlQ", title:"nAts Viper Bind PRO SMOKES", player:"nAts", date:"2026-04-30" },
-      { id:"8coM4-osiMM", title:"TL nAts Viper Bind RADIANT RANKED", player:"nAts", date:"2026-04-05" },
-      { id:"CGxAXp9Bo7g", title:"TL nAts Viper Bind SMOKES MASTER", player:"nAts", date:"2026-04-14" },
-      { id:"yAW8BRd1ITY", title:"TL nAts Viper Bind SMOKES GOAT", player:"nAts", date:"2026-04-09" },
+      { id:"bWVrVMP2tuE", title:"NRG s0m Raze Bind CHAMPION ENTRY", player:"s0m", date:"2026-04-18" },
     ],
     brimstone: [
     ],
@@ -723,7 +578,6 @@ const VODS = {
     harbor: [
     ],
     clove: [
-      { id:"vFTJnO-7Dj4", title:"Marved Clove Bind RADIANT RANKED", player:"Marved", date:"2026-04-28" },
     ],
     miks: [
     ],
@@ -735,7 +589,6 @@ const VODS = {
     ],
     chamber: [
       { id:"7cJSL26ceNY", title:"aleksandar Chamber Bind RADIANT ONE TAPS", player:"aleksandar", date:"2026-04-18" },
-      { id:"p_kNEhm9tBM", title:"NRG s0m Chamber Bind RADIANT AIM", player:"s0m", date:"2026-04-12" },
     ],
     deadlock: [
     ],
@@ -744,17 +597,12 @@ const VODS = {
     veto: [
     ],
     sova: [
-      { id:"Mzikz9_mPYg", title:"PRX f0rsaken Sova Bind LATAM RADIANT", player:"f0rsaken", date:"2026-03-11" },
     ],
     breach: [
     ],
     skye: [
       { id:"npYkkGSRO-k", title:"aleksandar Skye Bind RADIANT AIMER", player:"aleksandar", date:"2026-04-23" },
       { id:"RQpkYV17hZ4", title:"NRG s0m Skye Bind RANKED", player:"s0m", date:"2026-04-23" },
-      { id:"p6Z8iDbUGIg", title:"s0m Skye Bind RANKED", player:"s0m", date:"2026-04-23" },
-      { id:"Bikt3AwN-Pg", title:"aleksandar Skye Bind RADIANT UTIL", player:"aleksandar", date:"2026-04-24" },
-      { id:"KCjLPjt7_dE", title:"NRG s0m Skye Bind RADIANT FLASHES", player:"s0m", date:"2026-04-04" },
-
     ],
     kayo: [
     ],
@@ -765,7 +613,6 @@ const VODS = {
     tejo: [
     ],
     waylay: [
-      { id:"I_OHZP8iKtw", title:"GEN Karon Waylay Bind INSANE ENTRY", player:"Karon", date:"2026-04-06" },
     ]
   },
   haven: {
@@ -773,9 +620,6 @@ const VODS = {
       { id:"SdQGH21gDvE", title:"ENVY ion Jett Haven RADIANT RANKED w/NRG s0m", player:"ion2x", date:"2026-04-26" },
     ],
     reyna: [
-      { id:"GkkolEIngtQ", title:"florescent Reyna Haven RADIANT RANKED", player:"florescent", date:"2026-05-01" },
-      { id:"sgLH4Z8IRpA", title:"C9 OXY Reyna Haven INSANE AIM", player:"OXY", date:"2026-04-12" },
-      { id:"ADCeejaYgFM", title:"florescent Reyna Haven ONE TAP INSANITY", player:"florescent", date:"2026-05-02" },
     ],
     raze: [
     ],
@@ -787,13 +631,10 @@ const VODS = {
       { id:"kJkmPye26Ew", title:"NRG s0m Phoenix Haven RADIANT RANKED", player:"s0m", date:"2026-04-25" },
       { id:"UaAUxFETSoI", title:"florescent Phoenix Haven RADIANT RANKED", player:"florescent", date:"2026-04-22" },
       { id:"I98Ccnia6q0", title:"ENVY demon1 Phoenix Haven RADIANT FLASHES", player:"demon1", date:"2026-04-19" },
-      { id:"HwMnbjWb4Ek", title:"QOR derrek Phoenix Haven RADIANT RANKED", player:"derrek", date:"2026-04-19" },
-      { id:"lsGS9jmCtGQ", title:"NRG brawk Phoenix Haven RADIANT FLASHES", player:"brawk", date:"2026-04-13" },
     ],
     yoru: [
     ],
     iso: [
-      { id:"2hiEiJjmYPY", title:"canezerra Iso Haven RADIANT RANKED", player:"canezerra", date:"2026-04-08" },
     ],
     omen: [
     ],
@@ -805,38 +646,21 @@ const VODS = {
     astra: [
     ],
     harbor: [
-      { id:"1A9M5fk-Lpg", title:"NRG s0m Harbor Haven RADIANT SMOKES", player:"s0m", date:"2026-04-03" },
     ],
     clove: [
       { id:"VQ5eQo_uT64", title:"dapr Clove Haven SMOKES", player:"dapr", date:"2026-04-14" },
-      { id:"PSRZJBmdfZU", title:"NS Xross Clove Haven MASTERS CHAMPION", player:"Xross", date:"2026-04-13" },
-      { id:"u4caHTd04f0", title:"yanyan Clove Haven NO MAP COVER", player:"yanyan", date:"2026-03-18" },
     ],
     miks: [
-      { id:"_bLFgur4qNw", title:"TL nAts Miks Haven RADIANT SMOKES", player:"nAts", date:"2026-03-21" },
-      { id:"qrTbIcHXag0", title:"canezerra Miks Haven RADIANT RANKED", player:"canezerra", date:"2026-03-20" },
     ],
     sage: [
     ],
     cypher: [
       { id:"CrMu154qGPE", title:"TL nAts Cypher Haven RADIANT", player:"nAts", date:"2026-04-21" },
       { id:"oqRYPJEkZiY", title:"NRG s0m Cypher Haven RADIANT CAMERAS", player:"s0m", date:"2026-04-19" },
-      { id:"j7apmHfiZWQ", title:"ENVY demon1 Cypher Haven TIER 1 SENTI", player:"demon1", date:"2026-04-20" },
-      { id:"OsVy3UdPijE", title:"NRG s0m Cypher Haven RADIANT RANKED", player:"s0m", date:"2026-04-17" },
-      { id:"QShPW6C0tVQ", title:"NAVI hiro Cypher Haven RADIANT UTIL", player:"hiro", date:"2026-04-19" },
-      { id:"mRaP9dEhSYo", title:"GEN Lakia Cypher Haven RADIANT", player:"Lakia", date:"2026-03-30" },
-
     ],
     killjoy: [
-      { id:"Ch76qjFxnqw", title:"TL nAts Killjoy Haven RADIANT MASTER", player:"nAts", date:"2026-04-08" },
-      { id:"3sHMqgBsb1g", title:"DRX Mako Killjoy Haven APAC RADIANT", player:"Mako", date:"2026-04-09" },
-
     ],
     chamber: [
-      { id:"w26pYD2WlV8", title:"TS Zeus Chamber Haven APAC RADIANT", player:"Zeus", date:"2026-04-28" },
-      { id:"JDwhPpcwdXc", title:"Victor Chamber Haven ONE TAPS", player:"Victor", date:"2026-04-15" },
-      { id:"V4yVXH2DeTc", title:"N4RRATE Chamber Haven RADIANT", player:"N4RRATE", date:"2026-02-17" },
-      { id:"HGHc8phMAdk", title:"M8 marteen Chamber Haven RADIANT EU", player:"marteen", date:"2026-02-20" },
     ],
     deadlock: [
     ],
@@ -846,10 +670,6 @@ const VODS = {
     ],
     sova: [
       { id:"KpE2EXh9MLE", title:"NRG s0m Sova Haven LINEUP GOD", player:"s0m", date:"2026-04-11" },
-      { id:"wLQVgTS9Dtg", title:"SEN Jerrwin Sova Haven RADIANT", player:"Jerrwin", date:"2026-04-30" },
-      { id:"ksTKkBUwEkg", title:"C9 OXY Sova Haven RADIANT LINEUPS", player:"OXY", date:"2026-05-02" },
-      { id:"HqNC3G8Y6fo", title:"NRG s0m Sova Haven RADIANT RANKED", player:"s0m", date:"2026-04-07" },
-
     ],
     breach: [
     ],
@@ -869,23 +689,14 @@ const VODS = {
   split: {
     jett: [
       { id:"6nlom6x8bjA", title:"florescent Jett Split ENTRY GODDESS", player:"florescent", date:"2026-04-14" },
-      { id:"cQTMElba0UM", title:"florescent Jett Split RADIANT RANKED", player:"florescent", date:"2026-04-16" },
-      { id:"oJlZIxv_6mg", title:"florescent Jett Split RANK 1 AIM", player:"florescent", date:"2026-04-12" },
-      { id:"4zzKmk54rRA", title:"canezerra Jett Split NEXT PRO", player:"canezerra", date:"2026-01-24" },
-      { id:"bPEcMpZU75o", title:"T1 Meteor Jett Split INSANE MVP", player:"Meteor", date:"2026-02-25" },
     ],
     reyna: [
       { id:"dUqa69S5fqY", title:"C9 OXY Reyna Split RADIANT RANKED", player:"OXY", date:"2026-04-26" },
-      { id:"jB0PpYYe89U", title:"canezerra Reyna Split RADIANT", player:"canezerra", date:"2026-04-16" },    
-      { id:"yLMOKJV8gPE", title:"ZETA matto Reyna Split RADIANT RANKED", player:"matto", date:"2026-03-03" },
-      { id:"bUGznAe6tSw", title:"C9 OXY Reyna Split PRO AIMER", player:"OXY", date:"2026-04-05" },
+      { id:"jB0PpYYe89U", title:"canezerra Reyna Split RADIANT", player:"canezerra", date:"2026-04-16" },
     ],
     raze: [
       { id:"s6F10O6wAuc", title:"100T Asuna Raze Split RADIANT RANKED", player:"Asuna", date:"2026-04-21" },
-      { id:"EmmUDHv1nsY", title:"NRG brawk Raze Split RADIANT MVP", player:"brawk", date:"2026-04-16" },
-      { id:"XIVyVX1h1bg", title:"NRG s0m Raze Split RADIANT ENTRY", player:"s0m", date:"2026-04-12" },
-      { id:"X9y5pPn1Wz8", title:"QOR Derrek Raze Split PRO ENTRY", player:"derrek", date:"2026-02-15" },
-
+      { id:"EmmUDHv1nsY", title:"NRG brawk Raze Split RADIANT MVP", player:"brawk", date:"2026-04-16" }
     ],
     neon: [
       { id:"eScv6iy1afY", title:"MIBR zekken Neon Split RADIANT SHOTGUN", player:"zekken", date:"2026-04-15" },
@@ -893,7 +704,6 @@ const VODS = {
     phoenix: [
     ],
     yoru: [
-      { id:"oMSNtf3bC5U", title:"ENVY Eggsterr Yoru Split RADIANT RANKED", player:"Eggsterr", date:"2026-04-03" },
     ],
     iso: [
     ],
@@ -902,7 +712,6 @@ const VODS = {
     viper: [
       { id:"V_YeZOWRj98", title:"NRG s0m Viper Split WORLD CHAMP", player:"s0m", date:"2026-04-24" },
       { id:"DD1Soaw_K1I", title:"Zander Viper Split RANKED SMOKES", player:"Zander", date:"2026-04-11" },
-      { id:"C8Bgen8HlT0", title:"Zander Viper Split RADIANT SMOKES", player:"Zander", date:"2026-04-11" },
     ],
     brimstone: [
     ],
@@ -911,29 +720,18 @@ const VODS = {
     harbor: [
     ],
     clove: [
-      { id:"jliyUlegMd0", title:"haeyoday Clove Split AIM GOAT", player:"haeyoday", date:"2026-04-19" },
-      { id:"Ef1Wz5e7OO4", title:"haeyoday Clove Split BEST AIMER", player:"haeyoday", date:"2026-02-28" },
-      { id:"PybjrQLln0w", title:"ghoul33 Clove Split RADIANT LATAM", player:"ghoul33", date:"2026-03-08" },
-      { id:"EwXLZL9Dw78", title:"florescent Clove Split RADIANT RANKED", player:"florescent", date:"2026-03-01" },
     ],
     miks: [
-      { id:"fTS3wO4dswI", title:"ENVY demon1 Miks Split MASTER", player:"demon1", date:"2026-03-22" },
-
     ],
     sage: [
     ],
     cypher: [
-      { id:"-9cPLzfrBGs", title:"TL nAts Split Cypher RADIANT RANKED", player:"nAts", date:"2026-04-15" },
     ],
     killjoy: [
-      { id:"G07s6m6-yJg", title:"TL nAts Killjoy Split RADIANT RANKED", player:"nAts", date:"2026-05-01" },
     ],
     chamber: [
-      { id:"F60rN7-Rk3w", title:"Flashback Chamber Split APAC DOMINATION", player:"Flashback", date:"2026-04-25" },
-      { id:"tdNrQ56AKSI", title:"ENVY demon1 Chamber Split", player:"demon1", date:"2026-05-01" },
     ],
     deadlock: [
-      { id:"76lek9z4JT0", title:"NRG brawk Deadlock Split RADIANT RANKED", player:"brawk", date:"2026-04-06" },
     ],
     vyse: [
     ],
@@ -944,17 +742,11 @@ const VODS = {
     breach: [
     ],
     skye: [
-      { id:"85gOCBJ4Ti8", title:"C9 xeppaa Skye Split RADIANT UTIL", player:"xeppaa", date:"2026-03-31" },
-      { id:"yoUXnjaOAHE", title:"NRG s0m Skye Split RADIANT RANKED", player:"s0m", date:"2026-04-09" },
-      { id:"OltrZLDeufA", title:"C9 OXY Skye Split RADIANT RANKED", player:"OXY", date:"2026-04-12" },
-      { id:"dL_gZeNgSFs", title:"SRG Noia Skye Split RADIANT RANKED", player:"Noia", date:"2026-03-05" },
-      { id:"BvvQX13GcXs", title:"C9 OXY Skye Split RADIANT MVPS", player:"OXY", date:"2026-05-02" },
     ],
     kayo: [
     ],
     fade: [
       { id:"S25CxLRMcjY", title:"MIBR Sacy Fade Split RADIANT RANKED", player:"Sacy", date:"2026-04-20" },
-      { id:"XkAlWjrgrkM", title:"GEN Ash Fade Split RECON GOAT", player:"Ash", date:"2026-04-01" },
     ],
     gekko: [
       { id:"T-eTP7jMAt0", title:"C9 OXY Gekko Split RADIANT", player:"OXY", date:"2026-04-27" },
@@ -968,31 +760,16 @@ const VODS = {
     jett: [
       { id:"5MXBs467cI0", title:"florescent Jett Fracture BEST AIM", player:"florescent", date:"2026-04-25" },
       { id:"JmTkAveTsiI", title:"florescent Jett Fracture RADIANT RANKED", player:"florescent", date:"2026-04-22" },
-      { id:"0Pfv3SMwKaE", title:"florescent Jett Fracture RADIANT MVP", player:"florescent", date:"2026-04-23" },
     ],
     reyna: [
       { id:"C30cgHfSKNE", title:"florescent Reyna Fracture RADIANT AIMER", player:"florescent", date:"2026-04-17" },
-      { id:"lhSkdotlNjk", title:"haeyoday Reyna Fracture INSANE AIM", player:"haeyoday", date:"2026-04-02" },
-      { id:"pROpZL_N--0", title:"Tarik Reyna Fracture ONE TAPS", player:"Tarik", date:"2026-05-01" },
-      { id:"TaGE3NFWeEk", title:"florescent Reyna Fracture RADIANT AIMER", player:"florescent", date:"2026-04-14" },
-      { id:"cxXqcMwx-Ak", title:"florescent Reyna Fracture INSANE AIM", player:"florescent", date:"2026-04-08" },
-      { id:"8iQPx8P0foo", title:"C9 OXY Reyna Fracture RADIANT 200IQ", player:"OXY", date:"2026-04-06" },
-      { id:"kyLJBzrjOp8", title:"florescent Reyna Fracture RADIANT RANKED", player:"florescent", date:"2026-04-07" },
-
     ],
     raze: [
-      { id:"1-oWIoRJ2Jk", title:"GEN t3xture Raze Fracture APAC ENTRY", player:"t3xture", date:"2026-04-18" },
-      { id:"59VZSBCY8pw", title:"koalanoob Raze Fracture RADIANT RANKED", player:"koalanoob", date:"2026-05-01" },
     ],
     neon: [
       { id:"dPulIDBZXtA", title:"C9 OXY Neon Fracture RADIANT RANKED", player:"OXY", kd:"23/19", date:"2026-04-28" },
-      { id:"v_q58hRtRK0", title:"MIBR zekken Neon Fracture RADIANT RANKED", player:"zekken", date:"2026-04-24" },
-      { id:"yZ7_46QSW0E", title:"NRG s0m Neon Fracture RADIANT ENTRY", player:"s0m", date:"2026-04-26" },
-      { id:"14Obsv1snNE", title:"NRG s0m Neon Fracture RADIANT RANKED", player:"s0m", date:"2026-04-30" },
-
     ],
     phoenix: [
-      { id:"uKvWzlRVBkc", title:"NRG s0m Phoenix Fracture RADIANT RANKED", player:"s0m", date:"2026-04-07" },
     ],
     yoru: [
     ],
@@ -1002,7 +779,6 @@ const VODS = {
       { id:"FK0J9WTlePQ", title:"Flexinja Omen Fracture RANKED", player:"Flexinja", date:"2026-04-28" },
     ],
     viper: [
-      { id:"NnARslLPPlY", title:"NAVI hiro Viper Fracture RADIANT GAMESENSE", player:"hiro", date:"2026-04-15" },
     ],
     brimstone: [
       { id:"hKJA4B2DfzQ", title:"ENVY demon1 Brimstone Fracture RADIANT SMOKES", player:"demon1", date:"2026-04-20" },
@@ -1014,29 +790,19 @@ const VODS = {
     clove: [
       { id:"1vOCS8E2wVc", title:"C9 OXY Clove Fracture RADIANT RANKED", player:"OXY", date:"2026-04-28" },
       { id:"5liz_r2jRKI", title:"C9 OXY Clove Fracture SMOKES MVP", player:"OXY", date:"2026-04-11" },
-      { id:"goV6fG5WH0U", title:"SEN Jerrwin Clove Fracture PRO CONTROLLER", player:"Jerrwin", date:"2026-03-31" },
-      { id:"tqLuQtaeg0Y", title:"C9 OXY Clove Fracture AGGRESSIVE SMOKES", player:"OXY", date:"2026-04-10" },
     ],
     miks: [
-      { id:"n2WgRq8mP-M", title:"aleksandar Miks Fracture SCRIMS DOMINATION", player:"aleksandar", date:"2026-03-16" },
     ],
     sage: [
     ],
     cypher: [
       { id:"wIz3sCqXlLA", title:"TL nAts Cypher Fracture RADIANT GAMESENSE", player:"nAts", date:"2026-04-21" },
-      { id:"HCy7RHym_68", title:"TL nAts Cypher Fracture RADIANT SETUPS", player:"nAts", date:"2026-04-15" },
-      { id:"gpLUCGyINTA", title:"ENVY demon1 Cypher Fracture SETUP GOD", player:"demon1", date:"2026-04-13" },
     ],
     killjoy: [
-      { id:"9v9iD-WvQ6s", title:"Inspire Killjoy Fracture RADIANT SETUPS", player:"Inspire", date:"2026-04-05" },
     ],
     chamber: [
       { id:"Sego0UGSJRk", title:"LEV Sato Chamber Fracture RADIANT RANKED", player:"sato", date:"2026-04-28" },
       { id:"f6G6AVh80pY", title:"C9 OXY Chamber Fracture RADIANT ONLY HEADS", player:"OXY", date:"2026-04-21" },
-      { id:"ZxLpo92IIf4", title:"ENVY ion Chamber Fracture PRO AIM", player:"ion2x", date:"2026-03-25" },
-      { id:"zIunHkgYq5Q", title:"ENVY demon1 Chamber Fracture RADIANT NEW ACT", player:"demon1", date:"2026-05-01" },
-      { id:"w9utq_kRY6o", title:"ENVY demon1 Chamber Fracture RADIANT MVP", player:"demon1", date:"2026-05-02" },
-      { id:"BfN0D19Nb58", title:"KRU less Chamber Fracture RADIANT RANKED", player:"less", date:"2026-05-02" },
     ],
     deadlock: [
     ],
@@ -1048,63 +814,40 @@ const VODS = {
     ],
     breach: [
       { id:"0INbba0OWNE", title:"NRG s0m Breach Fracture UTIL MASTER", player:"s0m", date:"2026-04-17" },
-      { id:"LXawAs7uKSI", title:"QOR derrek Fracture Breach FLASH GOAT", player:"derrek", date:"2026-04-16" },
-      { id:"oCTPObW6XCg", title:"NRG s0m Breach Fracture RADIANT RANKED", player:"s0m", date:"2026-04-16" },
-      { id:"2DvoWIZfZT4", title:"NRG s0m Breach Fracture RADIANT RANKED", player:"s0m", date:"2026-04-06" },
 
     ],
     skye: [
       { id:"UXqu0RnwgNw", title:"ENVY demon1 Skye Fracture PRO UTIL", player:"demon1", date:"2026-04-13" },
-      { id:"pvjJI6gb2sQ", title:"ENVY POPPIN Skye Fracture TIER 1 RECON", player:"POPPIN", date:"2026-03-21" },
-      { id:"6v7GDjnhq1E", title:"NRG brawk Skye Fracture WORLD MVP", player:"brawk", date:"2026-04-18" },
     ],
     kayo: [
     ],
     fade: [
       { id:"3REvnHBdIf4", title:"NRG brawk Fade Fracture RADIANT RANKED", player:"brawk", date:"2026-04-28" },
-      { id:"hF_MJeRDE4U", title:"NRG s0m Fade Fracture RADIANT RANKED", player:"s0m", date:"2026-04-11" },
     ],
     gekko: [
     ],
     tejo: [
-      { id:"FE3OmMI5Lyw", title:"FUR Nerve Tejo Fracture NA RANKED RADIANT", player:"nerve", date:"2026-04-28" },
       { id:"M3g-yMQWdqY", title:"C9 OXY Tejo Fracture RADIANT RANKED", player:"OXY", date:"2026-04-24" },
-      { id:"bBzD8QkwjBc", title:"ZETA hatto Tejo Fracture RADIANT MVP", player:"hatto", date:"2026-03-29" },
     ],
     waylay: [
     ]
   },
   pearl: {
     jett: [
-      { id:"V1_TNR0yaao", title:"TenZ Jett Pearl RADIANT GOAT", player:"TenZ", date:"2026-04-23" },
-      { id:"7xKD0ojyGcA", title:"LOUD luk xo Jett Pearl RADIANT AIMER", player:"luk xo", date:"2026-04-23" },
-      { id:"48BArO8rCZE", title:"NRG s0m Jett Pearl RADIANT AIM", player:"s0m", date:"2026-04-08" },
     ],
     reyna: [
-      { id:"bFHRVyIIoco", title:"Inspire Reyna Pearl PRO RANKED", player:"Inspire", date:"2026-03-14" },
     ],
     raze: [
-      { id:"LP4a3zQsxfw", title:"MIBR zekken Raze Pearl", player:"zekken", date:"2026-04-30" },
     ],
     neon: [
       { id:"o3-doqnC2FI", title:"MIBR zekken Neon Pearl RADIANT", player:"zekken", date:"2026-04-23" },
-      { id:"awft5rh83dQ", title:"C9 OXY Neon Pearl RADIANT RANKED", player:"OXY", date:"2026-04-20" },
-      { id:"H1bDliO3jss", title:"C9 OXY Neon Pearl RADIANT RANKED", player:"OXY", date:"2026-04-16" },
-      
     ],
     phoenix: [
       { id:"9dL4B3C4aEA", title:"aleksandar Phoenix Pearl RADIANT RANKED", player:"aleksandar", date:"2026-04-25" },
       { id:"ZvTGWJxdcIE", title:"C9 OXY Phoenix Pearl RADIANT RANKED", player:"OXY", date:"2026-04-25" },
       { id:"vlFIURAn1Wk", title:"C9 OXY Phoenix Pearl RADIANT MASTERCLASS", player:"OXY", date:"2026-04-22" },
-      { id:"W_HBNqpsnu8", title:"DRX Yong Phoenix Pearl FLASH KING", player:"Yong", date:"2026-04-23" },
-      { id:"FD36SpdoCig", title:"NRG s0m Phoenix Pearl RADIANT RANKED", player:"s0m", date:"2026-04-17" },
-      { id:"lglL26mk7sQ", title:"C9 OXY Phoenix Pearl RADIANT MVP", player:"OXY", date:"2026-03-15" },
-
     ],
     yoru: [
-      { id:"qujRF2QbAfU", title:"ENVY Eggsterr Yoru Pearl YORU MASTERY", player:"Eggsterr", date:"2026-03-13" },
-      { id:"4y1H4jPrY0U", title:"BBL Larok Yoru Pearl GOAT ", player:"Larok", date:"2026-03-01" },
-
     ],
     iso: [
     ],
@@ -1115,19 +858,12 @@ const VODS = {
     brimstone: [
     ],
     astra: [
-      { id:"pddLuOe9M2k", title:"Xander Astra Pearl RADIANT SMOKES", player:"Xander", date:"2026-04-14" },
-      { id:"_mHTEFp8t4o", title:"Zander Astra Pearl RADIANT SMOKES", player:"Zander", date:"2026-04-21" },
-      { id:"EahHLew5RI0", title:"SEN JohnQT Astra Pearl PRO SMOKES", player:"JohnQT", date:"2026-04-22" },
     ],
     harbor: [
     ],
     clove: [
-      { id:"1d_y2e3NqS8", title:"NRG s0m Clove Pearl RADIANT SMOKES", player:"s0m", date:"2026-04-03" },
-      { id:"vsW9zyqplQM", title:"aleksandar Clove Pearl MVP", player:"aleksandar", date:"2026-02-07" },
     ],
     miks: [
-      { id:"lXoQRdyVTeQ", title:"C9 OXY Miks Pearl RADIANT RANKED NEW", player:"OXY", date:"2026-03-26" },
-      { id:"OWqaXaj2E4M", title:"aleksandar Miks Pearl NEW AGENT MASTERY", player:"aleksandar", date:"2026-04-03" },
     ],
     sage: [
     ],
@@ -1135,14 +871,10 @@ const VODS = {
     ],
     killjoy: [
       { id:"dQsUBU-mlS8", title:"TL nAts Killjoy Pearl RADIANT RANKED", player:"nAts", date:"2026-04-30" },
-      { id:"TQrbDrik9pY", title:"TL nAts Killjoy Pearl RADIANT RANKED", player:"nAts", date:"2026-04-08" },
     ],
     chamber: [
       { id:"r583kLoILW0", title:"C9 OXY Chamber Pearl RADIANT AIM", player:"OXY", date:"2026-04-21" },
       { id:"JveGDMyeSto", title:"ENVY ion Chamber Pearl RANK 1 ONE TAPS", player:"ion2x", date:"2026-04-15" },
-      { id:"PaK7rCarcgA", title:"NRG s0m Chamber Pearl WORLD CHAMP DIFF", player:"s0m", date:"2026-04-09" },
-      { id:"fhqfBZ-Mbds", title:"C9 OXY Chamber Pearl RADIANT RANK 1", player:"OXY", date:"2026-04-22" },
-      { id:"obKb-iokbBU", title:"SEN johnQT Chamber Pearl TIER 1 AIM", player:"johnQT", date:"2026-05-02" },
 
     ],
     deadlock: [
@@ -1154,29 +886,21 @@ const VODS = {
     veto: [
     ],
     sova: [
-      { id:"Sn41Z_-NG18", title:"NRG brawk Sova Pearl RADIANT LINEUPS", player:"brawk", date:"2026-04-14" },
-      { id:"XlipvE2uLno", title:"NRG brawk Sova Pearl WORLD CHAMP RANKED", player:"brawk", date:"2026-04-01" },
     ],
     breach: [
     ],
     skye: [
-      { id:"UAyCwrDNLT8", title:"C9 OXY Skye Pearl RADIANT RANKED", player:"OXY", date:"2026-04-05" },
     ],
     kayo: [
-      { id:"i4ytszNJ_C0", title:"ENVY demon1 KAY/O Pearl RADIANT FLASHES", player:"demon1", date:"2026-04-13" },
     ],
     fade: [
       { id:"QGi_UZOitcA", title:"NRG s0m Fade Pearl RADIANT RANKED", player:"s0m", date:"2026-04-22" },
-      { id:"J_ppaEeuBPg", title:"TL nAts Fade Pearl RADIANT EMEA", player:"nAts", date:"2026-04-16" },
     ],
     gekko: [
     ],
     tejo: [
-      { id:"KN4T9-ccjwU", title:"canezerra Tejo Pearl RADIANT RANKED", player:"canezerra", date:"2026-02-15" },
     ],
     waylay: [
-      { id:"Grjvr-N_qXw", title:"SEN nightz Waylay Pearl RADIANT RANKED", player:"nightz", date:"2026-01-29" },
-
     ]
   },
   icebox: {
@@ -1245,35 +969,21 @@ const VODS = {
      { id:"5QyWONDgI-k", title:"QOR derrek Jett Breeze RADIANT RANKED", player:"derrek", date:"2026-04-27" },
      { id:"YecrOrVSzQo", title:"Tarik Jett Breeze RADIANT DOMINATION", player:"Tarik", date:"2026-04-19" },
      { id:"x-1OzTql9oU", title:"ENVY ion Jett Breeze RADIANT ENTRY", player:"ion2x", date:"2026-04-17" },
-     { id:"Wc8BCZ5KVyg", title:"T1 iZu Jett Breeze OP GOAT", player:"iZu", date:"2026-04-17" },
-     { id:"mA5Tj5iAAHI", title:"C9 OXY Jett Breeze RADIANT ENTRY", player:"OXY", date:"2026-04-10" },
-     { id:"tjiDvW7Ed5E", title:"NAVI ComeBack Jett Breeze EU RADIANT", player:"ComeBack", date:"2026-04-14" },
-     { id:"xz8DL_SouCE", title:"florescent Jett Breeze RADIANT ONETAPS", player:"florescent", date:"2026-04-18" },
-     { id:"ri6rxoug4c0", title:"florescent Jett Breeze RADIANT AIM", player:"florescent", date:"2026-05-02" },
-     { id:"Z1ubZoLUNgY", title:"NRG s0m Jett Breeze RADIANT OP", player:"s0m", date:"2026-04-08" },
     ],
     reyna: [
      { id:"HrWzwyCfcZ0", title:"C9 OXY Reyna Breeze RADIANT RANKED", player:"OXY", date:"2026-04-25" },
      { id:"BNRfiwvK7HI", title:"C9 OXY Reyna Breeze RADIANT", player:"OXY", date:"2026-04-22" },
      { id:"P6tFzHdcWcw", title:"ENVY ion Reyna Breeze AIM ONLY", player:"ion2x", date:"2026-04-13" },
-     { id:"lhLXHhwOBag", title:"C9 OXY Reyna Breeze RANKED 1", player:"OXY", date:"2026-04-17" },
-     { id:"mpqaNq65JKg", title:"ENVY ion Reyna Breeze RADIANT MVP", player:"ion2x", date:"2026-04-07" },
-     { id:"RpoPdNrPy6s", title:"AG f4ngeer Reyna Breeze RADIANT MVP", player:"f4ngeer", date:"2026-02-07" },
     ],
     raze: [
     ],
     neon: [
       { id:"smjMBKaOhQU", title:"C9 OXY Neon Breeze RADIANT RANKED", player:"OXY", date:"2026-04-25" },
       { id:"AtBRUr7KMQ8", title:"FNATIC kaajak Neon Breeze EU DOMINATION", player:"kaajak", date:"2026-04-11" },
-      { id:"a5i9sjEA400", title:"C9 OXY Neon Breeze RADIANT MVP", player:"OXY", date:"2026-04-27" },
-      { id:"U0gVTKHVYGc", title:"NRG s0m Neon Breeze SHOTGUN GOD", player:"s0m", date:"2026-04-16" },
-
     ],
     phoenix: [
     ],
     yoru: [
-      { id:"mxmOTIpW-dQ", title:"Eggsterr Yoru Breeze RADIANT YORU", player:"Eggsterr", date:"2026-04-03" },
-      { id:"65L7SB16j5I", title:"NRG s0m Yoru Breeze RANKED ENTRY", player:"s0m", date:"2026-04-10" },
     ],
     iso: [
     ],
@@ -1281,9 +991,6 @@ const VODS = {
     ],
     viper: [
       { id:"_LGITZFzJS8", title:"NRG s0m Viper Breeze CHAMPION SMOKES", player:"s0m", date:"2026-04-27" },
-      { id:"yvx5bRZkT4o", title:"TL nAts Viper Breeze", player:"nAts", date:"2026-04-13" },
-      { id:"qZ1ReQtMf2g", title:"NRG s0m Viper Breeze WORLD CHAMP SMOKES", player:"s0m", date:"2026-04-30" },
-      { id:"lhAy7a3hTmk", title:"NRG s0m Viper Breeze RADIANT SMOKES", player:"s0m", date:"2026-04-21" },
     ],
     brimstone: [
     ],
@@ -1293,22 +1000,17 @@ const VODS = {
      { id:"jnrywmGvfCs", title:"Zander Harbor Breeze RADIANT RANKED", player:"Zander", date:"2026-04-25" },
     ],
     clove: [
-      { id:"_S7KOeLiqsA", title:"Shunta Clove Breeze RADIANT AIM", player:"Shunta", date:"2026-04-10" },
     ],
     miks: [
-      { id:"EoLRzuwTXyQ", title:"Kassielsy Miks Breeze NEW AGENT MVP", player:"Kassielsy", date:"2026-03-20" },
-
     ],
     sage: [
     ],
     cypher: [
-      { id:"e8BvD_mdVQw", title:"TL nAts Cypher Breeze INSANE SETUPS", player:"nAts", date:"2026-04-08" },
     ],
     killjoy: [
     ],
     chamber: [
       { id:"ifS472dStUA", title:"NRG s0m Chamber Breeze MVP", player:"s0m", date:"2026-04-18" },
-      { id:"NTn4tuNaFNI", title:"NRG s0m Chamber Breeze RADIANT RANKED", player:"s0m", date:"2026-04-05" },
     ],
     deadlock: [
     ],
@@ -1317,9 +1019,7 @@ const VODS = {
     veto: [
     ],
     sova: [
-      { id:"Y0iPbJs1krQ", title:"NRG brawk Sova Breeze WORLD CHAMP", player:"brawk", date:"2026-04-27" },
-      { id:"Ne-PRF7vawE", title:"Sacy Sova Breeze PRO RECON", player:"Sacy", date:"2026-03-29" },
-      { id:"cMucLJHGoCs", title:"NRG s0m Sova Breeze RADIANT RANKED", player:"s0m", date:"2026-05-02" },
+      { id:"Y0iPbJs1krQ", title:"NRG brawk Sova Breeze WORLD CHAMP", player:"brawk", date:"2026-04-27" }
     ],
     breach: [
     ],
@@ -1340,36 +1040,22 @@ const VODS = {
     jett: [
       { id:"tnESIZbDUqo", title:"Tarik Jett Lotus RANKED", player:"Tarik", date:"2026-04-25" },
       { id:"wKxTSIkgK0k", title:"florescent Jett Lotus RADIANT RANKED", player:"florescent", date:"2026-04-22" },
-      { id:"9m3FIJ7I2gs", title:"TenZ Jett Lotus RADIANT ENTRY", player:"TenZ", date:"2026-04-21" },
-      { id:"QXgw2etu7hw", title:"florescent Jett Lotus RADIANT RANKED", player:"florescent", date:"2026-04-21" },
-      { id:"0FiufGDoGH0", title:"florescent Jett Lotus INSANE ONE TAPS", player:"florescent", date:"2026-04-16" },
-      { id:"0EdNeNq43L0", title:"florescent Jett Lotus RANKED GOAT", player:"florescent", date:"2026-04-15" },
     ],
     reyna: [
       { id:"WiUJIaxH3fo", title:"C9 OXY Reyna Lotus RADIANT RANKED", player:"OXY", date:"2026-04-26" },
-      { id:"6OLNIo-KkJg", title:"C9 OXY Reyna Lotus RADIANT ONE TAPS", player:"OXY", date:"2026-05-01" },
-      { id:"Gcr_A20oEYs", title:"C9 OXY Reyna Lotus RADIANT RANKED", player:"OXY", date:"2026-04-12" },
-      { id:"k_h0P5U0NLc", title:"C9 OXY Reyna Lotus RADIANT RANKED", player:"OXY", date:"2026-04-09" },
     ],
     raze: [
-      { id:"Put7KPLtquc", title:"NRG s0m Raze Lotus DOMINATION RADIANT", player:"s0m", date:"2026-05-01" },
     ],
     neon: [
       { id:"diXmbYFTe4c", title:"MIBR zekken Neon Lotus RADIANT RANKED", player:"zekken", date:"2026-04-30" },
-      { id:"3lPciKRKsjg", title:"EG dgzin Neon Lotus PRO GAMEPLAY", player:"dgzin", date:"2026-04-21" },
-      { id:"jOb1LYWwIZg", title:"MIBR zekken Neon Lotus PRO GAMEPLAY", player:"zekken", date:"2026-05-02" },
-      { id:"TuYnOc4eCtM", title:"NRG s0m Neon Lotus TIER 1 RANKED", player:"s0m", date:"2026-04-26" },
     ],
     phoenix: [
     ],
     yoru: [
     ],
     iso: [
-      { id:"_YkehRPdxX0", title:"aleksandar Iso Lotus RADIANT RANKED", player:"aleksandar", date:"2026-03-17" },
     ],
     omen: [
-      { id:"PQR-Ieht-M0", title:"Zander Omen Lotus INSANE MVP", player:"Zander", date:"2026-03-30" },
-      { id:"15vZgo4DN9s", title:"SR Zander Omen Lotus RADIANT", player:"Zander", date:"2026-03-28" },
     ],
     viper: [
     ],
@@ -1381,10 +1067,8 @@ const VODS = {
       { id:"V2pxy1_vatU", title:"PA1NT Harbor Lotus RANKED SMOKES", player:"PA1NT", date:"2026-04-19" },
     ],
     clove: [
-      { id:"8VLhxoVf2XY", title:"QOR Notexxd Clove Lotus RANK 1 MVP", player:"Notexxd", date:"2026-04-16" },
     ],
     miks: [
-      { id:"-a2poQeawlc", title:"DFM meiy Miks Lotus RADIANT", player:"meiy", date:"2026-03-24" },
     ],
     sage: [
     ],
@@ -1400,8 +1084,6 @@ const VODS = {
       { id:"1voPqhkTDX8", title:"ENVY demon1 Deadlock Lotus RADIANT TRAPS", player:"demon1", date:"2026-04-20" },
     ],
     vyse: [
-    { id:"i7-CBuv2T1k", title:"TL nAts Vyse Lotus EU RANKED", player:"nAts", date:"2026-03-22" },
-    { id:"YczyJ4_90I0", title:"TL nAts Vyse Lotus RADIANT RANKED", player:"nAts", date:"2026-03-30" },
     ],
     veto: [
     ],
@@ -1417,8 +1099,6 @@ const VODS = {
     ],
     fade: [
       { id:"zNEL3KulkIQ", title:"ENVY ion Fade Lotus RADIANT UTIL", player:"ion2x", date:"2026-04-14" },
-      { id:"OrgD9kxYiSQ", title:"C9 xeppaa Fade Lotus RADIANT MVP", player:"xeppaa", date:"2026-04-08" },
-      { id:"r-Y3u0Pkjlc", title:"ENVY demon1 Fade Lotus PRO AIM", player:"demon1", date:"2026-04-13" },
     ],
     gekko: [
       { id:"y_2PWdwRMlU", title:"C9 OXY Gekko Lotus WINGMAN MASTER", player:"OXY", date:"2026-04-17" },
@@ -1512,10 +1192,8 @@ const VODS = {
     astra: [
     ],
     harbor: [
-      { id:"RTJKC3TyU7I", title:"Eggsterr Harbor Abyss RADIANT SMOKES", player:"Eggsterr", date:"2026-03-10" },
     ],
     clove: [
-      { id:"O9Do103K0K4", title:"ENVY keznit Clove Abyss RADIANT", player:"keznitdeus", date:"2026-02-13" },
     ],
     miks: [
     ],
@@ -1533,7 +1211,6 @@ const VODS = {
     vyse: [
     ],
     veto: [
-      { id:"RTIde3aNHWU", title:"TH benjyfishy Veto Abyss RADIANT SENTI", player:"benjyfishy", date:"2026-03-17" },
     ],
     sova: [
     ],
@@ -1556,7 +1233,6 @@ const VODS = {
     jett: [
     ],
     reyna: [
-      { id:"QmZy1kEDy0E", title:"koalanoob Reyna Corrode INSANE AIM", player:"koalanoob", date:"2026-01-27" },
     ],
     raze: [
     ],
@@ -1579,7 +1255,6 @@ const VODS = {
     harbor: [
     ],
     clove: [
-    { id:"YnFAmaY9M68", title:"haeyoday Clove Corrode RADIANT MVP", player:"haeyoday", date:"2026-03-09" }
     ],
     miks: [
     ],
@@ -1729,7 +1404,6 @@ function updateBreadcrumb(){
   const activeScreen = document.querySelector(".screen.active")?.id;
   if(activeScreen === "s-favorites"){ bc.innerHTML=`<span class="crumb" onclick="goHome()">ALL MAPS</span> <span class="sep">›</span> <span class="current">FAVORITES</span>`; return; }
   if(activeScreen === "s-myvods"){ bc.innerHTML=`<span class="crumb" onclick="goHome()">ALL MAPS</span> <span class="sep">›</span> <span class="current">MY VODS</span>`; return; }
-  if(activeScreen === "s-search"){ bc.innerHTML=`<span class="crumb" onclick="goHome()">ALL MAPS</span> <span class="sep">›</span> <span class="current">SEARCH</span>`; return; }
   const parts=[`<span class="crumb" onclick="goHome()">ALL MAPS</span>`];
   if(selMap) parts.push(`<span class="sep">›</span><span class="crumb" onclick="goAgents()">${selMap.name.toUpperCase()}</span>`);
   if(selAgent) parts.push(`<span class="sep">›</span><span class="current">${selAgent.name.toUpperCase()}</span>`);
@@ -1738,7 +1412,7 @@ function updateBreadcrumb(){
 
 function goBack(){
   const active = document.querySelector(".screen.active")?.id;
-  if(active === "s-favorites" || active === "s-myvods" || active === "s-search") { document.getElementById("nav-search").value=""; selMap=null; selAgent=null; updateBreadcrumb(); show("s-maps"); }
+  if(active === "s-favorites" || active === "s-myvods") { selMap=null; selAgent=null; updateBreadcrumb(); show("s-maps"); }
   else if(selAgent){ selAgent=null; updateBreadcrumb(); show("s-agents"); }
   else if(selMap){ selMap=null; updateBreadcrumb(); show("s-maps"); }
 } function goHome(){ selMap=null; selAgent=null; updateBreadcrumb(); show("s-maps"); }
@@ -1752,6 +1426,7 @@ function renderMaps(){
       <img src="${m.img}" alt="${m.name}" onerror="this.style.display='none'">
       <div class="map-card-content">
         <div class="map-name">${m.name}</div>
+        <div class="map-vod-count">${n>0?n+' VODs':'Coming soon'}</div>
       </div>
     </div>`;
   }).join("");
@@ -1784,7 +1459,7 @@ function renderAgents(){
           </div>
           <div class="agent-card-info">
             <div class="agent-name">${a.name}</div>
-            <div class="agent-count"></div>
+            <div class="agent-count">${vods.length>0?vods.length+' VOD'+(vods.length!==1?'s':''):'No VODs yet'}</div>
           </div>
         </div>`;
       }).join("")}</div>`;
@@ -1803,6 +1478,7 @@ function renderVideos(){
   const vods=agentVods(selMap.id,selAgent.id);
   document.getElementById("v-eyebrow").textContent=selMap.name+" · Radiant VODs";
   document.getElementById("v-title").textContent=selAgent.name;
+  document.getElementById("v-count").textContent=vods.length+' VOD'+(vods.length!==1?'s':'');
   const grid = document.getElementById("video-grid");
   grid.onclick = function(e) {
     const vid = e.target.closest("[data-vid]")?.dataset.vid;
@@ -1841,14 +1517,8 @@ async function init() {
   try { await loadAgentIcons(); } catch(e) { console.warn("Agent icons failed", e); }
 
   // Parse URL so refreshing and direct links work
-  const params = new URLSearchParams(location.search);
   const parts = location.pathname.replace(/^\//, "").split("/").filter(Boolean);
-  if(parts[0] === "search" && params.get("q")) {
-    const q = params.get("q");
-    renderMaps(); updateBreadcrumb();
-    document.getElementById("nav-search").value = q;
-    runSearch(q);
-  } else if(parts[0] === "favorites") {
+  if(parts[0] === "favorites") {
     renderMaps(); updateBreadcrumb(); goFavorites();
   } else if(parts[0] && parts[1]) {
     selMap = MAPS.find(m => m.id === parts[0]) || null;
@@ -1869,12 +1539,7 @@ init();
 window.addEventListener("popstate", function(e) {
   // Always navigate based on the current URL
   const parts = location.pathname.replace(/^\//, "").split("/").filter(Boolean);
-  const searchParams = new URLSearchParams(location.search);
-  if(parts[0] === "search" && searchParams.get("q")) {
-    const q = searchParams.get("q");
-    document.getElementById("nav-search").value = q;
-    runSearch(q);
-  } else if(parts[0] === "favorites") {
+  if(parts[0] === "favorites") {
     selMap=null; selAgent=null; updateBreadcrumb(); renderFavorites(); show("s-favorites", false);
   } else if(parts[0] && parts[1]) {
     selMap = MAPS.find(m=>m.id===parts[0])||null;
@@ -2263,7 +1928,7 @@ async function renderMyVods() {
 
   if(error || !data) { grid.innerHTML = '<div class="empty"><strong>Error loading VODs</strong></div>'; return; }
 
-  
+  count.textContent = data.length;
 
   if(!data.length) {
     grid.innerHTML = '<div class="empty"><strong>No VODs yet</strong>Paste a YouTube URL above to add your first one</div>';
@@ -2305,117 +1970,6 @@ async function deleteMyVod(id) {
   await _supabase.from("user_vods").delete().eq("id", id).eq("user_id", currentUser.id);
   renderMyVods();
 }
-
-// ── SEARCH ────────────────────────────────────────────────
-
-function openSearch() {
-  const val = document.getElementById("nav-search").value;
-  if(val.trim()) runSearch(val);
-}
-
-function handleSearch(val) {
-  clearTimeout(searchTimeout);
-  if(!val.trim()) {
-    if(document.getElementById("s-search").classList.contains("active")) {
-      show("s-maps");
-    }
-    return;
-  }
-  // Switch to search screen immediately so it feels instant
-  if(!document.getElementById("s-search").classList.contains("active")) {
-    document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
-    document.getElementById("s-search").classList.add("active");
-    document.getElementById("back-btn").style.display = "block";
-    const bgLayer = document.getElementById("map-bg-layer");
-    const bgOverlay = document.getElementById("agents-bg-overlay");
-    if(bgLayer) bgLayer.style.opacity = "0";
-    if(bgOverlay) bgOverlay.style.display = "none";
-    document.body.style.background = "";
-  }
-  searchTimeout = setTimeout(() => runSearch(val), 120);
-}
-
-function runSearch(query) {
-  const q = query.toLowerCase().trim();
-  const results = [];
-
-  for(const mapId in VODS) {
-    const map = MAPS.find(m => m.id === mapId);
-    for(const agentId in VODS[mapId]) {
-      const agent = AGENTS.find(a => a.id === agentId);
-      for(const v of VODS[mapId][agentId]) {
-        const searchStr = [v.title, v.player, map?.name, agent?.name].join(" ").toLowerCase();
-        if(searchStr.includes(q)) {
-          results.push({ ...v, mapId, agentId, mapName: map?.name, agentName: agent?.name });
-        }
-      }
-    }
-  }
-
-  // Show search screen
-  document.getElementById("search-title").textContent = results.length + " result" + (results.length !== 1 ? "s" : "");
-  document.getElementById("search-sub").textContent = results.length ? `Showing results for "${query}"` : `No results for "${query}"`;
-
-  const grid = document.getElementById("search-grid");
-
-  if(!results.length) {
-    grid.innerHTML = '<div class="empty"><strong>No results</strong>Try a different player, map, or agent</div>';
-  } else {
-    grid.innerHTML = results.map(v => `
-      <div class="video-card">
-        <div class="video-thumb" data-vid="${v.id}" style="cursor:pointer">
-          <img src="https://img.youtube.com/vi/${v.id}/mqdefault.jpg" alt="${v.title}">
-          <div class="play-overlay"><div class="play-icon"><div class="play-tri"></div></div></div>
-        </div>
-        <div class="video-info">
-          <div class="video-tag-row">
-            <span class="video-map-tag">${v.mapName||''}</span>
-            <span class="video-agent-tag">${v.agentName||''}</span>
-          </div>
-          <div class="video-title" data-vid="${v.id}" style="cursor:pointer">${v.title}</div>
-          <div class="video-meta-row">
-            <span class="video-player">${v.player}</span>
-            ${v.date ? `<span class="video-date">${new Date(v.date).toLocaleDateString('en-US',{month:'short',year:'numeric'})}</span>` : ''}
-          </div>
-          ${currentUser ? `
-          <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);display:flex;gap:6px;align-items:center">
-            <button class="notes-btn ${getUserNote(v.id)?'has-note':''}" onclick="openNotes('${v.id}','${v.title.replace(/'/g,"\'")}','${v.player}'${v.note?`,'${v.note.replace(/'/g,"\'")}'`:''})">
-              📝 ${getUserNote(v.id) ? 'View notes' : 'Add notes'}
-            </button>
-            <button class="notes-btn ${isFav(v.id)?'has-note':''}" onclick="toggleFav('${v.id}',this)" title="Save to favorites">
-              ${isFav(v.id) ? '♥ Saved' : '♡ Save'}
-            </button>
-          </div>` : ''}
-        </div>
-      </div>
-    `).join("");
-
-    // Event delegation
-    grid.onclick = function(e) {
-      const vid = e.target.closest("[data-vid]")?.dataset.vid;
-      if(vid) window.open("https://youtube.com/watch?v="+vid, "_blank");
-    };
-  }
-
-  // Update URL
-  const searchUrl = "/search?q=" + encodeURIComponent(query);
-  if(location.pathname !== "/search") {
-    history.pushState({screen:"s-search", query}, "", searchUrl);
-  } else {
-    history.replaceState({screen:"s-search", query}, "", searchUrl);
-  }
-}
-
-// Close search / clear on escape
-document.addEventListener("keydown", function(e) {
-  if(e.key === "Escape") {
-    document.getElementById("nav-search").value = "";
-    document.getElementById("nav-search").blur();
-    if(document.getElementById("s-search").classList.contains("active")) {
-      selMap=null; selAgent=null; updateBreadcrumb(); show("s-maps");
-    }
-  }
-});
 </script>
 
 <!-- VIDEO MODAL -->
@@ -2436,7 +1990,7 @@ document.addEventListener("keydown", function(e) {
 <div class="auth-modal-backdrop" id="auth-modal" onclick="closeAuthModal(event)">
   <div class="auth-modal" style="position:relative">
     <button class="auth-close" onclick="closeAuthModalDirect()">✕</button>
-    <h2>FragLog<span style="color:var(--red)">.gg</span></h2>
+    <h2>FRAGLOG</h2>
     <p>Sign in to save favorites and add notes</p>
     <div class="auth-tabs">
       <button class="auth-tab active" onclick="switchTab('login')">Sign In</button>
@@ -2537,18 +2091,8 @@ document.addEventListener("keydown", function(e) {
   </div>
 
   <!-- VOD list -->
-  <div class="section-label" style="margin-top:2rem">Your collection</div>
+  <div class="section-label" style="margin-top:2rem">Your collection (<span id="mv-count">0</span>)</div>
   <div class="video-grid" id="mv-grid"></div>
-</div>
-
-
-<div class="screen" id="s-search">
-  <div class="hero">
-    <div class="hero-eyebrow">Search Results</div>
-    <div class="videos-title" id="search-title">Results</div>
-    <div class="hero-sub" id="search-sub"></div>
-  </div>
-  <div class="video-grid" id="search-grid"></div>
 </div>
 
 <!-- NOTES MODAL -->
