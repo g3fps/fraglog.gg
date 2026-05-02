@@ -639,7 +639,7 @@ nav {
 .mv-delete-btn:hover { background: rgba(255,70,85,0.1); }
 
 /* ── SEARCH ──────────────────────────────────────────────── */
-.nav-search-wrap { position: relative; flex: 1; max-width: 320px; }
+.nav-search-wrap { position: relative; width: 320px; max-width: 320px; }
 .nav-search-input {
   width: 100%; background: var(--surface);
   border: 1px solid var(--border);
