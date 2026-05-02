@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FRAGLOG</title>
+<title>FragLog.gg</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
-  // v1.1 - added working search with url updates 
+  // v0.8 - changed name, removed vod count 
 // ── MY VODS ───────────────────────────────────────────────
 function mvExtractId() {
   const url = document.getElementById("mv-url").value.trim();
@@ -285,8 +285,8 @@ nav { display: flex; align-items: center; justify-content: space-between; paddin
 .map-card:hover .map-card-accent { transform: scaleY(1); }
 .map-card-content { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: flex-end; padding: 10px 12px; background: linear-gradient(to top, rgba(8,14,20,0.95) 0%, transparent 65%); z-index: 2; }
 .map-name { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 1.5px; color: var(--text); line-height: 1; }
-.map-vod-count { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); margin-top: 2px; }
-.map-card.has-vods .map-vod-count { color: var(--red); }
+
+
 
 .agents-page-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(28px,4vw,48px); letter-spacing: 2px; margin-bottom: 2rem; }
 .agent-section { margin-bottom: 1.75rem; }
@@ -570,7 +570,7 @@ nav { padding: 0 2.5rem; border-radius: 0; }
 <div id="map-bg-layer" style="position:fixed;inset:0;background-size:cover;background-position:center;background-repeat:no-repeat;opacity:0;transition:opacity 0.4s ease;z-index:0;"></div>
 <div id="agents-bg-overlay" style="position:fixed;inset:0;background:rgba(8,14,20,0.72);z-index:1;display:none;"></div>
 <nav>
-  <div class="logo" onclick="goHome()" style="cursor:pointer">FRAGLOG</div>
+  <div class="logo" onclick="goHome()" style="cursor:pointer">FragLog<span>.gg</span></div>
   <div style="display:flex;align-items:center;gap:1rem"><button id="back-btn" onclick="goBack()" style="display:none;background:none;border:1px solid rgba(255,255,255,0.15);color:#ECE8E1;font-family:DM Mono,monospace;font-size:11px;letter-spacing:2px;padding:6px 14px;cursor:pointer;text-transform:uppercase">← Back</button><div class="breadcrumb" id="breadcrumb"></div></div>
   <div class="nav-search-wrap">
     <input type="text" id="nav-search" class="nav-search-input" placeholder="Search players, maps, agents..." oninput="handleSearch(this.value)" onfocus="openSearch()" autocomplete="off">
@@ -580,9 +580,8 @@ nav { padding: 0 2.5rem; border-radius: 0; }
 
 <div class="screen active" id="s-maps">
   <div class="hero">
-    <div class="hero-eyebrow">Valorant VOD Library</div>
     <div class="hero-title">Study the<br>Best in the World</div>
-    <div class="hero-sub">Radiant &amp; pro player POV gameplay — filtered by map and agent</div>
+    <div class="hero-sub">Radiant &amp; pro player gameplay — filtered by map and agent</div>
   </div>
   <div class="section-label">Select a map</div>
   <div class="map-grid" id="map-grid"></div>
@@ -1637,7 +1636,6 @@ function renderMaps(){
       <img src="${m.img}" alt="${m.name}" onerror="this.style.display='none'">
       <div class="map-card-content">
         <div class="map-name">${m.name}</div>
-        <div class="map-vod-count">${n>0?n+' VODs':'Coming soon'}</div>
       </div>
     </div>`;
   }).join("");
@@ -2195,8 +2193,6 @@ async function deleteMyVod(id) {
 
 // ── SEARCH ────────────────────────────────────────────────
 
-var searchTimeout = null;
-
 function openSearch() {
   const val = document.getElementById("nav-search").value;
   if(val.trim()) runSearch(val);
@@ -2325,7 +2321,7 @@ document.addEventListener("keydown", function(e) {
 <div class="auth-modal-backdrop" id="auth-modal" onclick="closeAuthModal(event)">
   <div class="auth-modal" style="position:relative">
     <button class="auth-close" onclick="closeAuthModalDirect()">✕</button>
-    <h2>FRAGLOG</h2>
+    <h2>FragLog<span style="color:var(--red)">.gg</span></h2>
     <p>Sign in to save favorites and add notes</p>
     <div class="auth-tabs">
       <button class="auth-tab active" onclick="switchTab('login')">Sign In</button>
