@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>FragLog.gg</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
-  // v0.8 - changed name, removed vod count 
+//v0.9 - rewrote whole file to fix search errors and removed vod counts from whole site 
 // ── MY VODS ───────────────────────────────────────────────
 function mvExtractId() {
   const url = document.getElementById("mv-url").value.trim();
@@ -85,7 +85,7 @@ async function renderMyVods() {
 
   if(error || !data) { grid.innerHTML = '<div class="empty"><strong>Error loading VODs</strong></div>'; return; }
 
-  count.textContent = data.length;
+  
 
   if(!data.length) {
     grid.innerHTML = '<div class="empty"><strong>No VODs yet</strong>Paste a YouTube URL above to add your first one</div>';
@@ -304,8 +304,8 @@ nav { display: flex; align-items: center; justify-content: space-between; paddin
 .agent-card-info { position:relative; z-index:2; padding:8px 10px; }
 .agent-icon-placeholder { width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:var(--surface2); color:var(--muted); font-size:32px; font-family:'Bebas Neue',sans-serif; }
 .agent-name { font-family: 'Bebas Neue', sans-serif; font-size: 16px; letter-spacing: 1px; color: var(--text); line-height: 1; }
-.agent-count { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--muted); margin-top: 2px; }
-.agent-card.has-vods .agent-count { color: var(--red); }
+
+
 
 .videos-header { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 1.5rem; }
 .videos-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(28px,4vw,48px); letter-spacing: 2px; line-height: 1; }
@@ -489,7 +489,6 @@ nav { padding: 0 2.5rem; border-radius: 0; }
   /* Agent grid — 3 columns on mobile */
   .agent-grid { grid-template-columns: repeat(3, 1fr); gap: 6px; }
   .agent-name { font-size: 13px; }
-  .agent-count { font-size: 8px; }
   .agents-page-title { font-size: 28px; margin-bottom: 1.25rem; }
   .role-header { font-size: 9px; }
 
@@ -598,12 +597,14 @@ nav { padding: 0 2.5rem; border-radius: 0; }
       <div class="hero-eyebrow" id="v-eyebrow"></div>
       <div class="videos-title" id="v-title"></div>
     </div>
-    <div class="videos-count" id="v-count"></div>
+    
   </div>
   <div class="video-grid" id="video-grid"></div>
 </div>
 
 <script>
+// Global search state
+var searchTimeout = null;
 // ============================================================
 // VODS — ADD YOUR VIDEOS HERE
 // Format: { id: "YOUTUBE_ID", title: "Title", player: "playername", kd: "24/8", date: "2025-01-15" }
@@ -1668,7 +1669,7 @@ function renderAgents(){
           </div>
           <div class="agent-card-info">
             <div class="agent-name">${a.name}</div>
-            <div class="agent-count">${vods.length>0?vods.length+' VOD'+(vods.length!==1?'s':''):'No VODs yet'}</div>
+            <div class="agent-count"></div>
           </div>
         </div>`;
       }).join("")}</div>`;
@@ -1687,7 +1688,6 @@ function renderVideos(){
   const vods=agentVods(selMap.id,selAgent.id);
   document.getElementById("v-eyebrow").textContent=selMap.name+" · Radiant VODs";
   document.getElementById("v-title").textContent=selAgent.name;
-  document.getElementById("v-count").textContent=vods.length+' VOD'+(vods.length!==1?'s':'');
   const grid = document.getElementById("video-grid");
   grid.onclick = function(e) {
     const vid = e.target.closest("[data-vid]")?.dataset.vid;
@@ -2148,7 +2148,7 @@ async function renderMyVods() {
 
   if(error || !data) { grid.innerHTML = '<div class="empty"><strong>Error loading VODs</strong></div>'; return; }
 
-  count.textContent = data.length;
+  
 
   if(!data.length) {
     grid.innerHTML = '<div class="empty"><strong>No VODs yet</strong>Paste a YouTube URL above to add your first one</div>';
@@ -2422,7 +2422,7 @@ document.addEventListener("keydown", function(e) {
   </div>
 
   <!-- VOD list -->
-  <div class="section-label" style="margin-top:2rem">Your collection (<span id="mv-count">0</span>)</div>
+  <div class="section-label" style="margin-top:2rem">Your collection</div>
   <div class="video-grid" id="mv-grid"></div>
 </div>
 
