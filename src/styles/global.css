@@ -65,6 +65,7 @@ nav {
   color: var(--muted);
   letter-spacing: 1px;
   text-transform: uppercase;
+  min-width: 200px;
 }
 .crumb { cursor: pointer; color: var(--muted); transition: color 0.2s; }
 .crumb:hover { color: var(--text); }
