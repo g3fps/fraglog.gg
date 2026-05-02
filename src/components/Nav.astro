@@ -21,7 +21,7 @@ const isSearch = currentPath.startsWith('/search');
       placeholder="Search players, maps, agents..."
       autocomplete="off"
       oninput="handleNavSearch(this.value)"
-      onfocus="if(this.value.trim()) handleNavSearch(this.value)"
+      onfocus="if(this.value.trim() && window.location.pathname !== '/search') handleNavSearch(this.value)"
     >
   </div>
 
