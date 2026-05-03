@@ -454,6 +454,7 @@ export const VODS = {
     yoru: [
     ],
     iso: [
+      { id:"ZElTpkR5uIQ", title:"zanks Iso Fracture RADIANT RANKED", player:"zanks", date:"2026-05-03" },
     ],
     waylay: [
     ],
@@ -575,6 +576,8 @@ export const VODS = {
     iso: [
       { id:"9XEKkyhyHB0", title:"Sacy Iso Pearl RADIANT RANKED", player:"Sacy", date:"2026-03-24" },
       { id:"T6OHmB0mIjA", title:"KRU Saadhak Iso Pearl RADIANT RANKED", player:"Saadhak", date:"2025-12-25" },
+      { id:"Dml8GquCs7Y", title:"zanks Iso Pearl RADIANT MVP 37 KILLS", player:"zanks", date:"2026-05-03" },
+
     ],
     waylay: [
       { id:"Grjvr-N_qXw", title:"SEN nightz Waylay Pearl RADIANT RANKED", player:"nightz", date:"2026-01-29" },
@@ -750,6 +753,7 @@ export const VODS = {
     ],
     iso: [
       { id:"P-higQgvO3g", title:"TH Wo0t Iso Breeze RADIANT EU", player:"Wo0t", date:"2026-03-18" },
+      { id:"bmI86S86fGg", title:"zanks Iso Breeze RADIANT RANKED", player:"zanks", date:"2026-05-03" },
     ],
     waylay: [
     ],
