@@ -2,7 +2,7 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Nav from '../../components/Nav.astro';
 import Footer from '../../components/Footer.astro';
-import { MAPS, AGENTS, agentVods, formatDate } from '../../data/data.js';
+import { getAllVods, MAPS, AGENTS, formatDate } from '../../data/data.js';
 import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
@@ -19,58 +19,52 @@ if (accessToken && refreshToken) {
   user = data.session?.user ?? null;
 }
 
-const { map: mapId, agent: agentId } = Astro.params;
-const mapData = MAPS.find(m => m.id === mapId);
-const agentData = AGENTS.find(a => a.id === agentId);
+const { player } = Astro.params;
+const allVods = getAllVods();
+const playerVods = allVods.filter(v => v.player.toLowerCase() === (player ?? '').toLowerCase());
+if (!playerVods.length) return Astro.redirect('/');
 
-if (!mapData || !agentData) return Astro.redirect('/');
-
-const vods = agentVods(mapId, agentId);
-const title = `${agentData.name} ${mapData.name} VODs — fraglog.gg`;
-const description = `Watch ${vods.length} Radiant ${agentData.name} VODs on ${mapData.name}. Pro player POV gameplay on FragLog.gg`;
+const displayName = playerVods[0].player;
+const title = `${displayName} VODs — fraglog.gg`;
+const description = `Watch all ${playerVods.length} ${displayName} VODs on FragLog.gg`;
 ---
-<BaseLayout title={title} description={description} ogImage={mapData.img} canonical={`https://fraglog.gg/${mapId}/${agentId}`} user={user}>
-  <Nav crumbs={[{ label: 'ALL MAPS', href: '/' }, { label: mapData.name.toUpperCase(), href: `/${mapId}` }, { label: agentData.name.toUpperCase() }]} user={user} />
+<BaseLayout title={title} description={description} user={user}>
+  <Nav crumbs={[{ label: 'ALL MAPS', href: '/' }, { label: displayName.toUpperCase() }]} user={user} />
   <div class="page-content">
     <div class="videos-header">
       <div>
-        <div class="hero-eyebrow">{mapData.name} · Radiant VODs</div>
-        <div class="videos-title">{agentData.name}</div>
+        <div class="hero-eyebrow">Player Profile</div>
+        <div class="videos-title">{displayName}</div>
+        <div class="hero-sub">{playerVods.length} VOD{playerVods.length !== 1 ? 's' : ''} in the library</div>
       </div>
     </div>
 
-    {vods.length === 0 ? (
-      <div class="video-grid">
-        <div class="empty">
-          <strong>No VODs Yet</strong>
-          Check back soon.
-        </div>
-      </div>
-    ) : (
-      <div class="video-grid" id="video-grid">
-        {vods.map(v => (
-          <div class="video-card" id={`vc-${v.id}`}>
-            <div class="video-thumb" data-vid={v.id} style="cursor:pointer">
-              <img src={`https://img.youtube.com/vi/${v.id}/mqdefault.jpg`} alt={v.title} loading="lazy" />
-              <div class="play-overlay">
-                <div class="play-icon"><div class="play-tri"></div></div>
-              </div>
-            </div>
-            <div class="video-info">
-              <div class="video-title" data-vid={v.id} style="cursor:pointer">{v.title}</div>
-              <div class="video-meta-row">
-                <span class="video-player" style="cursor:pointer" onclick={`window.location='/player/${v.player.toLowerCase().replace(/\\//g,'').replace(/ /g,'')}'`}>{v.player}</span>
-                {v.kd && <span class="video-kd">{v.kd}</span>}
-                {v.date && <span class="video-date">{formatDate(v.date)}</span>}
-              </div>
-              <div class="notes-section" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);display:flex;gap:6px;align-items:center" data-vid={v.id} data-title={v.title} data-player={v.player} data-note={v.note || ''}>
-                <span class="note-login-prompt"><span onclick="openAuth()" style="color:var(--red);cursor:pointer">Sign in</span> to save &amp; add notes</span>
-              </div>
+    <div class="video-grid" id="video-grid">
+      {playerVods.map(v => (
+        <div class="video-card" id={`vc-${v.id}`}>
+          <div class="video-thumb" data-vid={v.id} style="cursor:pointer">
+            <img src={`https://img.youtube.com/vi/${v.id}/mqdefault.jpg`} alt={v.title} loading="lazy" />
+            <div class="play-overlay">
+              <div class="play-icon"><div class="play-tri"></div></div>
             </div>
           </div>
-        ))}
-      </div>
-    )}
+          <div class="video-info">
+            <div class="video-tag-row">
+              <span class="video-map-tag">{v.mapName}</span>
+              <span class="video-agent-tag">{v.agentName}</span>
+            </div>
+            <div class="video-title" data-vid={v.id} style="cursor:pointer">{v.title}</div>
+            <div class="video-meta-row">
+              {v.kd && <span class="video-kd">{v.kd}</span>}
+              {v.date && <span class="video-date">{formatDate(v.date)}</span>}
+            </div>
+            <div class="notes-section" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);display:flex;gap:6px;align-items:center" data-vid={v.id} data-title={v.title} data-player={v.player} data-note={v.note || ''}>
+              <span class="note-login-prompt"><span onclick="openAuth()" style="color:var(--red);cursor:pointer">Sign in</span> to save &amp; add notes</span>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
   </div>
   <Footer />
 </BaseLayout>
@@ -116,7 +110,6 @@ function updateVideoActions() {
   });
 }
 
-// Wait for auth to be ready before updating UI
 const poll = setInterval(() => {
   if (window.__authReady) {
     clearInterval(poll);

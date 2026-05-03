@@ -137,6 +137,8 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
     document.cookie = `sb-refresh-token=${session.refresh_token}; path=/; max-age=604800; SameSite=Lax`;
   }
   renderNav();
+  window.__authReady = true;
+
 }
 
   async function loadUserData() {
