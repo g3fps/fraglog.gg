@@ -278,6 +278,7 @@ export const VODS = {
     killjoy: [
       { id:"Ch76qjFxnqw", title:"TL nAts Killjoy Haven RADIANT MASTER", player:"nAts", date:"2026-04-08" },
       { id:"3sHMqgBsb1g", title:"DRX Mako Killjoy Haven APAC RADIANT", player:"Mako", date:"2026-04-09" },
+      { id:"4rW9BwRD61A", title:"KC dos9 Killjoy Haven", player:"dos9", date:"2026-02-26" },
     ],
     chamber: [
       { id:"w26pYD2WlV8", title:"TS Zeus Chamber Haven APAC RADIANT", player:"Zeus", date:"2026-04-28" },
@@ -334,6 +335,7 @@ export const VODS = {
     ],
     neon: [
       { id:"eScv6iy1afY", title:"MIBR zekken Neon Split RADIANT SHOTGUN", player:"zekken", date:"2026-04-15" },
+      { id:"4RVIw2taYg4", title:"TH ComeBack Neon Split RADIANT RANKED", player:"ComeBack", date:"2026-02-10" },
     ],
     phoenix: [
     ],
@@ -496,6 +498,7 @@ export const VODS = {
       { id:"w9utq_kRY6o", title:"ENVY demon1 Chamber Fracture RADIANT MVP", player:"demon1", date:"2026-05-02" },
       { id:"BfN0D19Nb58", title:"KRU less Chamber Fracture RADIANT RANKED", player:"less", date:"2026-05-02" },
       { id:"9ObKjuKssng", title:"G2 jawgemo Chamber Fracture RADIANT RANKED", player:"jawgemo", date:"2026-05-01" },
+      { id:"QjMeX-NAigQ", title:"ENVY demon1 Chamber Fracture PRO OPERATOR", player:"demon1", date:"2026-05-03" },
     ],
     deadlock: [
     ],
@@ -541,6 +544,7 @@ export const VODS = {
       { id:"V1_TNR0yaao", title:"TenZ Jett Pearl RADIANT GOAT", player:"TenZ", date:"2026-04-23" },
       { id:"7xKD0ojyGcA", title:"LOUD luk xo Jett Pearl RADIANT AIMER", player:"luk xo", date:"2026-04-23" },
       { id:"48BArO8rCZE", title:"NRG s0m Jett Pearl RADIANT AIM", player:"s0m", date:"2026-04-08" },
+      { id:"19lxEnRFQFY", title:"M8 bipo Jett Pearl RADIANT ELO", player:"bipo", date:"2026-04-12" },
     ],
     reyna: [
       { id:"bFHRVyIIoco", title:"Inspire Reyna Pearl PRO RANKED", player:"Inspire", date:"2026-03-14" },
@@ -602,6 +606,7 @@ export const VODS = {
     sage: [
     ],
     cypher: [
+      { id:"UrJwNPSuISA", title:"inspire Cypher Pearl RADIANT RANKED", player:"inspire", date:"2026-05-03" },
     ],
     killjoy: [
       { id:"dQsUBU-mlS8", title:"TL nAts Killjoy Pearl RADIANT RANKED", player:"nAts", date:"2026-04-30" },
@@ -717,6 +722,7 @@ export const VODS = {
       { id:"ri6rxoug4c0", title:"florescent Jett Breeze RADIANT AIM", player:"florescent", date:"2026-05-02" },
       { id:"Z1ubZoLUNgY", title:"NRG s0m Jett Breeze RADIANT OP", player:"s0m", date:"2026-04-08" },
       { id:"ekZDh2WpNek", title:"KRX Hermes Jett Breeze RADIANT RANKED", player:"Hermes", date:"2026-05-02" },
+      { id:"VD1w6se--Fc", title:"florescent Jett Breeze TIER 1 AIM", player:"florescent", date:"2026-05-02" },
     ],
     reyna: [
       { id:"HrWzwyCfcZ0", title:"C9 OXY Reyna Breeze RADIANT RANKED", player:"OXY", date:"2026-04-25" },
@@ -761,6 +767,7 @@ export const VODS = {
       { id:"7at2gOKff-E", title:"DFM Meiy Astra Breeze RADIANT RANKED", player:"Meiy", date:"2026-03-04" },
       { id:"L7QxrhrofPg", title:"FUR nerve Astra Breeze RADIANT RANKED", player:"nerve", date:"2026-05-02" },
       { id:"OaoQ4uKJa6A", title:"ENVY demon1 Astra Breeze RADIANT SMOKES", player:"demon1", date:"2026-05-02" },
+      { id:"0KV9-cDNGdU", title:"GON Astra Breeze RADIANT RANKED", player:"GON", date:"2026-02-09" },
     ],
     harbor: [
       { id:"jnrywmGvfCs", title:"Zander Harbor Breeze RADIANT RANKED", player:"Zander", date:"2026-04-25" },
@@ -821,6 +828,7 @@ export const VODS = {
       { id:"6OLNIo-KkJg", title:"C9 OXY Reyna Lotus RADIANT ONE TAPS", player:"OXY", date:"2026-05-01" },
       { id:"Gcr_A20oEYs", title:"C9 OXY Reyna Lotus RADIANT RANKED", player:"OXY", date:"2026-04-12" },
       { id:"k_h0P5U0NLc", title:"C9 OXY Reyna Lotus RADIANT RANKED", player:"OXY", date:"2026-04-09" },
+      { id:"X8DDBdxA3ZQ", title:"C9 OXY Reyna Lotus RADIANT RANK 1", player:"OXY", date:"2026-05-03" },
     ],
     raze: [
       { id:"Put7KPLtquc", title:"NRG s0m Raze Lotus DOMINATION RADIANT", player:"s0m", date:"2026-05-01" },
