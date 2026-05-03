@@ -91,55 +91,48 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
     </div>
   </div>
 
-  <!-- Nav right rendered server-side — no shift -->
   <script is:inline define:vars={{ user }}>
-  // Render nav immediately with server-known auth state
-  (function() {
-    // Nav right is rendered by Nav.astro using server data
-    // This just sets up the global user state for client-side features
-    window.__initialUser = user;
-  })();
+  window.__initialUser = user;
   </script>
 
   <script is:inline>
   let _supabase;
- function initSupabase() {
-  if (typeof supabase !== 'undefined' && !_supabase) {
-    _supabase = supabase.createClient(
-      "https://cvdtykmkajmhlxydhzzl.supabase.co",
-      "sb_publishable_I16eAnYgsA9fd8ZMlmFQtA_RxepSaXi",
-      {
-        auth: {
-          persistSession: true,
-          storageKey: 'sb-session',
-          storage: window.localStorage,
+  function initSupabase() {
+    if (typeof supabase !== 'undefined' && !_supabase) {
+      _supabase = supabase.createClient(
+        "https://cvdtykmkajmhlxydhzzl.supabase.co",
+        "sb_publishable_I16eAnYgsA9fd8ZMlmFQtA_RxepSaXi",
+        {
+          auth: {
+            persistSession: true,
+            storageKey: 'sb-session',
+            storage: window.localStorage,
+          }
         }
-      }
-    );
+      );
+    }
+    return _supabase;
   }
-  return _supabase;
-}
 
   let currentUser = window.__initialUser || null;
   let authMode = "login";
   let userFavorites = [];
   let userNotes = {};
+  let userWatched = [];
 
   async function initAuth() {
-  const sb = initSupabase();
-  if (!sb) return;
-  const { data: { session } } = await sb.auth.getSession();
-  if (session?.user) {
-    currentUser = session.user;
-    await loadUserData();
-    // Set cookies for SSR
-    document.cookie = `sb-access-token=${session.access_token}; path=/; max-age=3600; SameSite=Lax`;
-    document.cookie = `sb-refresh-token=${session.refresh_token}; path=/; max-age=604800; SameSite=Lax`;
+    const sb = initSupabase();
+    if (!sb) return;
+    const { data: { session } } = await sb.auth.getSession();
+    if (session?.user) {
+      currentUser = session.user;
+      await loadUserData();
+      document.cookie = `sb-access-token=${session.access_token}; path=/; max-age=3600; SameSite=Lax`;
+      document.cookie = `sb-refresh-token=${session.refresh_token}; path=/; max-age=604800; SameSite=Lax`;
+    }
+    renderNav();
+    window.__authReady = true;
   }
-  renderNav();
-  window.__authReady = true;
-
-}
 
   async function loadUserData() {
     if (!currentUser) return;
@@ -149,6 +142,8 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
     const { data: notes } = await sb.from("notes").select("video_id, content").eq("user_id", currentUser.id);
     userNotes = {};
     (notes||[]).forEach(n => userNotes[n.video_id] = n.content);
+    const { data: watched } = await sb.from("watched").select("video_id").eq("user_id", currentUser.id);
+    userWatched = (watched||[]).map(w => w.video_id);
   }
 
   function renderNav() {
@@ -218,12 +213,11 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
     if (error) { errEl.textContent = error.message; errEl.style.display = "block"; return; }
 
     await loadUserData();
-    // Set auth cookies so SSR can read them
-const session = (await sb.auth.getSession()).data.session;
-if (session) {
-  document.cookie = `sb-access-token=${session.access_token}; path=/; max-age=3600; SameSite=Lax`;
-  document.cookie = `sb-refresh-token=${session.refresh_token}; path=/; max-age=604800; SameSite=Lax`;
-}
+    const session = (await sb.auth.getSession()).data.session;
+    if (session) {
+      document.cookie = `sb-access-token=${session.access_token}; path=/; max-age=3600; SameSite=Lax`;
+      document.cookie = `sb-refresh-token=${session.refresh_token}; path=/; max-age=604800; SameSite=Lax`;
+    }
     closeAuthModalDirect();
     renderNav();
     if (typeof onAuthChange === 'function') onAuthChange();
@@ -235,6 +229,7 @@ if (session) {
     currentUser = null;
     userFavorites = [];
     userNotes = {};
+    userWatched = [];
     renderNav();
     document.cookie = 'sb-access-token=; path=/; max-age=0';
     document.cookie = 'sb-refresh-token=; path=/; max-age=0';
@@ -243,6 +238,7 @@ if (session) {
 
   function isFav(videoId) { return userFavorites.includes(videoId); }
   function getUserNote(videoId) { return userNotes[videoId] || ""; }
+  function isWatched(videoId) { return userWatched.includes(videoId); }
 
   async function toggleFav(videoId, btn) {
     if (!currentUser) { openAuth(); return; }
@@ -259,6 +255,22 @@ if (session) {
       await sb.from("favorites").insert({ user_id: currentUser.id, video_id: videoId });
     }
     if (typeof onFavChange === 'function') onFavChange();
+  }
+
+  async function toggleWatched(videoId, btn) {
+    if (!currentUser) { openAuth(); return; }
+    const sb = initSupabase();
+    if (isWatched(videoId)) {
+      userWatched = userWatched.filter(id => id !== videoId);
+      btn.classList.remove("active");
+      btn.textContent = "✓ Mark watched";
+      await sb.from("watched").delete().eq("user_id", currentUser.id).eq("video_id", videoId);
+    } else {
+      userWatched.push(videoId);
+      btn.classList.add("active");
+      btn.textContent = "✓ Watched";
+      await sb.from("watched").insert({ user_id: currentUser.id, video_id: videoId });
+    }
   }
 
   async function saveNote(videoId, text) {

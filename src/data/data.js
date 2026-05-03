@@ -419,7 +419,6 @@ export const VODS = {
   fracture: {
     jett: [
       { id:"WQFVi2Hqwh4", title:"ENVY ion Jett Fracture RADIANT RANKED", player:"ion2x", date:"2026-04-29" },
-      { id:"xrGnIm0yWlQ", title:"C9 OXY Jett Fracture RADIANT RANKED", player:"OXY", date:"2026-04-19" },
       { id:"5MXBs467cI0", title:"florescent Jett Fracture BEST AIM", player:"florescent", date:"2026-04-25" },
       { id:"JmTkAveTsiI", title:"florescent Jett Fracture RADIANT RANKED", player:"florescent", date:"2026-04-22" },
       { id:"0Pfv3SMwKaE", title:"florescent Jett Fracture RADIANT MVP", player:"florescent", date:"2026-04-23" },

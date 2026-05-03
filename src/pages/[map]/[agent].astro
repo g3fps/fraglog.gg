@@ -110,6 +110,9 @@ function updateVideoActions() {
         <button class="notes-btn ${favClass}" data-fav="${vid}" onclick="toggleFav('${vid}',this)" title="Save to favorites">
           ${favText}
         </button>`;
+        <button class="notes-btn ${isWatched(vid) ? 'has-note' : ''}" onclick="toggleWatched('${vid}',this)">
+        ${isWatched(vid) ? '✓ Watched' : '✓ Mark watched'}
+        </button>
     } else {
       el.innerHTML = `<span class="note-login-prompt"><span onclick="openAuth()" style="color:var(--red);cursor:pointer">Sign in</span> to save &amp; add notes</span>`;
     }
