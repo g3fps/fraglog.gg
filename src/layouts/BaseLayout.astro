@@ -1,7 +1,7 @@
 ---
 import '../styles/global.css';
 
-const { title = 'FragLog.gg — Valorant VOD Library', description = 'Watch Radiant and pro player Valorant gameplay VODs filtered by map and agent. Study the best players in the world on FragLog.gg', ogImage = 'https://media.valorant-api.com/maps/7eaecc1b-4337-bbf6-6ab9-04b8f06b3319/splash.png', canonical = 'https://fraglog.gg', user = null } = Astro.props;
+const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radiant and pro player Valorant gameplay VODs filtered by map and agent. Study the best players in the world on fraglog.gg', ogImage = 'https://media.valorant-api.com/maps/7eaecc1b-4337-bbf6-6ab9-04b8f06b3319/splash.png', canonical = 'https://fraglog.gg', user = null } = Astro.props;
 ---
 <!DOCTYPE html>
 <html lang="en">
@@ -11,7 +11,7 @@ const { title = 'FragLog.gg — Valorant VOD Library', description = 'Watch Radi
   <title>{title}</title>
   <meta name="description" content={description}>
   <meta name="keywords" content="Valorant VODs, Radiant gameplay, pro player POV, Valorant tips, agent guide, map guide">
-  <meta name="author" content="FragLog.gg">
+  <meta name="author" content="fraglog.gg">
   <meta name="robots" content="index, follow">
 
   <meta property="og:type" content="website">
@@ -313,7 +313,7 @@ if (session) {
       document.getElementById("notes-char-count").textContent = ta.value.length + " characters";
       document.getElementById("notes-saved-msg").style.display = "none";
     });
-    document.getElementById("footer-year").textContent = `© ${new Date().getFullYear()} FragLog.gg — All rights reserved`;
+    document.getElementById("footer-year").textContent = `© ${new Date().getFullYear()} fraglog.gg — All rights reserved`;
     initAuth().catch(e => console.warn("Auth init failed", e));
   });
 
