@@ -2,7 +2,7 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Nav from '../components/Nav.astro';
 import Footer from '../components/Footer.astro';
-import { getAllVods, formatDate } from '../data/data.js';
+import { getAllVods } from '../data/data.js';
 import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
@@ -21,8 +21,8 @@ if (accessToken && refreshToken) {
 
 const allVods = getAllVods();
 ---
-<BaseLayout title="Search — FragLog.gg" description="Search Valorant VODs by player, map, or agent on FragLog.gg">
-  <Nav crumbs={[{ label: 'ALL MAPS', href: '/' }, { label: 'SEARCH' }]} />
+<BaseLayout title="Search — fraglog.gg" description="Search Valorant VODs by player, map, or agent on FragLog.gg" user={user}>
+  <Nav crumbs={[{ label: 'ALL MAPS', href: '/' }, { label: 'SEARCH' }]} user={user} />
   <div class="page-content">
     <div class="hero" style="margin-bottom:1.5rem;padding-bottom:1.5rem">
       <div class="hero-eyebrow">Search Results</div>
@@ -75,10 +75,10 @@ function runSearch(query) {
         </div>
         <div class="video-title" data-vid="${v.id}" style="cursor:pointer">${v.title}</div>
         <div class="video-meta-row">
-          <span class="video-player">${v.player}</span>
+          <a class="video-player" href="/player/${v.player.toLowerCase().replace(/\//g,'').replace(/ /g,'-')}" onclick="event.stopPropagation()">${v.player}</a>
           ${v.date ? `<span class="video-date">${new Date(v.date).toLocaleDateString('en-US',{month:'short',year:'numeric'})}</span>` : ''}
         </div>
-        <div class="notes-section" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);display:flex;gap:6px;align-items:center" data-vid="${v.id}" data-title="${v.title.replace(/"/g,'&quot;')}" data-player="${v.player}">
+        <div class="notes-section" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);display:flex;gap:6px;align-items:center;flex-wrap:wrap" data-vid="${v.id}" data-title="${v.title.replace(/"/g,'&quot;')}" data-player="${v.player}">
           <span class="note-login-prompt"><span onclick="openAuth()" style="color:var(--red);cursor:pointer">Sign in</span> to save &amp; add notes</span>
         </div>
       </div>
@@ -87,14 +87,14 @@ function runSearch(query) {
 
   grid.onclick = e => {
     const el = e.target.closest("[data-vid]");
-    if (el) window.open("https://youtube.com/watch?v=" + el.dataset.vid, "_blank");
+    if (el && !e.target.closest("button") && !e.target.closest("a")) window.open("https://youtube.com/watch?v=" + el.dataset.vid, "_blank");
   };
 
   updateSearchActions();
 }
 
 function updateSearchActions() {
-  if (typeof currentUser === 'undefined' || !currentUser) return;
+  if (!currentUser) return;
   document.querySelectorAll("#search-grid .notes-section").forEach(el => {
     const vid = el.dataset.vid;
     const title = el.dataset.title;
@@ -103,9 +103,12 @@ function updateSearchActions() {
     const noteClass = getUserNote(vid) ? "has-note" : "";
     const favText = isFav(vid) ? "♥ Saved" : "♡ Save";
     const favClass = isFav(vid) ? "has-note" : "";
+    const watchText = isWatched(vid) ? "✓ Watched" : "✓ Mark watched";
+    const watchClass = isWatched(vid) ? "watched" : "";
     el.innerHTML = `
       <button class="notes-btn ${noteClass}" onclick="openNotes('${vid}','${title.replace(/'/g,"\\'")}','${player}')">📝 ${noteText}</button>
-      <button class="notes-btn ${favClass}" onclick="toggleFav('${vid}',this)"> ${favText}</button>`;
+      <button class="notes-btn ${favClass}" onclick="toggleFav('${vid}',this)">${favText}</button>
+      <button class="notes-btn ${watchClass}" onclick="toggleWatched('${vid}',this)">${watchText}</button>`;
   });
 }
 
@@ -119,11 +122,14 @@ if (q) {
   runSearch(q);
 }
 
-// Handle nav search input on this page (override to search in place)
+// Handle nav search on this page
 document.getElementById("nav-search").oninput = function(e) {
   const val = e.target.value;
   const url = val.trim() ? '/search?q=' + encodeURIComponent(val.trim()) : '/search';
   history.replaceState({}, '', url);
   runSearch(val);
 };
+
+window.__onAuthReady = updateSearchActions;
+if (window.__authReady) updateSearchActions();
 </script>

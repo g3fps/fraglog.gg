@@ -21,8 +21,8 @@ if (accessToken && refreshToken) {
 
 const allVods = getAllVods();
 ---
-<BaseLayout title="Favorites — FragLog.gg" description="Your saved Valorant VODs on FragLog.gg">
-  <Nav crumbs={[{ label: 'ALL MAPS', href: '/' }, { label: 'FAVORITES' }]} />
+<BaseLayout title="Favorites — fraglog.gg" description="Your saved Valorant VODs on FragLog.gg" user={user}>
+  <Nav crumbs={[{ label: 'ALL MAPS', href: '/' }, { label: 'FAVORITES' }]} user={user} />
   <div class="page-content">
     <div class="hero">
       <div class="hero-eyebrow">Your Collection</div>
@@ -47,7 +47,7 @@ function onFavChange() { renderFavorites(); }
 function renderFavorites() {
   const container = document.getElementById("fav-container");
 
-  if (typeof currentUser === 'undefined' || !currentUser) {
+  if (!currentUser) {
     container.innerHTML = '<div class="video-grid"><div class="empty"><strong>Not signed in</strong>Sign in to see your saved VODs</div></div>';
     return;
   }
@@ -59,13 +59,12 @@ function renderFavorites() {
   }
 
   const found = ALL_VODS.filter(v => favIds.includes(v.id));
-
   if (!found.length) {
     container.innerHTML = '<div class="video-grid"><div class="empty"><strong>No favorites found</strong>Some saved videos may have been removed</div></div>';
     return;
   }
 
-  container.innerHTML = `<div class="video-grid" style="grid-template-columns:repeat(auto-fill,minmax(220px,1fr))">${found.map(v => `
+  container.innerHTML = `<div class="video-grid">${found.map(v => `
     <div class="video-card" id="vc-${v.id}">
       <div class="video-thumb" data-vid="${v.id}" style="cursor:pointer">
         <img src="https://img.youtube.com/vi/${v.id}/mqdefault.jpg" alt="${v.title}" loading="lazy">
@@ -82,9 +81,12 @@ function renderFavorites() {
           <span class="video-player">${v.player}</span>
           ${v.date ? `<span class="video-date">${new Date(v.date).toLocaleDateString('en-US',{month:'short',year:'numeric'})}</span>` : ''}
         </div>
-        <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
+        <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);display:flex;gap:6px;flex-wrap:wrap">
           <button class="notes-btn ${getUserNote(v.id)?'has-note':''}" onclick="openNotes('${v.id}','${v.title.replace(/'/g,"\\'")}','${v.player}')">
             📝 ${getUserNote(v.id) ? 'View notes' : 'Add notes'}
+          </button>
+          <button class="notes-btn ${isWatched(v.id)?'watched':''}" onclick="toggleWatched('${v.id}',this)">
+            ${isWatched(v.id) ? '✓ Watched' : '✓ Mark watched'}
           </button>
         </div>
       </div>
@@ -97,16 +99,6 @@ function renderFavorites() {
   };
 }
 
-// Run after auth loads
-document.addEventListener("DOMContentLoaded", () => {
-  // Poll for auth readiness
-  let tries = 0;
-  const poll = setInterval(() => {
-    if (typeof currentUser !== 'undefined') {
-      clearInterval(poll);
-      renderFavorites();
-    }
-    if (++tries > 50) clearInterval(poll);
-  }, 100);
-});
+window.__onAuthReady = renderFavorites;
+if (window.__authReady) renderFavorites();
 </script>

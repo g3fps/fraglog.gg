@@ -13,27 +13,22 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
   <meta name="keywords" content="Valorant VODs, Radiant gameplay, pro player POV, Valorant tips, agent guide, map guide">
   <meta name="author" content="fraglog.gg">
   <meta name="robots" content="index, follow">
-
   <meta property="og:type" content="website">
   <meta property="og:url" content={canonical}>
   <meta property="og:title" content={title}>
   <meta property="og:description" content={description}>
   <meta property="og:image" content={ogImage}>
-
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content={title}>
   <meta name="twitter:description" content={description}>
   <meta name="twitter:image" content={ogImage}>
-
   <link rel="canonical" href={canonical}>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-
   <script defer src="https://cdn.vercel-insights.com/v1/script.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" is:inline></script>
 </head>
 <body>
   <div id="map-bg-layer"></div>
-
   <slot />
 
   <!-- Auth Modal -->
@@ -102,13 +97,7 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
       _supabase = supabase.createClient(
         "https://cvdtykmkajmhlxydhzzl.supabase.co",
         "sb_publishable_I16eAnYgsA9fd8ZMlmFQtA_RxepSaXi",
-        {
-          auth: {
-            persistSession: true,
-            storageKey: 'sb-session',
-            storage: window.localStorage,
-          }
-        }
+        { auth: { persistSession: true, storageKey: 'sb-session', storage: window.localStorage } }
       );
     }
     return _supabase;
@@ -132,7 +121,7 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
     }
     renderNav();
     window.__authReady = true;
-    window.dispatchEvent(new Event('authReady'));
+    if (typeof window.__onAuthReady === 'function') window.__onAuthReady();
   }
 
   async function loadUserData() {
@@ -227,10 +216,7 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
   async function signOut() {
     const sb = initSupabase();
     await sb.auth.signOut();
-    currentUser = null;
-    userFavorites = [];
-    userNotes = {};
-    userWatched = [];
+    currentUser = null; userFavorites = []; userNotes = {}; userWatched = [];
     renderNav();
     document.cookie = 'sb-access-token=; path=/; max-age=0';
     document.cookie = 'sb-refresh-token=; path=/; max-age=0';
@@ -246,13 +232,11 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
     const sb = initSupabase();
     if (isFav(videoId)) {
       userFavorites = userFavorites.filter(id => id !== videoId);
-      btn.classList.remove("active");
-      btn.textContent = "♡ Save";
+      btn.classList.remove("active"); btn.textContent = "♡ Save";
       await sb.from("favorites").delete().eq("user_id", currentUser.id).eq("video_id", videoId);
     } else {
       userFavorites.push(videoId);
-      btn.classList.add("active");
-      btn.textContent = "♥ Saved";
+      btn.classList.add("active"); btn.textContent = "♥ Saved";
       await sb.from("favorites").insert({ user_id: currentUser.id, video_id: videoId });
     }
     if (typeof onFavChange === 'function') onFavChange();
@@ -263,13 +247,11 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
     const sb = initSupabase();
     if (isWatched(videoId)) {
       userWatched = userWatched.filter(id => id !== videoId);
-      btn.classList.remove("active");
-      btn.textContent = "✓ Mark watched";
+      btn.classList.remove("watched"); btn.textContent = "✓ Mark watched";
       await sb.from("watched").delete().eq("user_id", currentUser.id).eq("video_id", videoId);
     } else {
       userWatched.push(videoId);
-      btn.classList.add("active");
-      btn.textContent = "✓ Watched";
+      btn.classList.add("watched"); btn.textContent = "✓ Watched";
       await sb.from("watched").insert({ user_id: currentUser.id, video_id: videoId });
     }
   }
@@ -291,12 +273,8 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
     document.getElementById("notes-modal-title").textContent = title;
     document.getElementById("notes-modal-meta").textContent = player;
     const adminBox = document.getElementById("notes-admin-box");
-    if (adminNote) {
-      adminBox.style.display = "block";
-      document.getElementById("notes-admin-text").textContent = adminNote;
-    } else {
-      adminBox.style.display = "none";
-    }
+    if (adminNote) { adminBox.style.display = "block"; document.getElementById("notes-admin-text").textContent = adminNote; }
+    else { adminBox.style.display = "none"; }
     const ta = document.getElementById("notes-textarea");
     ta.value = getUserNote(videoId);
     document.getElementById("notes-char-count").textContent = ta.value.length + " characters";
@@ -333,10 +311,7 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
   });
 
   document.addEventListener("keydown", e => {
-    if (e.key === "Escape") {
-      closeNotesDirect();
-      closeAuthModalDirect();
-    }
+    if (e.key === "Escape") { closeNotesDirect(); closeAuthModalDirect(); }
   });
   </script>
 </body>

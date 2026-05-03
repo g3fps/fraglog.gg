@@ -491,6 +491,7 @@ nav {
 }
 .notes-btn:hover { color: var(--text); border-color: rgba(255,255,255,0.3); }
 .notes-btn.has-note { color: var(--red); border-color: rgba(255,70,85,0.4); }
+.notes-btn.watched { color: #6BCF6B; border-color: rgba(107,207,107,0.4); }
 .note-login-prompt { font-size: 11px; color: var(--muted); font-style: italic; }
 
 /* Notes Modal */

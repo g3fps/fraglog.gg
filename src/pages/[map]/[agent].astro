@@ -63,7 +63,7 @@ const description = `Watch ${vods.length} Radiant ${agentData.name} VODs on ${ma
                 {v.kd && <span class="video-kd">{v.kd}</span>}
                 {v.date && <span class="video-date">{formatDate(v.date)}</span>}
               </div>
-              <div class="notes-section" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);display:flex;gap:6px;align-items:center" data-vid={v.id} data-title={v.title} data-player={v.player} data-note={v.note || ''}>
+              <div class="notes-section" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);display:flex;gap:6px;align-items:center;flex-wrap:wrap" data-vid={v.id} data-title={v.title} data-player={v.player} data-note={v.note || ''}>
                 <span class="note-login-prompt"><span onclick="openAuth()" style="color:var(--red);cursor:pointer">Sign in</span> to save &amp; add notes</span>
               </div>
             </div>
@@ -78,17 +78,16 @@ const description = `Watch ${vods.length} Radiant ${agentData.name} VODs on ${ma
 <script is:inline>
 document.addEventListener("click", function(e) {
   const el = e.target.closest("[data-vid]");
-  if (el && !e.target.closest("button")) window.open("https://youtube.com/watch?v=" + el.dataset.vid, "_blank");
+  if (el && !e.target.closest("button") && !e.target.closest("a")) {
+    window.open("https://youtube.com/watch?v=" + el.dataset.vid, "_blank");
+  }
 });
 
 function onAuthChange() { updateVideoActions(); }
 
 function onNoteChange(videoId) {
   const btn = document.querySelector(`.notes-btn[data-vid="${videoId}"]`);
-  if (btn) {
-    btn.classList.add("has-note");
-    btn.textContent = "📝 View notes";
-  }
+  if (btn) { btn.classList.add("has-note"); btn.textContent = "📝 View notes"; }
 }
 
 function updateVideoActions() {
@@ -103,28 +102,21 @@ function updateVideoActions() {
       const noteClass = getUserNote(vid) ? "has-note" : "";
       const favText = isFav(vid) ? "♥ Saved" : "♡ Save";
       const favClass = isFav(vid) ? "has-note" : "";
+      const watchText = isWatched(vid) ? "✓ Watched" : "✓ Mark watched";
+      const watchClass = isWatched(vid) ? "watched" : "";
+      const safeTitle = title.replace(/'/g, "\\'");
       el.innerHTML = `
-        <button class="notes-btn ${noteClass}" data-vid="${vid}" onclick="openNotes('${vid}','${title.replace(/'/g,"\\'")}','${player}'${adminNote ? `,'${adminNote.replace(/'/g,"\\'")}''` : ''})">
-          📝 ${noteText}
-        </button>
-        <button class="notes-btn ${favClass}" data-fav="${vid}" onclick="toggleFav('${vid}',this)" title="Save to favorites">
-          ${favText}
-        </button>`;
-        <button class="notes-btn ${isWatched(vid) ? 'has-note' : ''}" onclick="toggleWatched('${vid}',this)">
-        ${isWatched(vid) ? '✓ Watched' : '✓ Mark watched'}
-        </button>
+        <button class="notes-btn ${noteClass}" data-vid="${vid}" onclick="openNotes('${vid}','${safeTitle}','${player}'${adminNote ? `,'${adminNote.replace(/'/g,"\\'")}'` : ''})">📝 ${noteText}</button>
+        <button class="notes-btn ${favClass}" onclick="toggleFav('${vid}',this)">${favText}</button>
+        <button class="notes-btn ${watchClass}" onclick="toggleWatched('${vid}',this)">${watchText}</button>`;
     } else {
       el.innerHTML = `<span class="note-login-prompt"><span onclick="openAuth()" style="color:var(--red);cursor:pointer">Sign in</span> to save &amp; add notes</span>`;
     }
   });
 }
 
-function tryUpdate() {
-  if (window.__authReady) {
-    updateVideoActions();
-  } else {
-    window.addEventListener('authReady', updateVideoActions, { once: true });
-  }
-}
-tryUpdate();
+// Register callback — runs as soon as BaseLayout finishes initAuth
+window.__onAuthReady = updateVideoActions;
+// Also handle case where auth already finished before this script ran
+if (window.__authReady) updateVideoActions();
 </script>
