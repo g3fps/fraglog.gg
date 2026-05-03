@@ -60,7 +60,7 @@ const description = `Watch ${vods.length} Radiant ${agentData.name} VODs on ${ma
               <div class="video-title" data-vid={v.id} style="cursor:pointer">{v.title}</div>
               <div class="video-meta-row">
                 <a class="video-player" href={`/player/${v.player.toLowerCase().replace(/\//g,'').replace(/ /g,'-')}`} onclick="event.stopPropagation()">{v.player}</a>
-                {v.kd && <span class="video-kd">{v.kd}</span>}span class="video-player
+                {v.kd && <span class="video-kd">{v.kd}</span>}
                 {v.date && <span class="video-date">{formatDate(v.date)}</span>}
               </div>
               <div class="notes-section" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);display:flex;gap:6px;align-items:center" data-vid={v.id} data-title={v.title} data-player={v.player} data-note={v.note || ''}>
