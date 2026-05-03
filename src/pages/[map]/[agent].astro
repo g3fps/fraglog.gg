@@ -119,14 +119,12 @@ function updateVideoActions() {
   });
 }
 
-// Wait for auth to be ready before updating UI
-let pollCount = 0;
-const poll = setInterval(() => {
-  pollCount++;
+function tryUpdate() {
   if (window.__authReady) {
-    clearInterval(poll);
     updateVideoActions();
+  } else {
+    window.addEventListener('authReady', updateVideoActions, { once: true });
   }
-  if (pollCount > 200) clearInterval(poll);
-}, 100);
+}
+tryUpdate();
 </script>

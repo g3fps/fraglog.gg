@@ -132,6 +132,7 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
     }
     renderNav();
     window.__authReady = true;
+    window.dispatchEvent(new Event('authReady'));
   }
 
   async function loadUserData() {
