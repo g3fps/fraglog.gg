@@ -33,8 +33,7 @@ body::before {
 
 /* ── NAV ─────────────────────────────────────────────────── */
 nav {
-  display: grid;
-  grid-template-columns: auto 1fr auto 1fr auto;
+  display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 2.5rem;
@@ -46,6 +45,7 @@ nav {
   top: 0;
   z-index: 200;
   gap: 1rem;
+  overflow: hidden;
 }
 
 .logo {
@@ -769,8 +769,10 @@ footer {
 
   .footer-grid { grid-template-columns: 1fr 1fr; gap: 2rem; }
   .myvods-row { grid-template-columns: 1fr; }
-  .nav-search-wrap { max-width: 140px; }
-  .nav-search-input { font-size: 12px; padding: 6px 10px; }
+  .nav-search-wrap { width: 100px; max-width: 100px; flex-shrink: 1; }
+  .nav-search-input { font-size: 11px; padding: 5px 8px; }
+  .nav-right { min-width: 0; flex-shrink: 0; }
+  .breadcrumb { min-width: 0; flex-shrink: 1; }
 }
 
 @media (max-width: 480px) {
