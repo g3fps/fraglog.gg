@@ -120,10 +120,13 @@ function updateVideoActions() {
 }
 
 // Wait for auth to be ready before updating UI
+let pollCount = 0;
 const poll = setInterval(() => {
+  pollCount++;
   if (window.__authReady) {
     clearInterval(poll);
     updateVideoActions();
   }
-}, 50);
+  if (pollCount > 200) clearInterval(poll);
+}, 100);
 </script>
