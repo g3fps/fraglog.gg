@@ -53,6 +53,7 @@ export const VODS = {
     jett: [
       { id:"7R6AVy9l2u4", title:"ENVY ion Jett Ascent OPERATOR GOAT", player:"ion2x", date:"2026-04-30" },
       { id:"KM0I4IvErIo", title:"FUR koalanoob Jett Ascent RADIANT RANKED", player:"koalanoob", date:"2026-04-30" },
+      { id:"nugOCDa17d4", title:"ENVY demon1 Jett Ascent RADIANT RANKED", player:"demon1", date:"2026-05-04" },
     ],
     reyna: [
     ],
@@ -299,6 +300,7 @@ export const VODS = {
       { id:"ksTKkBUwEkg", title:"C9 OXY Sova Haven RADIANT LINEUPS", player:"OXY", date:"2026-05-02" },
       { id:"HqNC3G8Y6fo", title:"NRG s0m Sova Haven RADIANT RANKED", player:"s0m", date:"2026-04-07" },
       { id:"O5I6GUhjPjc", title:"KC avez Sova Haven EU DOMINATION", player:"avez", date:"2026-04-25" },
+      { id:"-iZGr7x_LL4", title:"QOR Derrek Sova Haven RADIANT UTIL", player:"derrek", date:"2026-05-04" },
     ],
     breach: [
     ],
@@ -383,6 +385,7 @@ export const VODS = {
     chamber: [
       { id:"F60rN7-Rk3w", title:"Flashback Chamber Split APAC DOMINATION", player:"Flashback", date:"2026-04-25" },
       { id:"tdNrQ56AKSI", title:"ENVY demon1 Chamber Split", player:"demon1", date:"2026-05-01" },
+      { id:"mV0_nN57fFs", title:"florescent Chamber Split RADIANT RANKED", player:"florescent", date:"2026-05-04" },
     ],
     deadlock: [
       { id:"76lek9z4JT0", title:"NRG brawk Deadlock Split RADIANT RANKED", player:"brawk", date:"2026-04-06" },
@@ -402,6 +405,7 @@ export const VODS = {
       { id:"OltrZLDeufA", title:"C9 OXY Skye Split RADIANT RANKED", player:"OXY", date:"2026-04-12" },
       { id:"dL_gZeNgSFs", title:"SRG Noia Skye Split RADIANT RANKED", player:"Noia", date:"2026-03-05" },
       { id:"BvvQX13GcXs", title:"C9 OXY Skye Split RADIANT MVPS", player:"OXY", date:"2026-05-02" },
+      { id:"jG2KIYjMPBU", title:"NRG s0m Skye Split RADIANT UTIL", player:"s0m", date:"2026-05-04" },
     ],
     kayo: [
     ],
@@ -567,6 +571,7 @@ export const VODS = {
       { id:"Ii4ARRVwtwI", title:"cheatcode Pearl Phoenix RADIANT AIM", player:"cheatcode", date:"2026-04-25" },
       { id:"awUvf_tgESA", title:"RC hiroronn Phoenix Pearl RADIANT RANKED", player:"hiroronn", date:"2026-04-24" },
       { id:"3GD96bcKKH8", title:"C9 OXY Phoenix Pearl RADIANT FLASHES", player:"OXY", date:"2026-05-02" },
+      { id:"Mxta2gfKRtQ", title:"ShahZaM Phoenix Pearl RADIANT RANKED", player:"ShahZaM", date:"2026-05-04" },
     ],
     yoru: [
       { id:"qujRF2QbAfU", title:"ENVY Eggsterr Yoru Pearl YORU MASTERY", player:"Eggsterr", date:"2026-03-13" },
@@ -725,6 +730,8 @@ export const VODS = {
       { id:"Z1ubZoLUNgY", title:"NRG s0m Jett Breeze RADIANT OP", player:"s0m", date:"2026-04-08" },
       { id:"ekZDh2WpNek", title:"KRX Hermes Jett Breeze RADIANT RANKED", player:"Hermes", date:"2026-05-02" },
       { id:"VD1w6se--Fc", title:"florescent Jett Breeze TIER 1 AIM", player:"florescent", date:"2026-05-02" },
+      { id:"eFEb_qlYbl0", title:"NRG s0m Jett Breeze RADIANT RANKED", player:"s0m", date:"2026-05-04" },
+      { id:"pKGRbWbnmkk", title:"ENVY demon1 Jett Breeze PRO ENTRY", player:"demon1", date:"2026-05-04" },
     ],
     reyna: [
       { id:"HrWzwyCfcZ0", title:"C9 OXY Reyna Breeze RADIANT RANKED", player:"OXY", date:"2026-04-25" },
@@ -842,6 +849,7 @@ export const VODS = {
       { id:"3lPciKRKsjg", title:"EG dgzin Neon Lotus PRO GAMEPLAY", player:"dgzin", date:"2026-04-21" },
       { id:"jOb1LYWwIZg", title:"MIBR zekken Neon Lotus PRO GAMEPLAY", player:"zekken", date:"2026-05-02" },
       { id:"TuYnOc4eCtM", title:"NRG s0m Neon Lotus TIER 1 RANKED", player:"s0m", date:"2026-04-26" },
+      { id:"e4Q1sfgj0R8", title:"icy Neon Lotus RADIANT RANKED", player:"icy", date:"2026-05-04" },
     ],
     phoenix: [
     ],
@@ -854,6 +862,7 @@ export const VODS = {
     ],
     waylay: [
       { id:"vsDaIBP1-C0", title:"FL Hals Waylay Lotus RADIANT RANKED", player:"Hals", date:"2026-04-20" },
+      { id:"__kxNRF4qj8", title:"ZETA eKo Waylay Lotus RADIANT APAC", player:"eKo", date:"2026-05-04" },
     ],
     omen: [
       { id:"PQR-Ieht-M0", title:"Zander Omen Lotus INSANE MVP", player:"Zander", date:"2026-03-30" },
@@ -886,6 +895,7 @@ export const VODS = {
     ],
     chamber: [
       { id:"EcMf5Nd0k1k", title:"NRG s0m Chamber Lotus RADIANT ONE TAPS", player:"s0m", date:"2026-04-30" },
+      { id:"KYeuEgEZmDY", title:"florescent Chamber Lotus RADIANT RANKED", player:"florescent", date:"2026-05-04" },
     ],
     deadlock: [
       { id:"1voPqhkTDX8", title:"ENVY demon1 Deadlock Lotus RADIANT TRAPS", player:"demon1", date:"2026-04-20" },
