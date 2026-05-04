@@ -36,10 +36,13 @@ const { crumbs = [], user = null } = Astro.props as { crumbs: { label: string; h
       <>
         <button class="auth-btn" onclick="window.location='/favorites'">♥ Favorites</button>
         <button class="auth-btn" onclick="window.location='/my-vods'">My VODs</button>
-        <div class="user-pill">
-          <div class="user-avatar">{user.email[0].toUpperCase()}</div>
-          {user.email.split("@")[0]}
-        </div>
+        <a class="user-pill" href="/settings" style="text-decoration:none">
+          <div class="user-avatar" id="nav-avatar-wrap">
+            <img id="nav-avatar-img" src="" alt="" style="display:none;width:100%;height:100%;object-fit:cover;border-radius:50%">
+            <span id="nav-avatar-initials">{user.email[0].toUpperCase()}</span>
+          </div>
+          <span id="nav-username">{user.email.split("@")[0]}</span>
+        </a>
         <button class="auth-btn" onclick="signOut()">Sign Out</button>
       </>
     ) : (
@@ -57,4 +60,29 @@ function handleNavSearch(val) {
   const url = '/search?q=' + encodeURIComponent(val.trim());
   window.location.href = url;
 }
+
+// Load profile for nav display
+(async function loadNavProfile() {
+  if (!document.getElementById('nav-avatar-wrap')) return;
+  try {
+    const sb = window._supabase || (typeof supabase !== 'undefined' && supabase.createClient(
+      "https://cvdtykmkajmhlxydhzzl.supabase.co",
+      "sb_publishable_I16eAnYgsA9fd8ZMlmFQtA_RxepSaXi",
+      { auth: { persistSession: true, storageKey: 'sb-session', storage: window.localStorage } }
+    ));
+    if (!sb) return;
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) return;
+    const { data: profile } = await sb.from('profiles').select('username,avatar_url').eq('id', session.user.id).single();
+    if (!profile) return;
+    if (profile.username) document.getElementById('nav-username').textContent = profile.username;
+    if (profile.avatar_url) {
+      const img = document.getElementById('nav-avatar-img');
+      img.src = profile.avatar_url;
+      img.style.display = 'block';
+      document.getElementById('nav-avatar-initials').style.display = 'none';
+    }
+  } catch(e) {}
+})();
+
 </script>

@@ -1,7 +1,7 @@
 ---
 import '../styles/global.css';
 
-const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radiant and pro player Valorant gameplay VODs filtered by map and agent. Study the best players in the world on fraglog.gg', ogImage = 'https://fraglog.gg/og-image.png', canonical = 'https://fraglog.gg', user = null } = Astro.props;
+const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radiant and pro player Valorant gameplay VODs filtered by map and agent. Study the best players in the world on fraglog.gg', ogImage = 'https://media.valorant-api.com/maps/7eaecc1b-4337-bbf6-6ab9-04b8f06b3319/splash.png', canonical = 'https://fraglog.gg', user = null } = Astro.props;
 ---
 <!DOCTYPE html>
 <html lang="en">
@@ -141,14 +141,30 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
     userWatched = (watched||[]).map(w => w.video_id);
   }
 
-  function renderNav() {
+  async function renderNav() {
     const nr = document.getElementById("nav-right");
     if (!nr) return;
     if (currentUser) {
       const email = currentUser.email;
+      const fallbackName = email.split("@")[0];
+
+      // Load profile for username + avatar
+      let username = fallbackName;
+      let avatarUrl = null;
+      try {
+        const sb = initSupabase();
+        const { data: profile } = await sb.from('profiles').select('username,avatar_url').eq('id', currentUser.id).single();
+        if (profile?.username) username = profile.username;
+        if (profile?.avatar_url) avatarUrl = profile.avatar_url;
+      } catch(e) {}
+
+      const avatarHtml = avatarUrl
+        ? `<img src="${avatarUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%" alt="">`
+        : email[0].toUpperCase();
+
       nr.innerHTML = `<button class="auth-btn" onclick="window.location='/favorites'">♥ Favorites</button>
         <button class="auth-btn" onclick="window.location='/my-vods'">My VODs</button>
-        <div class="user-pill"><div class="user-avatar">${email[0].toUpperCase()}</div>${email.split("@")[0]}</div>
+        <a class="user-pill" href="/settings" style="text-decoration:none"><div class="user-avatar" style="overflow:hidden">${avatarHtml}</div>${username}</a>
         <button class="auth-btn" onclick="signOut()">Sign Out</button>`;
     } else {
       nr.innerHTML = `<button class="auth-btn" onclick="openAuth()">Sign In</button>
