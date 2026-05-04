@@ -328,12 +328,16 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
       }
 
       const data = await response.json();
-      aiText.innerHTML = (data.text || "No summary generated.")
-      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-      .replace(/\n\n/g, '</p><p>')
-      .replace(/\n/g, '<br>')
-      .replace(/^/, '<p>')
-      .replace(/$/, '</p>');
+      const raw = data.text || "No summary generated.";
+      const html = raw
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+        .replace(/^#{1,3}\s+(.+)$/gm, '<strong>$1</strong>')
+        .replace(/\n\n+/g, '</p><p>')
+        .replace(/\n/g, '<br>');
+      aiText.innerHTML = '<p>' + html + '</p>';
     } catch (e) {
       aiText.textContent = "Something went wrong. Try again.";
       console.error("Summarize error:", e);
