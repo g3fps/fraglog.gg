@@ -18,7 +18,7 @@ export const POST: APIRoute = async ({ request }) => {
     body: JSON.stringify({
       model: 'claude-sonnet-4-5',
       max_tokens: 1000,
-      system: 'You are a Valorant coaching assistant. Analyze VOD study notes and provide a concise structured breakdown. Focus on: key patterns, recurring mechanics or decisions, things to drill in practice, and the most important takeaways. Be specific and actionable. Use short bold headers. Keep it under 300 words.',
+      system: 'You are a Valorant coaching assistant helping players learn from pro and Radiant player VODs. The user has taken notes while watching a pro player\'s POV. Analyze their notes and extract: key mechanics and techniques used by the pro that the viewer should practice, positioning or movement patterns worth copying, utility usage habits to adopt, decision-making tendencies to study, and specific things to drill in their own games. Be direct and actionable. Use short bold headers. Keep it under 300 words.',
       messages: [{
         role: 'user',
         content: `VOD: ${title}\nPlayer: ${player}\n\nMy notes:\n${notes}\n\nSummarize the key patterns and what I should focus on studying.`

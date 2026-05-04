@@ -73,7 +73,7 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
         </div>
         <div id="notes-ai-box" style="display:none;background:var(--darker);border-left:2px solid #7B8FA1;padding:12px 14px;margin-bottom:12px;border-radius:4px">
           <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#7B8FA1;margin-bottom:8px">✨ AI Summary</div>
-          <div id="notes-ai-text" style="font-size:13px;color:var(--text);line-height:1.7;white-space:pre-wrap"></div>
+          <div id="notes-ai-text" style="font-size:13px;color:var(--text);line-height:1.7;"></div>
         </div>
         <div class="notes-user-box">
           <div class="notes-user-label">Your Notes</div>
@@ -328,7 +328,12 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
       }
 
       const data = await response.json();
-      aiText.textContent = data.text || "No summary generated.";
+      aiText.innerHTML = (data.text || "No summary generated.")
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\n\n/g, '</p><p>')
+      .replace(/\n/g, '<br>')
+      .replace(/^/, '<p>')
+      .replace(/$/, '</p>');
     } catch (e) {
       aiText.textContent = "Something went wrong. Try again.";
       console.error("Summarize error:", e);
