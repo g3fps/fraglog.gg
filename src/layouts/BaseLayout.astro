@@ -72,8 +72,8 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
           <div class="notes-admin-text" id="notes-admin-text"></div>
         </div>
         <div id="notes-ai-box" style="display:none;background:var(--darker);border-left:2px solid #7B8FA1;padding:12px 14px;margin-bottom:12px;border-radius:4px">
-          <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#7B8FA1;margin-bottom:8px">✨ AI Summary</div>
-          <div id="notes-ai-text" style="font-size:13px;color:var(--text);line-height:1.7;"></div>
+          <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#7B8FA1;margin-bottom:8px">✨ Coach</div>
+          <div id="notes-ai-text" style="font-size:13px;color:var(--text);line-height:1.7"></div>
         </div>
         <div class="notes-user-box">
           <div class="notes-user-label">Your Notes</div>
@@ -84,7 +84,7 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
         <span class="notes-char-count" id="notes-char-count">0 characters</span>
         <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
           <span class="notes-saved-msg" id="notes-saved-msg">✓ Saved</span>
-          <button class="notes-save-btn" style="background:var(--surface2);color:var(--muted);border:1px solid var(--border)" onclick="summarizeNotes()" id="notes-summarize-btn">✨ Summarize</button>
+          <button class="notes-save-btn" style="background:var(--surface2);color:var(--muted);border:1px solid var(--border)" onclick="coachMe()" id="notes-coach-btn">✨ Coach me</button>
           <button class="notes-save-btn" onclick="saveNoteFromModal()">Save Notes</button>
         </div>
       </div>
@@ -285,7 +285,7 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
     document.getElementById("notes-char-count").textContent = ta.value.length + " characters";
     document.getElementById("notes-saved-msg").style.display = "none";
     document.getElementById("notes-ai-box").style.display = "none";
-    document.getElementById("notes-ai-text").textContent = "";
+    document.getElementById("notes-ai-text").innerHTML = "";
     document.getElementById("notes-modal").classList.add("open");
     document.body.style.overflow = "hidden";
     setTimeout(() => ta.focus(), 100);
@@ -298,23 +298,23 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
     if (typeof onNoteChange === 'function') onNoteChange(currentNoteVideoId);
   }
 
-  async function summarizeNotes() {
+  async function coachMe() {
     const notes = document.getElementById("notes-textarea").value.trim();
     if (!notes) {
-      alert("Write some notes first, then summarize them.");
+      alert("Write some notes first.");
       return;
     }
 
     const title = document.getElementById("notes-modal-title").textContent;
     const player = document.getElementById("notes-modal-meta").textContent;
-    const btn = document.getElementById("notes-summarize-btn");
+    const btn = document.getElementById("notes-coach-btn");
     const aiBox = document.getElementById("notes-ai-box");
     const aiText = document.getElementById("notes-ai-text");
 
-    btn.textContent = "✨ Summarizing...";
+    btn.textContent = "✨ Coaching...";
     btn.disabled = true;
     aiBox.style.display = "block";
-    aiText.textContent = "Analyzing your notes...";
+    aiText.innerHTML = '<span style="color:var(--muted)">Analyzing your notes...</span>';
 
     try {
       const response = await fetch("/api/analyze", {
@@ -323,12 +323,10 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
         body: JSON.stringify({ notes, title, player })
       });
 
-      if (!response.ok) {
-        throw new Error("API error: " + response.status);
-      }
+      if (!response.ok) throw new Error("API error: " + response.status);
 
       const data = await response.json();
-      const raw = data.text || "No summary generated.";
+      const raw = data.text || "";
       const html = raw
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
@@ -339,11 +337,10 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
         .replace(/\n/g, '<br>');
       aiText.innerHTML = '<p>' + html + '</p>';
     } catch (e) {
-      aiText.textContent = "Something went wrong. Try again.";
-      console.error("Summarize error:", e);
+      aiText.innerHTML = '<span style="color:var(--red)">Something went wrong. Try again.</span>';
     }
 
-    btn.textContent = "✨ Summarize";
+    btn.textContent = "✨ Coach me";
     btn.disabled = false;
   }
 
@@ -351,7 +348,7 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
     document.getElementById("notes-modal").classList.remove("open");
     document.body.style.overflow = "";
     document.getElementById("notes-ai-box").style.display = "none";
-    document.getElementById("notes-ai-text").textContent = "";
+    document.getElementById("notes-ai-text").innerHTML = "";
     currentNoteVideoId = null;
   }
   function closeNotesModal(e) {
