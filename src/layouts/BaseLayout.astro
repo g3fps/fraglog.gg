@@ -315,7 +315,7 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
     aiText.textContent = "";
 
     try {
-      const response = await fetch("/api/summarize", {
+      const response = await fetch("/api/analyze", {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({ notes, title, player: meta })
