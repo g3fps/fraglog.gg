@@ -271,19 +271,12 @@ if (!user) return Astro.redirect('/');
 </style>
 
 <script is:inline>
-const SUPABASE_URL = "https://cvdtykmkajmhlxydhzzl.supabase.co";
-const SUPABASE_KEY = "sb_publishable_I16eAnYgsA9fd8ZMlmFQtA_RxepSaXi";
-const STORAGE_URL = `${SUPABASE_URL}/storage/v1/object/public/avatars/`;
+const STORAGE_URL = `https://cvdtykmkajmhlxydhzzl.supabase.co/storage/v1/object/public/avatars/`;
 
-let _sb;
-function getSb() {
-  if (!_sb) _sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
-    auth: { persistSession: true, storageKey: 'sb-session', storage: window.localStorage }
-  });
-  return _sb;
-}
+// Reuse BaseLayout's Supabase instance
+function getSb() { return initSupabase(); }
 
-let currentUser = null;
+let settingsUser = null;
 let currentProfile = null;
 
 function setStatus(id, msg, color = '#6BCF6B') {
@@ -304,15 +297,15 @@ async function init() {
   const sb = getSb();
   const { data: { session } } = await sb.auth.getSession();
   if (!session) { window.location.href = '/'; return; }
-  currentUser = session.user;
+  settingsUser = session.user;
 
-  document.getElementById('profile-email').textContent = currentUser.email;
+  document.getElementById('profile-email').textContent = settingsUser.email;
 
-  // Load profile
-  const { data: profile } = await sb.from('profiles').select('*').eq('id', currentUser.id).single();
+  // Load profile — use maybeSingle to avoid 406 when no row exists yet
+  const { data: profile } = await sb.from('profiles').select('*').eq('id', settingsUser.id).maybeSingle();
   currentProfile = profile;
 
-  const username = profile?.username || currentUser.email.split('@')[0];
+  const username = profile?.username || settingsUser.email.split('@')[0];
   const avatarUrl = profile?.avatar_url || null;
 
   document.getElementById('inp-username').value = profile?.username || '';
@@ -339,7 +332,7 @@ async function saveProfile() {
 
   const sb = getSb();
   const { error } = await sb.from('profiles').upsert(
-    { id: currentUser.id, username, updated_at: new Date().toISOString() },
+    { id: settingsUser.id, username, updated_at: new Date().toISOString() },
     { onConflict: 'id' }
   );
 
@@ -398,7 +391,7 @@ document.getElementById('avatar-input').addEventListener('change', async (e) => 
 
   const sb = getSb();
   const ext = file.name.split('.').pop();
-  const path = `${currentUser.id}/avatar.${ext}`;
+  const path = `${settingsUser.id}/avatar.${ext}`;
 
   const { error } = await sb.storage.from('avatars').upload(path, file, { upsert: true, contentType: file.type });
   if (error) { setUploadStatus('Upload failed.', 'var(--red)'); return; }
@@ -407,7 +400,7 @@ document.getElementById('avatar-input').addEventListener('change', async (e) => 
 
   // Save to profile
   await sb.from('profiles').upsert(
-    { id: currentUser.id, avatar_url: avatarUrl, updated_at: new Date().toISOString() },
+    { id: settingsUser.id, avatar_url: avatarUrl, updated_at: new Date().toISOString() },
     { onConflict: 'id' }
   );
 
