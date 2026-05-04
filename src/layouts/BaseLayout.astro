@@ -71,6 +71,10 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
           <div class="notes-admin-label">💡 Creator Note</div>
           <div class="notes-admin-text" id="notes-admin-text"></div>
         </div>
+        <div id="notes-ai-box" style="display:none;background:var(--darker);border-left:2px solid #7B8FA1;padding:12px 14px;margin-bottom:12px">
+          <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#7B8FA1;margin-bottom:8px">✨ AI Summary</div>
+          <div id="notes-ai-text" style="font-size:13px;color:var(--text);line-height:1.7;white-space:pre-wrap"></div>
+        </div>
         <div class="notes-user-box">
           <div class="notes-user-label">Your Notes</div>
           <textarea class="notes-textarea" id="notes-textarea" placeholder="Write anything — timestamps, things to study, key moments..."></textarea>
@@ -78,8 +82,9 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
       </div>
       <div class="notes-modal-footer">
         <span class="notes-char-count" id="notes-char-count">0 characters</span>
-        <div style="display:flex;align-items:center;gap:12px">
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
           <span class="notes-saved-msg" id="notes-saved-msg">✓ Saved</span>
+          <button class="notes-save-btn" style="background:var(--surface2);color:var(--muted);border:1px solid var(--border)" onclick="summarizeNotes()" id="notes-summarize-btn">✨ Summarize</button>
           <button class="notes-save-btn" onclick="saveNoteFromModal()">Save Notes</button>
         </div>
       </div>
@@ -247,11 +252,11 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
     const sb = initSupabase();
     if (isWatched(videoId)) {
       userWatched = userWatched.filter(id => id !== videoId);
-      btn.classList.remove("watched"); btn.textContent = "✓ Mark watched";
+      btn.classList.remove("active"); btn.textContent = "✓ Mark watched";
       await sb.from("watched").delete().eq("user_id", currentUser.id).eq("video_id", videoId);
     } else {
       userWatched.push(videoId);
-      btn.classList.add("watched"); btn.textContent = "✓ Watched";
+      btn.classList.add("active"); btn.textContent = "✓ Watched";
       await sb.from("watched").insert({ user_id: currentUser.id, video_id: videoId });
     }
   }
@@ -291,9 +296,65 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
     if (typeof onNoteChange === 'function') onNoteChange(currentNoteVideoId);
   }
 
+  async function summarizeNotes() {
+    const notes = document.getElementById("notes-textarea").value.trim();
+    if (!notes) {
+      alert("Write some notes first, then summarize them.");
+      return;
+    }
+
+    const title = document.getElementById("notes-modal-title").textContent;
+    const meta = document.getElementById("notes-modal-meta").textContent;
+    const btn = document.getElementById("notes-summarize-btn");
+    const aiBox = document.getElementById("notes-ai-box");
+    const aiText = document.getElementById("notes-ai-text");
+
+    btn.textContent = "✨ Summarizing...";
+    btn.disabled = true;
+    aiBox.style.display = "block";
+    aiText.textContent = "";
+
+    try {
+      const response = await fetch("/api/summarize", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ notes, title, player: meta })
+});
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        const chunk = decoder.decode(value);
+        const lines = chunk.split("\n");
+        for (const line of lines) {
+          if (line.startsWith("data: ")) {
+            const data = line.slice(6);
+            if (data === "[DONE]") continue;
+            try {
+              const parsed = JSON.parse(data);
+              if (parsed.type === "content_block_delta" && parsed.delta?.text) {
+                aiText.textContent += parsed.delta.text;
+              }
+            } catch {}
+          }
+        }
+      }
+    } catch (e) {
+      aiText.textContent = "Something went wrong. Try again.";
+    }
+
+    btn.textContent = "✨ Summarize";
+    btn.disabled = false;
+  }
+
   function closeNotesDirect() {
     document.getElementById("notes-modal").classList.remove("open");
     document.body.style.overflow = "";
+    document.getElementById("notes-ai-box").style.display = "none";
+    document.getElementById("notes-ai-text").textContent = "";
     currentNoteVideoId = null;
   }
   function closeNotesModal(e) {
