@@ -27,7 +27,6 @@ export const POST: APIRoute = async ({ request }) => {
   });
 
   const data = await response.json();
-  console.log("Anthropic response:", JSON.stringify(data));
   const text = data.content?.[0]?.text || 'No summary generated.';
 
   return new Response(JSON.stringify({ text }), {
