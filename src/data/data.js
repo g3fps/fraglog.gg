@@ -87,6 +87,8 @@ export const VODS = {
     sage: [
     ],
     cypher: [
+      { id:"TrABVuHlB44", title:"NRG s0m Cypher Ascent RADIANT SETUPS", player:"s0m", date:"2026-05-04" },
+
     ],
     killjoy: [
     ],
@@ -95,10 +97,12 @@ export const VODS = {
     deadlock: [
     ],
     vyse: [
+      { id:"0OEcUORW1P0", title:"KRU less Vyse Ascent RADIANT RANKED", player:"less", date:"2026-05-04" },
     ],
     veto: [
     ],
     sova: [
+      { id:"EaLyY77ACU8", title:"NRG brawk Sova Ascent RADIANT RANKED", player:"brawk", date:"2026-05-04" },
     ],
     breach: [
     ],
@@ -338,6 +342,7 @@ export const VODS = {
     neon: [
       { id:"eScv6iy1afY", title:"MIBR zekken Neon Split RADIANT SHOTGUN", player:"zekken", date:"2026-04-15" },
       { id:"4RVIw2taYg4", title:"TH ComeBack Neon Split RADIANT RANKED", player:"ComeBack", date:"2026-02-10" },
+      { id:"0IBirHeoEa0", title:"FUR alym Neon Split RADIANT RANKED", player:"alym", date:"2026-05-04" },
     ],
     phoenix: [
     ],
@@ -374,6 +379,8 @@ export const VODS = {
       { id:"2nTZI4pirhA", title:"C9 Zellsis Miks Split RADIANT RANKED", player:"Zellsis", date:"2026-04-02" },
     ],
     sage: [
+      { id:"HcRyx41uPqY", title:"C9 OXY Sage Split RADIANT RANKED", player:"OXY", date:"2026-05-04" },
+      { id:"UCSl_oCPL3U", title:"MRG MrTenzouEz Sage Split RADIANT", player:"MrTenzouEz", date:"2026-05-04" },
     ],
     cypher: [
       { id:"-9cPLzfrBGs", title:"TL nAts Split Cypher RADIANT RANKED", player:"nAts", date:"2026-04-15" },
@@ -549,6 +556,7 @@ export const VODS = {
       { id:"7xKD0ojyGcA", title:"LOUD luk xo Jett Pearl RADIANT AIMER", player:"luk xo", date:"2026-04-23" },
       { id:"48BArO8rCZE", title:"NRG s0m Jett Pearl RADIANT AIM", player:"s0m", date:"2026-04-08" },
       { id:"19lxEnRFQFY", title:"M8 bipo Jett Pearl RADIANT ELO", player:"bipo", date:"2026-04-12" },
+      { id:"U404SttcDPU", title:"TL MiniBoo Jett Pearl RADIANT RANKED", player:"MiniBoo", date:"2026-05-04" },
     ],
     reyna: [
       { id:"bFHRVyIIoco", title:"Inspire Reyna Pearl PRO RANKED", player:"Inspire", date:"2026-03-14" },
@@ -741,6 +749,7 @@ export const VODS = {
       { id:"mpqaNq65JKg", title:"ENVY ion Reyna Breeze RADIANT MVP", player:"ion2x", date:"2026-04-07" },
       { id:"RpoPdNrPy6s", title:"AG f4ngeer Reyna Breeze RADIANT MVP", player:"f4ngeer", date:"2026-02-07" },
       { id:"nlrQC27p5GM", title:"GEN Foxy9 Reyna Breeze RADIANT RANKED", player:"Foxy9", date:"2026-02-12" },
+      { id:"6VOr58aGyR8", title:"florescent Reyna Breeze ONE TAPS", player:"florescent", date:"2026-05-04" },
     ],
     raze: [
     ],
@@ -750,6 +759,7 @@ export const VODS = {
       { id:"a5i9sjEA400", title:"C9 OXY Neon Breeze RADIANT MVP", player:"OXY", date:"2026-04-27" },
       { id:"U0gVTKHVYGc", title:"NRG s0m Neon Breeze SHOTGUN GOD", player:"s0m", date:"2026-04-16" },
       { id:"vCr8pEug4XU", title:"C9 OXY Neon Breeze RADIANT AIM", player:"OXY", date:"2026-05-02" },
+      { id:"pZp_TlzXaXQ", title:"PRX f0rsaken Neon Breeze RADIANT RANKED", player:"f0rsaken", date:"2026-05-04" },
     ],
     phoenix: [
     ],
@@ -832,6 +842,7 @@ export const VODS = {
       { id:"QXgw2etu7hw", title:"florescent Jett Lotus RADIANT RANKED", player:"florescent", date:"2026-04-21" },
       { id:"0FiufGDoGH0", title:"florescent Jett Lotus INSANE ONE TAPS", player:"florescent", date:"2026-04-16" },
       { id:"0EdNeNq43L0", title:"florescent Jett Lotus RANKED GOAT", player:"florescent", date:"2026-04-15" },
+      { id:"VIutKhSRySw", title:"Tarik Jett Lotus RADIANT MVP", player:"Tarik", date:"2026-05-04" },
     ],
     reyna: [
       { id:"WiUJIaxH3fo", title:"C9 OXY Reyna Lotus RADIANT RANKED", player:"OXY", date:"2026-04-26" },
@@ -867,6 +878,7 @@ export const VODS = {
     omen: [
       { id:"PQR-Ieht-M0", title:"Zander Omen Lotus INSANE MVP", player:"Zander", date:"2026-03-30" },
       { id:"15vZgo4DN9s", title:"SR Zander Omen Lotus RADIANT", player:"Zander", date:"2026-03-28" },
+      { id:"yzf536NAPms", title:"Zander Omen Lotus PRO SMOKES", player:"Zander", date:"2026-05-04" },
     ],
     viper: [
       { id:"lIr3a8V4ZUw", title:"TL nAts Viper Lotus RADIANT GAMEPLAY", player:"nAts", date:"2026-05-02" },
