@@ -1,0 +1,260 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Nav from '../components/Nav.astro';
+import Footer from '../components/Footer.astro';
+
+const sbAccess = Astro.cookies.get('sb-access-token')?.value;
+const sbRefresh = Astro.cookies.get('sb-refresh-token')?.value;
+
+let user = null;
+if (sbAccess && sbRefresh) {
+  const { createClient } = await import('@supabase/supabase-js');
+  const sb = createClient(
+    'https://cvdtykmkajmhlxydhzzl.supabase.co',
+    'sb_publishable_I16eAnYgsA9fd8ZMlmFQtA_RxepSaXi'
+  );
+  const { data: { user: u } } = await sb.auth.setSession({ access_token: sbAccess, refresh_token: sbRefresh });
+  user = u;
+}
+---
+
+<BaseLayout title="Contact — fraglog.gg" user={user}>
+  <Nav crumbs={[{ label: 'Contact' }]} user={user} />
+
+  <main class="contact-main">
+    <div class="contact-container">
+
+      <div class="contact-header">
+        <div class="contact-eyebrow">Get in touch</div>
+        <h1 class="contact-title">Contact</h1>
+        <p class="contact-sub">VOD requests, recommendations, takedown requests, or anything else.</p>
+      </div>
+
+      <div class="contact-grid">
+        <!-- Form -->
+        <div class="contact-form-wrap">
+          <form id="contact-form" action="https://formspree.io/f/mrejpkqa" method="POST">
+            <div class="form-field">
+              <label for="name">Name</label>
+              <input type="text" id="name" name="name" placeholder="your name" required>
+            </div>
+            <div class="form-field">
+              <label for="email">Email</label>
+              <input type="email" id="email" name="email" placeholder="you@email.com" required>
+            </div>
+            <div class="form-field">
+              <label for="subject">Subject</label>
+              <select id="subject" name="subject" required>
+                <option value="" disabled selected>Select a topic...</option>
+                <option value="Takedown Request">Takedown Request</option>
+                <option value="Suggestion">Suggestion</option>
+                <option value="Bug Report">Bug Report</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div class="form-field">
+              <label for="message">Message</label>
+              <textarea id="message" name="message" placeholder="Write your message..." rows="5" required></textarea>
+            </div>
+            <button type="submit" class="submit-btn" id="submit-btn">
+              <span id="btn-text">Send Message</span>
+            </button>
+          </form>
+
+          <div class="success-msg" id="success-msg">
+            <div class="success-icon">✓</div>
+            <div class="success-title">Message sent</div>
+            <div class="success-sub">We'll get back to you as soon as possible.</div>
+          </div>
+        </div>
+
+        <!-- Info sidebar -->
+        <div class="contact-sidebar">
+          <div class="sidebar-card">
+            <div class="sidebar-card-icon">⚠️</div>
+            <div class="sidebar-card-title">Takedown Requests</div>
+            <div class="sidebar-card-text">Content creators can request removal of their VODs at any time. We'll handle it within 24 hours.</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <Footer />
+</BaseLayout>
+
+<style>
+.contact-main {
+  min-height: calc(100vh - 60px);
+  padding: 3rem 2.5rem;
+  position: relative;
+  z-index: 2;
+}
+.contact-container {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.contact-header {
+  margin-bottom: 3rem;
+  padding-bottom: 2rem;
+  border-bottom: 1px solid var(--border);
+}
+.contact-eyebrow {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--red);
+  margin-bottom: 0.5rem;
+}
+.contact-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(36px, 6vw, 64px);
+  letter-spacing: 2px;
+  line-height: 1;
+  margin-bottom: 0.5rem;
+}
+.contact-sub {
+  font-size: 14px;
+  color: var(--muted);
+  font-weight: 300;
+}
+
+/* Grid */
+.contact-grid {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 3rem;
+  align-items: start;
+}
+
+/* Form */
+.contact-form-wrap { position: relative; }
+.form-field { margin-bottom: 1.25rem; }
+.form-field label {
+  display: block;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+.form-field input,
+.form-field select,
+.form-field textarea {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.form-field input:focus,
+.form-field select:focus,
+.form-field textarea:focus { border-color: rgba(255,70,85,0.5); }
+.form-field select option { background: var(--surface); }
+.form-field textarea { resize: vertical; min-height: 120px; line-height: 1.6; }
+
+.submit-btn {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 12px 28px;
+  background: var(--red);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s;
+  margin-top: 0.5rem;
+}
+.submit-btn:hover { background: #e03040; }
+.submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* Success */
+.success-msg {
+  display: none;
+  text-align: center;
+  padding: 3rem 2rem;
+  border: 1px solid rgba(107,207,107,0.3);
+  border-radius: 12px;
+  background: rgba(107,207,107,0.05);
+}
+.success-msg.visible { display: block; }
+.success-icon {
+  font-size: 32px;
+  color: #6BCF6B;
+  margin-bottom: 1rem;
+}
+.success-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 28px;
+  letter-spacing: 2px;
+  margin-bottom: 0.5rem;
+}
+.success-sub { font-size: 14px; color: var(--muted); }
+
+/* Sidebar */
+.contact-sidebar { display: flex; flex-direction: column; gap: 12px; }
+.sidebar-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.25rem;
+}
+.sidebar-card-icon { font-size: 20px; margin-bottom: 8px; }
+.sidebar-card-title {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+.sidebar-card-text { font-size: 13px; color: var(--muted); line-height: 1.6; }
+
+@media (max-width: 768px) {
+  .contact-main { padding: 1.5rem 1rem; }
+  .contact-grid { grid-template-columns: 1fr; gap: 2rem; }
+  .contact-title { font-size: 36px; }
+}
+</style>
+
+<script is:inline>
+document.getElementById('contact-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = document.getElementById('submit-btn');
+  const btnText = document.getElementById('btn-text');
+  btn.disabled = true;
+  btnText.textContent = 'Sending...';
+
+  try {
+    const res = await fetch('https://formspree.io/f/mrejpkqa', {
+      method: 'POST',
+      body: new FormData(e.target),
+      headers: { Accept: 'application/json' }
+    });
+
+    if (res.ok) {
+      document.getElementById('contact-form').style.display = 'none';
+      document.getElementById('success-msg').classList.add('visible');
+    } else {
+      btnText.textContent = 'Send Message';
+      btn.disabled = false;
+      alert('Something went wrong. Try again.');
+    }
+  } catch {
+    btnText.textContent = 'Send Message';
+    btn.disabled = false;
+    alert('Something went wrong. Try again.');
+  }
+});
+</script>
