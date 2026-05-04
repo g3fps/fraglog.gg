@@ -106,6 +106,8 @@ if (!user) return Astro.redirect('/');
 .settings-main {
   min-height: calc(100vh - 60px);
   padding: 3rem 1.5rem;
+  position: relative;
+  z-index: 2;
 }
 .settings-container {
   max-width: 560px;
@@ -417,5 +419,15 @@ document.getElementById('avatar-input').addEventListener('change', async (e) => 
   setUploadStatus('✓ Photo updated', '#6BCF6B');
 });
 
-document.addEventListener('DOMContentLoaded', init);
+document.addEventListener('DOMContentLoaded', () => {
+  // Wait for Supabase CDN to be available
+  const tryInit = () => {
+    if (typeof supabase !== 'undefined') {
+      init();
+    } else {
+      setTimeout(tryInit, 50);
+    }
+  };
+  tryInit();
+});
 </script>
