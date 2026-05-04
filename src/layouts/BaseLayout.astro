@@ -71,7 +71,7 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
           <div class="notes-admin-label">💡 Creator Note</div>
           <div class="notes-admin-text" id="notes-admin-text"></div>
         </div>
-        <div id="notes-ai-box" style="display:none;background:var(--darker);border-left:2px solid #7B8FA1;padding:12px 14px;margin-bottom:12px">
+        <div id="notes-ai-box" style="display:none;background:var(--darker);border-left:2px solid #7B8FA1;padding:12px 14px;margin-bottom:12px;border-radius:4px">
           <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#7B8FA1;margin-bottom:8px">✨ AI Summary</div>
           <div id="notes-ai-text" style="font-size:13px;color:var(--text);line-height:1.7;white-space:pre-wrap"></div>
         </div>
@@ -252,11 +252,11 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
     const sb = initSupabase();
     if (isWatched(videoId)) {
       userWatched = userWatched.filter(id => id !== videoId);
-      btn.classList.remove("active"); btn.textContent = "✓ Mark watched";
+      btn.classList.remove("watched"); btn.textContent = "✓ Mark watched";
       await sb.from("watched").delete().eq("user_id", currentUser.id).eq("video_id", videoId);
     } else {
       userWatched.push(videoId);
-      btn.classList.add("active"); btn.textContent = "✓ Watched";
+      btn.classList.add("watched"); btn.textContent = "✓ Watched";
       await sb.from("watched").insert({ user_id: currentUser.id, video_id: videoId });
     }
   }
@@ -284,6 +284,8 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
     ta.value = getUserNote(videoId);
     document.getElementById("notes-char-count").textContent = ta.value.length + " characters";
     document.getElementById("notes-saved-msg").style.display = "none";
+    document.getElementById("notes-ai-box").style.display = "none";
+    document.getElementById("notes-ai-text").textContent = "";
     document.getElementById("notes-modal").classList.add("open");
     document.body.style.overflow = "hidden";
     setTimeout(() => ta.focus(), 100);
@@ -304,7 +306,7 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
     }
 
     const title = document.getElementById("notes-modal-title").textContent;
-    const meta = document.getElementById("notes-modal-meta").textContent;
+    const player = document.getElementById("notes-modal-meta").textContent;
     const btn = document.getElementById("notes-summarize-btn");
     const aiBox = document.getElementById("notes-ai-box");
     const aiText = document.getElementById("notes-ai-text");
@@ -312,43 +314,24 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
     btn.textContent = "✨ Summarizing...";
     btn.disabled = true;
     aiBox.style.display = "block";
-    aiText.textContent = "";
+    aiText.textContent = "Analyzing your notes...";
 
     try {
       const response = await fetch("/api/analyze", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ notes, title, player: meta })
-});
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ notes, title, player })
+      });
 
-      const reader = response.body.getReader();
-const decoder = new TextDecoder();
-let buffer = "";
+      if (!response.ok) {
+        throw new Error("API error: " + response.status);
+      }
 
-while (true) {
-  const { done, value } = await reader.read();
-  if (done) break;
-  buffer += decoder.decode(value, { stream: true });
-  const lines = buffer.split("\n");
-  buffer = lines.pop() || "";
-  for (const line of lines) {
-    if (line.startsWith("data: ")) {
-      const data = line.slice(6).trim();
-      if (data === "[DONE]") continue;
-      try {
-  const parsed = JSON.parse(data);
-  console.log("parsed:", parsed.type, parsed.delta);
-  if (parsed.type === "content_block_delta" && parsed.delta?.text) {
-    aiText.textContent += parsed.delta.text;
-  }
-} catch (e) {
-  console.log("parse error:", e, "raw data:", data);
-}
-    }
-  }
-}
+      const data = await response.json();
+      aiText.textContent = data.text || "No summary generated.";
     } catch (e) {
       aiText.textContent = "Something went wrong. Try again.";
+      console.error("Summarize error:", e);
     }
 
     btn.textContent = "✨ Summarize";
