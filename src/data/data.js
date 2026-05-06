@@ -616,7 +616,7 @@ export const VODS = {
       { id:"pddLuOe9M2k", title:"Xander Astra Pearl RADIANT SMOKES", player:"Xander", date:"2026-04-14" },
       { id:"_mHTEFp8t4o", title:"Zander Astra Pearl RADIANT SMOKES", player:"Zander", date:"2026-04-21" },
       { id:"EahHLew5RI0", title:"SEN JohnQT Astra Pearl PRO SMOKES", player:"JohnQT", date:"2026-04-22" },
-      { id:"3Bm00kS1nEg", title:"TL nAts Astra Pearl RADIANT RANKED", player:"nAts", date:"2026-05-05" }
+      { id:"3Bm00kS1nEg", title:"TL nAts Astra Pearl RADIANT RANKED", player:"nAts", date:"2026-05-05" },
       { id:"TJxPJqRcuCk", title:"Derrek Astra Pearl RADIANT SMOKES", player:"Derrek", date:"2026-05-06" },
     ],
     harbor: [
@@ -939,7 +939,7 @@ export const VODS = {
       { id:"ArQ4qlXJDI8", title:"TL nAts Vyse Lotus RADIANT SETUPS", player:"nAts", date:"2026-04-02" },
       { id:"PNQi4XASbpw", title:"TL nAts Vyse Lotus RADIANT RANKED", player:"nAts", date:"2026-03-27" },
       { id:"H86i0OVW6NA", title:"TL nAts Vyse Lotus RADIANT MVP", player:"nAts", date:"2026-03-23" },
-      { id:"bWtZZ6NRhHc", title:"TL nAts Vyse Lotus RADIANT GOAT", player:"nAts", date:"2026-05-06" },
+      { id:"bWtZZ6NRhHc", title:"TL nAts Vyse Lotus RADIANT EU", player:"nAts", date:"2026-05-06" },
     ],
     veto: [
     ],
