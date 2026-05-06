@@ -342,6 +342,7 @@ export const VODS = {
       { id:"EmmUDHv1nsY", title:"NRG brawk Raze Split RADIANT MVP", player:"brawk", date:"2026-04-16" },
       { id:"XIVyVX1h1bg", title:"NRG s0m Raze Split RADIANT ENTRY", player:"s0m", date:"2026-04-12" },
       { id:"X9y5pPn1Wz8", title:"QOR Derrek Raze Split PRO ENTRY", player:"derrek", date:"2026-02-15" },
+      { id:"G84Xw1MWuP4", title:"Tarik Raze Split RADIANT RANKED", player:"Tarik", date:"2026-05-06" },
     ],
     neon: [
       { id:"eScv6iy1afY", title:"MIBR zekken Neon Split RADIANT SHOTGUN", player:"zekken", date:"2026-04-15" },
@@ -575,6 +576,8 @@ export const VODS = {
       { id:"o3-doqnC2FI", title:"MIBR zekken Neon Pearl RADIANT", player:"zekken", date:"2026-04-23" },
       { id:"awft5rh83dQ", title:"C9 OXY Neon Pearl RADIANT RANKED", player:"OXY", date:"2026-04-20" },
       { id:"H1bDliO3jss", title:"C9 OXY Neon Pearl RADIANT RANKED", player:"OXY", date:"2026-04-16" },
+      { id:"Wj2rqLYOmTU", title:"C9 OXY Neon Pearl RADIANT SPEED", player:"OXY", date:"2026-05-06" },
+      { id:"_3mojxR2Knw", title:"C9 OXY Neon Pearl RADIANT MVP", player:"OXY", date:"2026-05-06" },
     ],
     phoenix: [
       { id:"9dL4B3C4aEA", title:"aleksandar Phoenix Pearl RADIANT RANKED", player:"aleksandar", date:"2026-04-25" },
@@ -614,6 +617,7 @@ export const VODS = {
       { id:"_mHTEFp8t4o", title:"Zander Astra Pearl RADIANT SMOKES", player:"Zander", date:"2026-04-21" },
       { id:"EahHLew5RI0", title:"SEN JohnQT Astra Pearl PRO SMOKES", player:"JohnQT", date:"2026-04-22" },
       { id:"3Bm00kS1nEg", title:"TL nAts Astra Pearl RADIANT RANKED", player:"nAts", date:"2026-05-05" }
+      { id:"TJxPJqRcuCk", title:"Derrek Astra Pearl RADIANT SMOKES", player:"Derrek", date:"2026-05-06" },
     ],
     harbor: [
     ],
@@ -643,6 +647,7 @@ export const VODS = {
       { id:"PaK7rCarcgA", title:"NRG s0m Chamber Pearl WORLD CHAMP DIFF", player:"s0m", date:"2026-04-09" },
       { id:"fhqfBZ-Mbds", title:"C9 OXY Chamber Pearl RADIANT RANK 1", player:"OXY", date:"2026-04-22" },
       { id:"obKb-iokbBU", title:"SEN johnQT Chamber Pearl TIER 1 AIM", player:"johnQT", date:"2026-05-02" },
+      { id:"FiPt08lRFOQ", title:"NRG s0m Chamber Pearl RADIANT RANKED", player:"s0m", date:"2026-05-06" },
     ],
     deadlock: [
     ],
@@ -778,10 +783,12 @@ export const VODS = {
       { id:"mxmOTIpW-dQ", title:"Eggsterr Yoru Breeze RADIANT YORU", player:"Eggsterr", date:"2026-04-03" },
       { id:"65L7SB16j5I", title:"NRG s0m Yoru Breeze RANKED ENTRY", player:"s0m", date:"2026-04-10" },
       { id:"iqhyXSXtVjA", title:"ENVY Eggsterr Yoru Breeze RADIANT MVP", player:"Eggsterr", date:"2026-05-05" },
+      { id:"76z7srrVZz4", title:"ENVY Eggsterr Yoru Breeze RADIANT RANKED", player:"Eggsterr", date:"2026-05-06" },
     ],
     iso: [
       { id:"P-higQgvO3g", title:"TH Wo0t Iso Breeze RADIANT EU", player:"Wo0t", date:"2026-03-18" },
       { id:"bmI86S86fGg", title:"zanks Iso Breeze RADIANT RANKED", player:"zanks", date:"2026-05-03" },
+      { id:"KFNViI6yg0g", title:"C9 OXY Iso Breeze RADIANT RANKED", player:"OXY", date:"2026-05-06" },
     ],
     waylay: [
     ],
@@ -932,6 +939,7 @@ export const VODS = {
       { id:"ArQ4qlXJDI8", title:"TL nAts Vyse Lotus RADIANT SETUPS", player:"nAts", date:"2026-04-02" },
       { id:"PNQi4XASbpw", title:"TL nAts Vyse Lotus RADIANT RANKED", player:"nAts", date:"2026-03-27" },
       { id:"H86i0OVW6NA", title:"TL nAts Vyse Lotus RADIANT MVP", player:"nAts", date:"2026-03-23" },
+      { id:"bWtZZ6NRhHc", title:"TL nAts Vyse Lotus RADIANT GOAT", player:"nAts", date:"2026-05-06" },
     ],
     veto: [
     ],
