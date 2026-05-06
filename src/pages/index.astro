@@ -19,13 +19,14 @@ if (accessToken && refreshToken) {
   user = data.session?.user ?? null;
 }
 ---
-<BaseLayout>
-  <Nav crumbs={[]} />
+<BaseLayout user={user}>
+  <Nav crumbs={[]} user={user} />
   <div class="page-content">
     <div class="hero">
       <div class="hero-title">Study the best<br><span style="color:var(--red)">beat the rest</span></div>
       <div class="hero-sub">Radiant &amp; pro player gameplay — filtered by map and agent</div>
     </div>
+
     <div class="section-label">Select a map</div>
     <div class="map-grid">
       {MAPS.map(map => {
@@ -47,4 +48,58 @@ if (accessToken && refreshToken) {
 
 <style>
 .map-card { display: block; text-decoration: none; }
+
+.feature-cards {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  margin-bottom: 2.5rem;
+  max-width: 400px;
+}
+.feature-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1.5rem;
+  text-decoration: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: all 0.15s;
+  position: relative;
+  overflow: hidden;
+}
+.feature-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: var(--red);
+  transform: scaleX(0);
+  transition: transform 0.2s;
+}
+.feature-card:hover { border-color: rgba(255,70,85,0.3); transform: translateY(-2px); }
+.feature-card:hover::before { transform: scaleX(1); }
+.feature-card-tag {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px; letter-spacing: 2px;
+  text-transform: uppercase; color: var(--red);
+}
+.feature-card-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 28px; letter-spacing: 1.5px;
+  color: var(--text); line-height: 1;
+}
+.feature-card-sub {
+  font-size: 13px; color: var(--muted);
+  font-weight: 300;
+}
+.feature-card-arrow {
+  font-size: 18px; color: var(--muted);
+  margin-top: auto; padding-top: 12px;
+  transition: all 0.15s;
+}
+.feature-card:hover .feature-card-arrow { color: var(--red); transform: translateX(4px); }
+
+@media (max-width: 768px) { .feature-cards { grid-template-columns: 1fr; } }
 </style>

@@ -2,68 +2,84 @@
 const { crumbs = [], user = null } = Astro.props as { crumbs: { label: string; href?: string }[], user: any };
 ---
 
-<nav>
-  <a class="logo" href="/">FragLog<span>.gg</span></a>
-
-  <div style="display:flex;align-items:center;gap:1rem">
-    <div class="breadcrumb">
-      {crumbs.map((crumb, i) => (
-        <>
-          {i > 0 && <span class="sep">›</span>}
-          {crumb.href
-            ? <a class="crumb" href={crumb.href}>{crumb.label}</a>
-            : <span class="current">{crumb.label}</span>
-          }
-        </>
-      ))}
+<header class="site-header">
+  <div class="nav-top">
+    <a class="logo" href="/">FragLog<span>.gg</span></a>
+    <div class="nav-top-right">
+      <div class="nav-search-wrap">
+        <input
+          type="text"
+          id="nav-search"
+          class="nav-search-input"
+          placeholder="Search players, maps, agents..."
+          autocomplete="off"
+          oninput="handleNavSearch(this.value)"
+          onfocus="if(this.value.trim() && window.location.pathname !== '/search') handleNavSearch(this.value)"
+        >
+      </div>
+      <div class="nav-right" id="nav-right">
+        {user ? (
+          <>
+            <a class="user-pill" href="/settings" style="text-decoration:none">
+              <div class="user-avatar" id="nav-avatar-wrap">
+                <img id="nav-avatar-img" src="" alt="" style="display:none;width:100%;height:100%;object-fit:cover;border-radius:50%">
+                <span id="nav-avatar-initials">{user.email[0].toUpperCase()}</span>
+              </div>
+              <span id="nav-username">{user.email.split("@")[0]}</span>
+            </a>
+            <button class="auth-btn" onclick="signOut()">Sign Out</button>
+          </>
+        ) : (
+          <>
+            <button class="auth-btn" onclick="openAuth()">Sign In</button>
+            <button class="auth-btn primary" onclick="openAuth('register')">Sign Up</button>
+          </>
+        )}
+      </div>
     </div>
   </div>
 
-  <div class="nav-search-wrap">
-    <input
-      type="text"
-      id="nav-search"
-      class="nav-search-input"
-      placeholder="Search players, maps, agents..."
-      autocomplete="off"
-      oninput="handleNavSearch(this.value)"
-      onfocus="if(this.value.trim() && window.location.pathname !== '/search') handleNavSearch(this.value)"
-    >
+  <div class="nav-bottom">
+    <div class="feature-tabs">
+      <a class="feature-tab" href="/" id="tab-vods">Ranked</a>
+      <a class="feature-tab" href="/util" id="tab-util">Util</a>
+      <a class="feature-tab" href="/pro" id="tab-pro">Pro</a>
+    </div>
+    <div class="nav-bottom-right">
+      <a class="feature-tab" href="/favorites" id="tab-favorites" style="display:none">♥ Favorites</a>
+      <a class="feature-tab" href="/my-vods" id="tab-myvods" style="display:none">My VODs</a>
+      {crumbs.length > 0 && (
+        <div class="breadcrumb">
+          {crumbs.map((crumb, i) => (
+            <>
+              {i > 0 && <span class="sep">›</span>}
+              {crumb.href
+                ? <a class="crumb" href={crumb.href}>{crumb.label}</a>
+                : <span class="current">{crumb.label}</span>
+              }
+            </>
+          ))}
+        </div>
+      )}
+    </div>
   </div>
-
-  <div class="nav-right" id="nav-right">
-    {user ? (
-      <>
-        <button class="auth-btn" onclick="window.location='/favorites'">♥ Favorites</button>
-        <button class="auth-btn" onclick="window.location='/my-vods'">My VODs</button>
-        <a class="user-pill" href="/settings" style="text-decoration:none">
-          <div class="user-avatar" id="nav-avatar-wrap">
-            <img id="nav-avatar-img" src="" alt="" style="display:none;width:100%;height:100%;object-fit:cover;border-radius:50%">
-            <span id="nav-avatar-initials">{user.email[0].toUpperCase()}</span>
-          </div>
-          <span id="nav-username">{user.email.split("@")[0]}</span>
-        </a>
-        <button class="auth-btn" onclick="signOut()">Sign Out</button>
-      </>
-    ) : (
-      <>
-        <button class="auth-btn" onclick="openAuth()">Sign In</button>
-        <button class="auth-btn primary" onclick="openAuth('register')">Sign Up</button>
-      </>
-    )}
-  </div>
-</nav>
+</header>
 
 <script is:inline>
 function handleNavSearch(val) {
   if (!val.trim()) return;
-  const url = '/search?q=' + encodeURIComponent(val.trim());
-  window.location.href = url;
+  window.location.href = '/search?q=' + encodeURIComponent(val.trim());
 }
 
-// Load profile for nav display
-(async function loadNavProfile() {
-  if (!document.getElementById('nav-avatar-wrap')) return;
+// Active tab
+(function() {
+  const path = window.location.pathname;
+  const map = { '/util': 'tab-util', '/pro': 'tab-pro', '/favorites': 'tab-favorites', '/my-vods': 'tab-myvods' };
+  const matched = Object.entries(map).find(([p]) => path.startsWith(p));
+  document.getElementById(matched ? matched[1] : 'tab-vods')?.classList.add('active');
+})();
+
+(async function initNav() {
   try {
     const sb = window._supabase || (typeof supabase !== 'undefined' && supabase.createClient(
       "https://cvdtykmkajmhlxydhzzl.supabase.co",
@@ -73,6 +89,13 @@ function handleNavSearch(val) {
     if (!sb) return;
     const { data: { session } } = await sb.auth.getSession();
     if (!session) return;
+
+    // Show favorites/my vods tabs
+    document.getElementById('tab-favorites').style.display = '';
+    document.getElementById('tab-myvods').style.display = '';
+
+    // Load profile
+    if (!document.getElementById('nav-avatar-wrap')) return;
     const { data: profile } = await sb.from('profiles').select('username,avatar_url').eq('id', session.user.id).single();
     if (!profile) return;
     if (profile.username) document.getElementById('nav-username').textContent = profile.username;
@@ -84,5 +107,4 @@ function handleNavSearch(val) {
     }
   } catch(e) {}
 })();
-
 </script>

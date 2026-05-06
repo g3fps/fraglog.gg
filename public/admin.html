@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>fraglog.gg — Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --red: #FF4655;
+  --darker: #080E14;
+  --surface: #151E27;
+  --surface2: #1C2733;
+  --border: rgba(255,255,255,0.08);
+  --text: #ECE8E1;
+  --muted: #7B8FA1;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--darker); color: var(--text); font-family: 'DM Sans', sans-serif; min-height: 100vh; padding: 2rem; }
+
+header { display: flex; align-items: center; gap: 12px; margin-bottom: 2.5rem; border-bottom: 1px solid var(--border); padding-bottom: 1.5rem; }
+.logo { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 3px; }
+.logo span { color: var(--red); }
+.badge { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; background: rgba(255,70,85,0.15); color: var(--red); padding: 3px 10px; border-radius: 20px; border: 1px solid rgba(255,70,85,0.3); }
+
+.container { max-width: 700px; margin: 0 auto; }
+
+.section-title { font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 1rem; }
+
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; }
+
+.field { margin-bottom: 1.25rem; }
+.field:last-child { margin-bottom: 0; }
+label { display: block; font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+
+input, select, textarea {
+  width: 100%;
+  background: var(--darker);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+input:focus, select:focus, textarea:focus { border-color: rgba(255,70,85,0.5); }
+select option { background: var(--surface); }
+
+.row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+.url-row { display: flex; gap: 8px; }
+.url-row input { flex: 1; }
+
+.btn {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 10px 18px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.btn-primary { background: var(--red); color: #fff; }
+.btn-primary:hover { background: #e03040; }
+.btn-secondary { background: var(--surface2); color: var(--muted); border: 1px solid var(--border); }
+.btn-secondary:hover { color: var(--text); }
+.btn-copy { background: var(--surface2); color: var(--text); border: 1px solid var(--border); width: 100%; margin-top: 10px; padding: 12px; font-size: 12px; }
+.btn-copy:hover { border-color: var(--red); color: var(--red); }
+.btn-copy.copied { background: rgba(107,207,107,0.15); border-color: #6BCF6B; color: #6BCF6B; }
+
+.thumb-preview { display: none; margin-top: 12px; }
+.thumb-preview img { width: 100%; border-radius: 8px; border: 1px solid var(--border); }
+.thumb-preview.visible { display: block; }
+
+.video-id-display {
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  color: var(--red);
+  margin-top: 6px;
+  min-height: 18px;
+}
+
+.output-box {
+  background: var(--darker);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px;
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  color: #6BCF6B;
+  line-height: 1.6;
+  word-break: break-all;
+  min-height: 60px;
+  white-space: pre-wrap;
+}
+
+.tip { font-size: 12px; color: var(--muted); margin-top: 8px; line-height: 1.5; }
+.tip strong { color: var(--text); }
+
+.entries-list { display: flex; flex-direction: column; gap: 8px; }
+.entry-item {
+  background: var(--darker);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--muted);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+.entry-item .entry-text { flex: 1; word-break: break-all; color: #6BCF6B; }
+.entry-remove { cursor: pointer; color: var(--red); font-size: 14px; flex-shrink: 0; }
+.entry-remove:hover { opacity: 0.7; }
+
+.empty-state { text-align: center; padding: 2rem; color: var(--muted); font-size: 13px; }
+
+.full-output {
+  background: var(--darker);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: #6BCF6B;
+  white-space: pre-wrap;
+  word-break: break-all;
+  max-height: 300px;
+  overflow-y: auto;
+  line-height: 1.7;
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <div class="logo">fraglog<span>.</span>gg</div>
+    <div class="badge">admin</div>
+    <div id="auth-status" style="margin-left:auto;font-family:'DM Mono',monospace;font-size:11px;color:var(--muted)">Connecting...</div>
+  </header>
+
+  <div id="signin-card" class="card" style="display:none;margin-bottom:1.5rem">
+    <div class="row">
+      <div class="field" style="margin-bottom:0">
+        <label>Email</label>
+        <input type="email" id="auth-email" placeholder="you@email.com">
+      </div>
+      <div class="field" style="margin-bottom:0">
+        <label>Password</label>
+        <input type="password" id="auth-pass" placeholder="••••••••">
+      </div>
+    </div>
+    <button class="btn btn-primary" style="width:100%;margin-top:12px" onclick="adminSignIn()">Sign In</button>
+    <div id="auth-error" style="font-family:'DM Mono',monospace;font-size:11px;color:#FF4655;margin-top:8px;min-height:14px"></div>
+  </div>
+
+  <!-- STEP 1: YouTube URL -->
+  <div class="section-title">Step 1 — Paste YouTube URL</div>
+  <div class="card">
+    <div class="field">
+      <label>YouTube URL</label>
+      <div class="url-row">
+        <input type="text" id="yt-url" placeholder="https://youtube.com/watch?v=PQa14R8HKFU" oninput="extractVideoId()">
+        <button class="btn btn-secondary" onclick="clearUrl()">Clear</button>
+      </div>
+      <div class="video-id-display" id="video-id-display"></div>
+    </div>
+    <div class="thumb-preview" id="thumb-preview">
+      <img id="thumb-img" src="" alt="Thumbnail">
+    </div>
+  </div>
+
+  <!-- STEP 2: VOD Details -->
+  <div class="section-title">Step 2 — Fill in details</div>
+  <div class="card">
+    <div class="row">
+      <div class="field">
+        <label>Map</label>
+        <select id="sel-map">
+          <option value="">Select map...</option>
+          <option value="ascent">Ascent</option>
+          <option value="bind">Bind</option>
+          <option value="haven">Haven</option>
+          <option value="split">Split</option>
+          <option value="fracture">Fracture</option>
+          <option value="pearl">Pearl</option>
+          <option value="icebox">Icebox</option>
+          <option value="breeze">Breeze</option>
+          <option value="lotus">Lotus</option>
+          <option value="sunset">Sunset</option>
+          <option value="abyss">Abyss</option>
+          <option value="corrode">Corrode</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Agent</label>
+        <select id="sel-agent">
+          <option value="">Select agent...</option>
+          <optgroup label="Duelists">
+            <option value="jett">Jett</option>
+            <option value="reyna">Reyna</option>
+            <option value="raze">Raze</option>
+            <option value="neon">Neon</option>
+            <option value="phoenix">Phoenix</option>
+            <option value="yoru">Yoru</option>
+            <option value="iso">Iso</option>
+            <option value="waylay">Waylay</option>
+          </optgroup>
+          <optgroup label="Controllers">
+            <option value="omen">Omen</option>
+            <option value="viper">Viper</option>
+            <option value="brimstone">Brimstone</option>
+            <option value="astra">Astra</option>
+            <option value="harbor">Harbor</option>
+            <option value="clove">Clove</option>
+            <option value="miks">Miks</option>
+          </optgroup>
+          <optgroup label="Sentinels">
+            <option value="sage">Sage</option>
+            <option value="cypher">Cypher</option>
+            <option value="killjoy">Killjoy</option>
+            <option value="chamber">Chamber</option>
+            <option value="deadlock">Deadlock</option>
+            <option value="vyse">Vyse</option>
+            <option value="veto">Veto</option>
+          </optgroup>
+          <optgroup label="Initiators">
+            <option value="sova">Sova</option>
+            <option value="breach">Breach</option>
+            <option value="skye">Skye</option>
+            <option value="kayo">KAY/O</option>
+            <option value="fade">Fade</option>
+            <option value="gekko">Gekko</option>
+            <option value="tejo">Tejo</option>
+          </optgroup>
+        </select>
+      </div>
+    </div>
+    <div class="row">
+      <div class="field">
+        <label>Player / Channel name</label>
+        <input type="text" id="inp-player" placeholder="tarik">
+      </div>
+      <div class="field">
+        <label>K/D (optional)</label>
+        <input type="text" id="inp-kd" placeholder="24/8">
+      </div>
+    </div>
+    <div class="row">
+      <div class="field">
+        <label>Title</label>
+        <input type="text" id="inp-title" placeholder="Tarik Jett Ascent Radiant VOD">
+      </div>
+      <div class="field">
+        <label>Date</label>
+        <input type="date" id="inp-date">
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 3: Generate -->
+  <div class="section-title">Step 3 — Generate & add to session</div>
+  <div class="card">
+    <button class="btn btn-primary" style="width:100%;padding:14px" onclick="addEntry()">+ Add VOD to Session</button>
+    <p class="tip" style="margin-top:12px">Add multiple VODs then copy the full batch at the end. Press <strong>Cmd+Enter</strong> (or <strong>Ctrl+Enter</strong>) to add quickly.</p>
+  </div>
+
+  <!-- Session entries -->
+  <div class="section-title" style="display:flex;justify-content:space-between;align-items:center">
+    <span>Session VODs (<span id="entry-count">0</span>)</span>
+    <button class="btn btn-secondary" style="font-size:10px;padding:5px 12px" onclick="clearSession()">Clear session</button>
+  </div>
+  <div class="card">
+    <div class="entries-list" id="entries-list">
+      <div class="empty-state">No VODs added yet — fill in the form above and hit Add.</div>
+    </div>
+  </div>
+
+  <!-- Full output -->
+  <div class="section-title">Generated code — paste into index.html</div>
+  <div class="card">
+    <p class="tip" style="margin-bottom:12px">Find the right map and agent in your <strong>VODS</strong> object and paste these lines inside the <strong>[ ]</strong></p>
+    <div class="full-output" id="full-output">// Your generated VOD lines will appear here</div>
+    <button class="btn btn-copy" id="copy-btn" onclick="copyAll()">Copy all to clipboard</button>
+  </div>
+
+  <hr style="border:none;border-top:1px solid var(--border);margin:2.5rem 0">
+
+  <div class="section-title">Pro Match VODs</div>
+
+  <div class="section-title" style="margin-top:1.5rem">Teams & Event</div>
+  <div class="card">
+    <div class="row">
+      <div class="field"><label>Team 1</label><input type="text" id="pro-team1" placeholder="Sentinels"></div>
+      <div class="field"><label>Team 2</label><input type="text" id="pro-team2" placeholder="NRG"></div>
+    </div>
+    <div class="row">
+      <div class="field"><label>Event</label><input type="text" id="pro-event" placeholder="VCT Americas 2025"></div>
+      <div class="field"><label>Date</label><input type="date" id="pro-date"></div>
+    </div>
+  </div>
+
+  <div class="section-title">Map 1</div>
+  <div class="card">
+    <div class="row">
+      <div class="field"><label>Map</label><select id="pro-map1"><option value="">Select map...</option><option value="ascent">Ascent</option><option value="bind">Bind</option><option value="haven">Haven</option><option value="split">Split</option><option value="fracture">Fracture</option><option value="pearl">Pearl</option><option value="icebox">Icebox</option><option value="breeze">Breeze</option><option value="lotus">Lotus</option><option value="sunset">Sunset</option><option value="abyss">Abyss</option><option value="corrode">Corrode</option></select></div>
+      <div class="field"><label>YouTube URL</label><input type="text" id="pro-yt1" placeholder="https://youtube.com/..." oninput="proHandleYT('1')"></div>
+    </div>
+    <div class="field" style="margin-top:10px"><label>Start Time (MM:SS or seconds)</label><input type="text" id="pro-ts1" placeholder="0:00 or 0"></div>
+    <div class="thumb-preview" id="pro-preview1"><img id="pro-thumb1" src="" alt=""><div class="video-id-display" id="pro-id1"></div></div>
+  </div>
+
+  <div class="section-title">Map 2</div>
+  <div class="card">
+    <div class="row">
+      <div class="field"><label>Map</label><select id="pro-map2"><option value="">Select map...</option><option value="ascent">Ascent</option><option value="bind">Bind</option><option value="haven">Haven</option><option value="split">Split</option><option value="fracture">Fracture</option><option value="pearl">Pearl</option><option value="icebox">Icebox</option><option value="breeze">Breeze</option><option value="lotus">Lotus</option><option value="sunset">Sunset</option><option value="abyss">Abyss</option><option value="corrode">Corrode</option></select></div>
+      <div class="field"><label>YouTube URL</label><input type="text" id="pro-yt2" placeholder="https://youtube.com/..." oninput="proHandleYT('2')"></div>
+    </div>
+    <div class="field" style="margin-top:10px"><label>Start Time (MM:SS or seconds)</label><input type="text" id="pro-ts2" placeholder="0:00 or 0"></div>
+    <div class="thumb-preview" id="pro-preview2"><img id="pro-thumb2" src="" alt=""><div class="video-id-display" id="pro-id2"></div></div>
+  </div>
+
+  <div class="section-title">Map 3 (optional)</div>
+  <div class="card">
+    <div class="row">
+      <div class="field"><label>Map</label><select id="pro-map3"><option value="">Select map...</option><option value="ascent">Ascent</option><option value="bind">Bind</option><option value="haven">Haven</option><option value="split">Split</option><option value="fracture">Fracture</option><option value="pearl">Pearl</option><option value="icebox">Icebox</option><option value="breeze">Breeze</option><option value="lotus">Lotus</option><option value="sunset">Sunset</option><option value="abyss">Abyss</option><option value="corrode">Corrode</option></select></div>
+      <div class="field"><label>YouTube URL</label><input type="text" id="pro-yt3" placeholder="https://youtube.com/..." oninput="proHandleYT('3')"></div>
+    </div>
+    <div class="field" style="margin-top:10px"><label>Start Time (MM:SS or seconds)</label><input type="text" id="pro-ts3" placeholder="0:00 or 0"></div>
+    <div class="thumb-preview" id="pro-preview3"><img id="pro-thumb3" src="" alt=""><div class="video-id-display" id="pro-id3"></div></div>
+  </div>
+
+  <div class="section-title">Save</div>
+  <div class="card">
+    <button class="btn btn-primary" style="width:100%;padding:14px" onclick="saveProMatch()">Save Pro Match to Supabase</button>
+    <div id="pro-status" style="font-family:'DM Mono',monospace;font-size:11px;text-align:center;margin-top:10px;min-height:16px"></div>
+  </div>
+
+  <div class="section-title" style="display:flex;justify-content:space-between;align-items:center">
+    <span>Recent Pro Matches (<span id="pro-recent-count">0</span>)</span>
+  </div>
+  <div class="card">
+    <div class="entries-list" id="pro-recent-list"><div class="empty-state">No pro matches yet.</div></div>
+  </div>
+</div>
+
+<script>
+let entries = JSON.parse(localStorage.getItem('fraglog-admin-entries') || '[]');
+let currentVideoId = "";
+
+function extractVideoId() {
+  const url = document.getElementById("yt-url").value.trim();
+  const match = url.match(/(?:v=|youtu\.be\/|embed\/)([a-zA-Z0-9_-]{11})/);
+  const display = document.getElementById("video-id-display");
+  const preview = document.getElementById("thumb-preview");
+  const img = document.getElementById("thumb-img");
+
+  if(match) {
+    currentVideoId = match[1];
+    display.textContent = "Video ID: " + currentVideoId;
+    img.src = `https://img.youtube.com/vi/${currentVideoId}/mqdefault.jpg`;
+    preview.classList.add("visible");
+    // Auto-set today's date if empty
+    if(!document.getElementById("inp-date").value) {
+      document.getElementById("inp-date").valueAsDate = new Date();
+    }
+  } else {
+    currentVideoId = "";
+    display.textContent = url.length > 5 ? "No video ID found — paste a full YouTube URL" : "";
+    preview.classList.remove("visible");
+  }
+}
+
+function clearUrl() {
+  document.getElementById("yt-url").value = "";
+  document.getElementById("video-id-display").textContent = "";
+  document.getElementById("thumb-preview").classList.remove("visible");
+  currentVideoId = "";
+}
+
+function addEntry() {
+  const map = document.getElementById("sel-map").value;
+  const agent = document.getElementById("sel-agent").value;
+  const player = document.getElementById("inp-player").value.trim();
+  const kd = document.getElementById("inp-kd").value.trim();
+  const title = document.getElementById("inp-title").value.trim();
+  const date = document.getElementById("inp-date").value;
+
+  if(!currentVideoId) { alert("Paste a valid YouTube URL first."); return; }
+  if(!map) { alert("Select a map."); return; }
+  if(!agent) { alert("Select an agent."); return; }
+  if(!player) { alert("Enter the player name."); return; }
+  if(!title) { alert("Enter a title."); return; }
+
+  const entry = { map, agent, id: currentVideoId, title, player, kd, date };
+  entries.push(entry);
+  renderEntries();
+  clearForm();
+}
+
+function clearForm() {
+  clearUrl();
+  document.getElementById("inp-player").value = "";
+  document.getElementById("inp-kd").value = "";
+  document.getElementById("inp-title").value = "";
+  document.getElementById("inp-date").value = "";
+}
+
+function removeEntry(idx) {
+  entries.splice(idx, 1);
+  renderEntries();
+}
+
+function renderEntries() {
+  const list = document.getElementById("entries-list");
+  const count = document.getElementById("entry-count");
+  const output = document.getElementById("full-output");
+  const copyBtn = document.getElementById("copy-btn");
+
+  count.textContent = entries.length;
+  localStorage.setItem('fraglog-admin-entries', JSON.stringify(entries));
+
+  if(!entries.length) {
+    list.innerHTML = '<div class="empty-state">No VODs added yet — fill in the form above and hit Add.</div>';
+    output.textContent = "// Your generated VOD lines will appear here";
+    return;
+  }
+
+  list.innerHTML = entries.map((e, i) => `
+    <div class="entry-item">
+      <div class="entry-text">${e.map} › ${e.agent} › ${e.player} · ${e.id}</div>
+      <span class="entry-remove" onclick="removeEntry(${i})">✕</span>
+    </div>
+  `).join("");
+
+  // Generate code grouped by map and agent
+  const grouped = {};
+  entries.forEach(e => {
+    if(!grouped[e.map]) grouped[e.map] = {};
+    if(!grouped[e.map][e.agent]) grouped[e.map][e.agent] = [];
+    grouped[e.map][e.agent].push(e);
+  });
+
+  let code = "";
+  for(const map in grouped) {
+    for(const agent in grouped[map]) {
+      code += `// ${map} › ${agent}\n`;
+      grouped[map][agent].forEach(e => {
+        code += `{ id:"${e.id}", title:"${e.title}", player:"${e.player}"`;
+        if(e.kd) code += `, kd:"${e.kd}"`;
+        if(e.date) code += `, date:"${e.date}"`;
+        code += ` },\n`;
+      });
+      code += "\n";
+    }
+  }
+
+  output.textContent = code.trim();
+  copyBtn.classList.remove("copied");
+  copyBtn.textContent = "Copy all to clipboard";
+}
+
+function clearSession() {
+  if(!entries.length || confirm("Clear all VODs from this session?")) {
+    entries = [];
+    localStorage.removeItem('fraglog-admin-entries');
+    renderEntries();
+  }
+}
+
+function copyAll() {
+  const text = document.getElementById("full-output").textContent;
+  if(text.startsWith("//") && text.includes("Your generated")) return;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById("copy-btn");
+    btn.textContent = "✓ Copied!";
+    btn.classList.add("copied");
+    setTimeout(() => {
+      btn.textContent = "Copy all to clipboard";
+      btn.classList.remove("copied");
+    }, 2000);
+  });
+}
+
+// Set today's date as default
+document.getElementById("inp-date").valueAsDate = new Date();
+
+// Restore session if any
+if(entries.length) renderEntries();
+
+// Enter key to add entry
+document.addEventListener("keydown", e => {
+  if(e.key === "Enter" && !e.shiftKey && !["INPUT","TEXTAREA","SELECT"].includes(e.target.tagName) === false) return;
+  if(e.key === "Enter" && (e.metaKey || e.ctrlKey)) addEntry();
+});
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL = "https://cvdtykmkajmhlxydhzzl.supabase.co";
+const SUPABASE_KEY = "sb_publishable_I16eAnYgsA9fd8ZMlmFQtA_RxepSaXi";
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// Auth init
+(async () => {
+  const { data: { session } } = await sb.auth.getSession();
+  const status = document.getElementById('auth-status');
+  if (session) {
+    status.textContent = `✓ ${session.user.email}`;
+    status.style.color = '#6BCF6B';
+  } else {
+    status.textContent = 'Not signed in';
+    status.style.color = '#FF4655';
+    document.getElementById('signin-card').style.display = 'block';
+  }
+  document.getElementById('pro-date').valueAsDate = new Date();
+  loadProRecent();
+})();
+
+async function adminSignIn() {
+  const email = document.getElementById('auth-email').value.trim();
+  const pass = document.getElementById('auth-pass').value;
+  const errEl = document.getElementById('auth-error');
+  const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
+  if (error) { errEl.textContent = error.message; return; }
+  document.getElementById('auth-status').textContent = `✓ ${data.user.email}`;
+  document.getElementById('auth-status').style.color = '#6BCF6B';
+  document.getElementById('signin-card').style.display = 'none';
+  errEl.textContent = '';
+}
+
+const proYtIds = { '1': null, '2': null, '3': null };
+
+function proHandleYT(n) {
+  const val = document.getElementById(`pro-yt${n}`).value.trim();
+  const match = val.match(/(?:v=|youtu\.be\/|embed\/)([a-zA-Z0-9_-]{11})/);
+  const preview = document.getElementById(`pro-preview${n}`);
+  const idEl = document.getElementById(`pro-id${n}`);
+  if (match) {
+    proYtIds[n] = match[1];
+    document.getElementById(`pro-thumb${n}`).src = `https://img.youtube.com/vi/${match[1]}/mqdefault.jpg`;
+    idEl.textContent = `ID: ${match[1]}`;
+    preview.classList.add('visible');
+  } else if (val.length === 11 && /^[a-zA-Z0-9_-]+$/.test(val)) {
+    proYtIds[n] = val;
+    document.getElementById(`pro-thumb${n}`).src = `https://img.youtube.com/vi/${val}/mqdefault.jpg`;
+    idEl.textContent = `ID: ${val}`;
+    preview.classList.add('visible');
+  } else {
+    proYtIds[n] = null;
+    preview.classList.remove('visible');
+  }
+}
+
+function setProStatus(msg, color = '#6BCF6B') {
+  const el = document.getElementById('pro-status');
+  el.textContent = msg; el.style.color = color;
+  setTimeout(() => el.textContent = '', 4000);
+}
+
+function parseTimestamp(val) {
+  if (!val) return 0;
+  val = val.trim();
+  if (val.includes(':')) {
+    const parts = val.split(':').map(Number);
+    if (parts.length === 2) return parts[0] * 60 + parts[1];
+    if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
+  }
+  return parseInt(val) || 0;
+}
+
+async function saveProMatch() {
+  const team1 = document.getElementById('pro-team1').value.trim();
+  const team2 = document.getElementById('pro-team2').value.trim();
+  const event = document.getElementById('pro-event').value.trim();
+  const date = document.getElementById('pro-date').value;
+  const map1 = document.getElementById('pro-map1').value;
+  const map2 = document.getElementById('pro-map2').value;
+  const map3 = document.getElementById('pro-map3').value;
+
+  if (!team1 || !team2) { setProStatus('Enter both team names.', '#FF4655'); return; }
+  if (!event) { setProStatus('Enter the event name.', '#FF4655'); return; }
+  if (!map1 || !proYtIds['1']) { setProStatus('Map 1 needs a map and YouTube URL.', '#FF4655'); return; }
+  if (!map2 || !proYtIds['2']) { setProStatus('Map 2 needs a map and YouTube URL.', '#FF4655'); return; }
+
+  const { error } = await sb.from('pro_matches').insert({
+    team1, team2, event, date: date || null,
+    map1, map1_youtube_id: proYtIds['1'],
+    map1_start_time: parseTimestamp(document.getElementById('pro-ts1').value),
+    map2, map2_youtube_id: proYtIds['2'],
+    map2_start_time: parseTimestamp(document.getElementById('pro-ts2').value),
+    map3: map3 || null, map3_youtube_id: proYtIds['3'] || null,
+    map3_start_time: parseTimestamp(document.getElementById('pro-ts3').value),
+  });
+
+  if (error) { setProStatus('Error: ' + error.message, '#FF4655'); return; }
+  setProStatus('✓ Match saved!');
+  ['team1','team2','event'].forEach(f => document.getElementById(`pro-${f}`).value = '');
+  ['1','2','3'].forEach(n => {
+    document.getElementById(`pro-yt${n}`).value = '';
+    document.getElementById(`pro-preview${n}`).classList.remove('visible');
+    document.getElementById(`pro-map${n}`).value = '';
+    document.getElementById(`pro-ts${n}`).value = '';
+    proYtIds[n] = null;
+  });
+  loadProRecent();
+}
+
+async function loadProRecent() {
+  const { data } = await sb.from('pro_matches').select('*').order('created_at', { ascending: false }).limit(8);
+  const list = document.getElementById('pro-recent-list');
+  const count = document.getElementById('pro-recent-count');
+  if (!data?.length) { list.innerHTML = '<div class="empty-state">No pro matches yet.</div>'; count.textContent = 0; return; }
+  count.textContent = data.length;
+  list.innerHTML = data.map(m => `
+    <div class="entry-item">
+      <div class="entry-text">${m.team1} vs ${m.team2} · ${m.event} · ${m.map1}${m.map2?', '+m.map2:''}${m.map3?', '+m.map3:''}</div>
+      <span class="entry-remove" onclick="deleteProMatch('${m.id}')">✕</span>
+    </div>
+  `).join('');
+}
+
+async function deleteProMatch(id) {
+  if (!confirm('Delete this match?')) return;
+  await sb.from('pro_matches').delete().eq('id', id);
+  loadProRecent();
+}
+</script>
+</body>
+</html>
