@@ -57,6 +57,9 @@ export const VODS = {
       { id:"axsm-YvPFos", title:"zanks Jett Ascent RADIANT MVP", player:"zanks", date:"2026-05-05" },
       { id:"AL-hOEd1gf4", title:"aspas Jett Ascent RADIANT DOMINATION", player:"aspas", date:"2025-10-12" },
       { id:"8_Kg0fl1MJ0", title:"C9 OXY Jett Ascent RADIANT ENTRY", player:"OXY", date:"2025-07-11" },
+      { id:"ufzg2izRNZo", title:"TenZ Jett Ascent RADIANT RANKED", player:"TenZ", date:"2025-07-14" },
+      { id:"yi6kt18XT_M", title:"C9 OXY Omen Ascent VS ASPAS", player:"OXY", date:"2025-03-25" },
+      { id:"LIxPWpdrfJY", title:"Tarik Jett Ascent RADIANT ENTRY", player:"Tarik", date:"2025-07-31" },
     ],
     reyna: [
     ],
@@ -66,11 +69,14 @@ export const VODS = {
     ],
     phoenix: [
       { id:"mP1MhHrNV9k", title:"NAVI hiro Phoenix Ascent RADIANT RANKED", player:"hiro", date:"2026-05-06" },
+      { id:"fFw59lBFu8o", title:"demon1 Phoenix Ascent RADIANT RANKED", player:"demon1", date:"2025-08-21" },
     ],
     yoru: [
       { id:"2KwKD2-HZY0", title:"Eggsterr Yoru Ascent RADIANT RANKED", player:"Eggsterr", date:"2025-03-24" },
     ],
     iso: [
+      { id:"NZZ1VnuSYE8", title:"Zekken Iso Ascent RADIANT RANKED", player:"Zekken", date:"2025-04-19" },
+      { id:"WZn_WMFXy4s", title:"Tarik Iso Ascent RADIANT RANKED", player:"Tarik", date:"2024-06-30" },
     ],
     waylay: [
       { id:"5SrKwvYnjgI", title:"C9 OXY Waylay Ascent RADIANT ENTRY", player:"OXY", date:"2025-09-20" },
@@ -88,19 +94,24 @@ export const VODS = {
     clove: [
       { id:"sxSiEhz9aw0", title:"C9 OXY Clove Ascent RADIANT RANKED", player:"OXY", date:"2026-05-02" },
       { id:"t8XGwF4NKBU", title:"ENVY demon1 Clove Ascent RADIANT RANKED", player:"demon1", date:"2025-05-17" },
+      { id:"DiUuvEOusx8", title:"demon1 Clove Ascent RADIANT SMOKES", player:"demon1", date:"2024-06-07" },
+      { id:"jchqBUbxBoQ", title:"Tarik Clove Ascent RADIANT RANKED", player:"Tarik", date:"2024-11-10" },
     ],
     miks: [
     ],
     sage: [
+      { id:"eF3JZshFW9w", title:"Asuna Sage Ascent RADIANT RANKED", player:"Asuna", date:"2025-10-25" }
     ],
     cypher: [
       { id:"TrABVuHlB44", title:"NRG s0m Cypher Ascent RADIANT SETUPS", player:"s0m", date:"2026-05-04" },
       { id:"znbUo2MMtvc", title:"TL nAts Cypher Ascent RADIANT RANKED", player:"nAts", date:"2026-05-05" },
       { id:"ZbCAww1kDXw", title:"TL nAts Cypher Ascent RADIANT SENTI", player:"nAts", date:"2025-07-24" },
+      { id:"RtsWcdaazg4", title:"100T Hiko Cypher Ascent RADIANT SETUPS", player:"Hiko", date:"2026-05-07" },
 
     ],
     killjoy: [
       { id:"Sb25q-aNiNY", title:"TL nAts Killjoy Ascent RADIANT RANKED", player:"nAts", date:"2025-06-02" },
+      { id:"fzhQjZ2VNQA", title:"Alexis Killjoy Ascent RADIANT RANKED", player:"Alexis", date:"2025-03-07" },
     ],
     chamber: [
     ],
@@ -113,13 +124,17 @@ export const VODS = {
     ],
     sova: [
       { id:"EaLyY77ACU8", title:"NRG brawk Sova Ascent RADIANT RANKED", player:"brawk", date:"2026-05-04" },
+      { id:"fG5bT4I5hQs", title:"Sacy Sova Ascent RADIANT LINEUPS", player:"Sacy", date:"2025-01-07" },
+      { id:"18zWsGBNEPY", title:"C9 OXY Sova Ascent RANKED MVP", player:"OXY", date:"2025-08-27" },
     ],
     breach: [
+      { id:"KQuYz5D5jCY", title:"nAts Breach Ascent RADIANT FLASHES", player:"nAts", date:"2025-06-09" },
     ],
     skye: [
     ],
     kayo: [
       { id:"ijghQiZtxNk", title:"Asuna KAY/O Ascent RADIANT RANKED", player:"Asuna", date:"2025-05-23" },
+      { id:"01BczTiWj_4", title:"s0m KAY/0 Ascent RADIANT RANKED", player:"s0m", date:"2025-06-26" },
     ],
     fade: [
     ],
@@ -229,11 +244,17 @@ export const VODS = {
   haven: {
     jett: [
       { id:"SdQGH21gDvE", title:"ENVY ion Jett Haven RADIANT RANKED w/NRG s0m", player:"ion2x", date:"2026-04-26" },
+      { id:"QGWRv5GBEws", title:"C9 OXY Jett Haven WITH ION", player:"OXY", date:"2026-05-07" },
+      { id:"XIfLGam3fnU", title:"Zekken Jett Haven RADIANT ENTRY", player:"Zekken", date:"2026-03-10" },
+      { id:"4cqV_DS538k", title:"aspas Jett Haven 21 KILL DOMINATION", player:"aspas", date:"2025-07-16" },
+
     ],
     reyna: [
       { id:"GkkolEIngtQ", title:"florescent Reyna Haven RADIANT RANKED", player:"florescent", date:"2026-05-01" },
       { id:"sgLH4Z8IRpA", title:"C9 OXY Reyna Haven INSANE AIM", player:"OXY", date:"2026-04-12" },
       { id:"ADCeejaYgFM", title:"florescent Reyna Haven ONE TAP INSANITY", player:"florescent", date:"2026-05-02" },
+      { id:"145LGyCfxtg", title:"Wo0t Reyna Haven FT AVEZ", player:"Wo0t", date:"2025-11-19" },
+
     ],
     raze: [
     ],
@@ -241,6 +262,7 @@ export const VODS = {
       { id:"FoR9881M0lY", title:"100T Asuna Neon Haven RADIANT SHOTGUN", player:"Asuna", date:"2026-04-18" },
       { id:"s7uUPgHjhuM", title:"C9 OXY Neon Haven TENZ RANKED", player:"OXY", date:"2026-04-18" },
       { id:"j6vaAXceK6Y", title:"ZETA Absol Neon Haven RADIANT RANKED", player:"Absol", date:"2026-02-21" },
+      { id:"honTdwkZLt4", title:"C9 OXY Neon Haven RADIANT RANKED", player:"OXY", date:"2026-02-12" },
     ],
     phoenix: [
       { id:"kJkmPye26Ew", title:"NRG s0m Phoenix Haven RADIANT RANKED", player:"s0m", date:"2026-04-25" },
@@ -255,6 +277,8 @@ export const VODS = {
       { id:"2hiEiJjmYPY", title:"canezerra Iso Haven RADIANT RANKED", player:"canezerra", date:"2026-04-08" },
     ],
     waylay: [
+      { id:"TbA0lBw47Tc", title:"Wo0t Waylay Haven RADIANT ENTRY", player:"Wo0t", date:"2025-10-25" },
+      { id:"0PZsARlGpsg", title:"NRG s0m Waylay Haven RADIANT RANKED", player:"s0m", date:"2025-11-09" },
     ],
     omen: [
     ],
@@ -274,6 +298,9 @@ export const VODS = {
       { id:"u4caHTd04f0", title:"yanyan Clove Haven NO MAP COVER", player:"yanyan", date:"2026-03-18" },
       { id:"SYsxe4t3R6Q", title:"FUR nerve Clove Haven RADIANT RANKED", player:"nerve", date:"2026-04-19" },
       { id:"VNGbfl2RaEg", title:"RC Dep Clove Haven RANKED MVP", player:"Dep", date:"2026-05-06" },
+      { id:"wBQjp4Jhd24", title:"Zekken Clove Haven RADIANT", player:"Zekken", date:"2025-11-05" },
+      { id:"mI6oSdrv_aY", title:"demon1 Clove Haven MVP FT MOODA", player:"demon1", date:"2025-08-15" },
+
     ],
     miks: [
       { id:"_bLFgur4qNw", title:"TL nAts Miks Haven RADIANT SMOKES", player:"nAts", date:"2026-03-21" },
@@ -291,11 +318,14 @@ export const VODS = {
       { id:"mRaP9dEhSYo", title:"GEN Lakia Cypher Haven RADIANT", player:"Lakia", date:"2026-03-30" },
       { id:"ULzOB71wzFQ", title:"GL hAwksinho Cypher Haven RADIANT RANKED", player:"hAwksinho", date:"2026-05-01" },
       { id:"8bdzvDCkbus", title:"inspire Cypher Haven TIER 1 SENTINEL", player:"Inspire", date:"2026-04-25" },
+      { id:"G-WQFGCqSjE", title:"suygetsu Cypher Haven RADIANT EU", player:"suygetsu", date:"2024-08-24" },
     ],
     killjoy: [
       { id:"Ch76qjFxnqw", title:"TL nAts Killjoy Haven RADIANT MASTER", player:"nAts", date:"2026-04-08" },
       { id:"3sHMqgBsb1g", title:"DRX Mako Killjoy Haven APAC RADIANT", player:"Mako", date:"2026-04-09" },
       { id:"4rW9BwRD61A", title:"KC dos9 Killjoy Haven", player:"dos9", date:"2026-02-26" },
+      { id:"EojUR1jRSTM", title:"nAts Haven Killjoy", player:"nAts", date:"2025-09-07" },
+
     ],
     chamber: [
       { id:"w26pYD2WlV8", title:"TS Zeus Chamber Haven APAC RADIANT", player:"Zeus", date:"2026-04-28" },
@@ -303,10 +333,12 @@ export const VODS = {
       { id:"V4yVXH2DeTc", title:"N4RRATE Chamber Haven RADIANT", player:"N4RRATE", date:"2026-02-17" },
       { id:"HGHc8phMAdk", title:"M8 marteen Chamber Haven RADIANT EU", player:"marteen", date:"2026-02-20" },
       { id:"6Ze3z6wKJ8M", title:"TL wayne Chamber Haven RADIANT RANKED", player:"wayne", date:"2026-02-14" },
+      { id:"-nufqqAPEWI", title:"nAts Chamber Haven SENTI MAIN EU", player:"nAts", date:"2025-07-24" },
     ],
     deadlock: [
     ],
     vyse: [
+      { id:"Wpq1DAjEzO4", title:"Asuna Vyse Haven RADIANT SETUPS", player:"Asuna", date:"2024-08-30" },
     ],
     veto: [
     ],
@@ -319,6 +351,7 @@ export const VODS = {
       { id:"-iZGr7x_LL4", title:"QOR Derrek Sova Haven RADIANT UTIL", player:"derrek", date:"2026-05-04" },
       { id:"UQCNICFuMAs", title:"florescent Sova Haven RADIANT RANKED", player:"florescent", date:"2026-05-05" },
       { id:"F3oRBITHLE4", title:"NRG s0m Sova Haven WORLD CHAMP LINEUPS", player:"s0m", date:"2026-05-07" },
+      { id:"6R_MBv_aKXw", title:"Derrek Sova Ascent RADIANT RANKED", player:"Derrek", date:"2026-02-20" },
     ],
     breach: [
     ],
@@ -355,6 +388,7 @@ export const VODS = {
       { id:"X9y5pPn1Wz8", title:"QOR Derrek Raze Split PRO ENTRY", player:"derrek", date:"2026-02-15" },
       { id:"G84Xw1MWuP4", title:"Tarik Raze Split RADIANT RANKED", player:"Tarik", date:"2026-05-06" },
       { id:"TKBrjWlV3lE", title:"ShahZaM Raze Split RADIANT ENTRY", player:"ShahZaM", date:"2026-05-07" },
+      { id:"X00K9n8IYtc", title:"GEN t3xture Raze Split RADIANT ENTRY", player:"t3xture", date:"2026-05-07" },
     ],
     neon: [
       { id:"eScv6iy1afY", title:"MIBR zekken Neon Split RADIANT SHOTGUN", player:"zekken", date:"2026-04-15" },
@@ -463,6 +497,7 @@ export const VODS = {
       { id:"kyLJBzrjOp8", title:"florescent Reyna Fracture RADIANT RANKED", player:"florescent", date:"2026-04-07" },
       { id:"dXqq_AOL2ME", title:"Okinawa Reyna Fracture RADIANT RANKED", player:"Okinawa", date:"2026-03-26" },
       { id:"vlQcvhOJd7U", title:"Okinawa Reyna Fracture RADIANT APAC", player:"Okinawa", date:"2026-04-26" },
+      { id:"W2zQZDtt5cM", title:"C9 OXY Reyna Fracture INSANE AIM", player:"OXY", date:"2026-04-02" },
     ],
     raze: [
       { id:"1-oWIoRJ2Jk", title:"GEN t3xture Raze Fracture APAC ENTRY", player:"t3xture", date:"2026-04-18" },
@@ -470,6 +505,9 @@ export const VODS = {
       { id:"qg-7JQgSlL8", title:"NRG s0m Raze Fracture RADIANT RANKED", player:"s0m", date:"2026-05-02" },
       { id:"YEoXzxNTuZQ", title:"FUR koalanoob Raze Fracture", player:"koalanoob", date:"2026-05-02" },
       { id:"e3hUjzBpDj0", title:"KRU less Raze Fracture RADIANT AIM", player:"less", date:"2026-05-05" },
+      { id:"Ybj9N-S6NIk", title:"C9 OXY Raze Fracture RADIANT 35 KILLS", player:"OXY", date:"2026-05-07" },
+      { id:"3QLtry4Nccc", title:"koalanoob Raze Fracture RADIANT RANKED", player:"koalanoob", date:"2026-05-07" },
+      { id:"4nXyp1j0_8E", title:"Asuna Raze Fracture RADIANT RANKED", player:"Asuna", date:"2026-03-20" },
     ],
     neon: [
       { id:"dPulIDBZXtA", title:"C9 OXY Neon Fracture RADIANT RANKED", player:"OXY", kd:"23/19", date:"2026-04-28" },
@@ -480,6 +518,7 @@ export const VODS = {
     ],
     phoenix: [
       { id:"uKvWzlRVBkc", title:"NRG s0m Phoenix Fracture RADIANT RANKED", player:"s0m", date:"2026-04-07" },
+      { id:"OeKGFaYV368", title:"Curry Phoenix Fracture RADIANT RANKED", player:"Curry", date:"2025-04-16" },
     ],
     yoru: [
     ],
@@ -487,6 +526,7 @@ export const VODS = {
       { id:"ZElTpkR5uIQ", title:"zanks Iso Fracture RADIANT RANKED", player:"zanks", date:"2026-05-03" },
     ],
     waylay: [
+      { id:"7JdoYPRn1ks", title:"Derrek Waylay Fracture RADIANT RANKED", player:"Derrek", date:"2026-03-22" },
     ],
     omen: [
       { id:"FK0J9WTlePQ", title:"Flexinja Omen Fracture RANKED", player:"Flexinja", date:"2026-04-28" },
@@ -498,6 +538,8 @@ export const VODS = {
       { id:"hKJA4B2DfzQ", title:"ENVY demon1 Brimstone Fracture RADIANT SMOKES", player:"demon1", date:"2026-04-20" },
       { id:"UWYs3vUPN00", title:"ENVY demon1 Brimstone Fracture RADIANT RANKED", player:"demon1", date:"2026-05-05" },
       { id:"2NWAk4G8jSU", title:"Derrek Brimstone Fracture RADIANT RANKED", player:"Derrek", date:"2026-05-06" },
+      { id:"O8CotP3pB44", title:"nAts Brimstone Fracture RADIANT EU", player:"nAts", date:"2026-03-29" },
+      { id:"5y_2V9SdtZ8", title:"Zander Brimstone Fracture RADIANT SMOKES MAIN", player:"Zander", date:"2025-04-24" },
     ],
     astra: [
     ],
@@ -522,6 +564,7 @@ export const VODS = {
     ],
     killjoy: [
       { id:"9v9iD-WvQ6s", title:"Inspire Killjoy Fracture RADIANT SETUPS", player:"Inspire", date:"2026-04-05" },
+      { id:"odmThaTVAl0", title:"nAts Killjoy Fracture RADIANT SENTI", player:"nAts", date:"2025-01-25" },
     ],
     chamber: [
       { id:"Sego0UGSJRk", title:"LEV Sato Chamber Fracture RADIANT RANKED", player:"sato", date:"2026-04-28" },
@@ -532,11 +575,14 @@ export const VODS = {
       { id:"BfN0D19Nb58", title:"KRU less Chamber Fracture RADIANT RANKED", player:"less", date:"2026-05-02" },
       { id:"9ObKjuKssng", title:"G2 jawgemo Chamber Fracture RADIANT RANKED", player:"jawgemo", date:"2026-05-01" },
       { id:"QjMeX-NAigQ", title:"ENVY demon1 Chamber Fracture PRO OPERATOR", player:"demon1", date:"2026-05-03" },
+      { id:"57ufEylp92I", title:"ion Chamber Fracture RADIANT 33 KILLS", player:"ion2x", date:"2026-03-26" },
+      { id:"wqqSe1jliyo", title:"100T Cryo Chamber Fracture RADIANT RANKED", player:"Cryocells", date:"2025-01-12" },
     ],
     deadlock: [
     ],
     vyse: [
       { id:"o-mGrPFtDQ4", title:"Sacy Vyse Fracture LATAM RANKED", player:"Sacy", date:"2026-04-17" },
+      { id:"WOaB0hAW43U", title:"nAts Vyse Fracture RADIANT SETUPS", player:"nAts", date:"2025-04-25" },
     ],
     veto: [
     ],
@@ -547,6 +593,7 @@ export const VODS = {
       { id:"LXawAs7uKSI", title:"QOR derrek Fracture Breach FLASH GOAT", player:"derrek", date:"2026-04-16" },
       { id:"oCTPObW6XCg", title:"NRG s0m Breach Fracture RADIANT RANKED", player:"s0m", date:"2026-04-16" },
       { id:"2DvoWIZfZT4", title:"NRG s0m Breach Fracture RADIANT RANKED", player:"s0m", date:"2026-04-06" },
+      { id:"-bwpz9fCDTA", title:"Asuna Breach Fracture RADIANT FLASHES", player:"Asuna", date:"2026-03-27" },
     ],
     skye: [
       { id:"UXqu0RnwgNw", title:"ENVY demon1 Skye Fracture PRO UTIL", player:"demon1", date:"2026-04-13" },
@@ -823,6 +870,7 @@ export const VODS = {
       { id:"P-higQgvO3g", title:"TH Wo0t Iso Breeze RADIANT EU", player:"Wo0t", date:"2026-03-18" },
       { id:"bmI86S86fGg", title:"zanks Iso Breeze RADIANT RANKED", player:"zanks", date:"2026-05-03" },
       { id:"KFNViI6yg0g", title:"C9 OXY Iso Breeze RADIANT RANKED", player:"OXY", date:"2026-05-06" },
+      { id:"eVIQ-AGBl20", title:"Tarik Iso Breeze RADIANT RANKED", player:"Tarik", date:"2026-05-07" }
     ],
     waylay: [
     ],
@@ -919,6 +967,8 @@ export const VODS = {
       { id:"jOb1LYWwIZg", title:"MIBR zekken Neon Lotus PRO GAMEPLAY", player:"zekken", date:"2026-05-02" },
       { id:"TuYnOc4eCtM", title:"NRG s0m Neon Lotus TIER 1 RANKED", player:"s0m", date:"2026-04-26" },
       { id:"e4Q1sfgj0R8", title:"icy Neon Lotus RADIANT RANKED", player:"icy", date:"2026-05-04" },
+      { id:"B53GjWyTh0Q", title:"NRG s0m Neon Lotus RADIANT RANKED", player:"s0m", date:"2026-05-07" },
+
     ],
     phoenix: [
     ],
@@ -952,6 +1002,7 @@ export const VODS = {
     clove: [
       { id:"8VLhxoVf2XY", title:"QOR Notexxd Clove Lotus RANK 1 MVP", player:"Notexxd", date:"2026-04-16" },
       { id:"O196DMbUqoY", title:"Sacy Clove Lotus RADIANT RANKED", player:"Sacy", date:"2026-04-21" },
+      { id:"KaWFbCtMVcs", title:"NRG s0m Clove Haven RADIANT RANKED", player:"s0m", date:"2026-05-07" },
     ],
     miks: [
       { id:"-a2poQeawlc", title:"DFM meiy Miks Lotus RADIANT", player:"meiy", date:"2026-03-24" },
