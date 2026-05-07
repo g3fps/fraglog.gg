@@ -63,6 +63,7 @@ export const VODS = {
     neon: [
     ],
     phoenix: [
+      { id:"mP1MhHrNV9k", title:"NAVI hiro Phoenix Ascent RADIANT RANKED", player:"hiro", date:"2026-05-06" },
     ],
     yoru: [
     ],
@@ -264,6 +265,7 @@ export const VODS = {
       { id:"PSRZJBmdfZU", title:"NS Xross Clove Haven MASTERS CHAMPION", player:"Xross", date:"2026-04-13" },
       { id:"u4caHTd04f0", title:"yanyan Clove Haven NO MAP COVER", player:"yanyan", date:"2026-03-18" },
       { id:"SYsxe4t3R6Q", title:"FUR nerve Clove Haven RADIANT RANKED", player:"nerve", date:"2026-04-19" },
+      { id:"VNGbfl2RaEg", title:"RC Dep Clove Haven RANKED MVP", player:"Dep", date:"2026-05-06" },
     ],
     miks: [
       { id:"_bLFgur4qNw", title:"TL nAts Miks Haven RADIANT SMOKES", player:"nAts", date:"2026-03-21" },
@@ -353,6 +355,7 @@ export const VODS = {
     ],
     yoru: [
       { id:"oMSNtf3bC5U", title:"ENVY Eggsterr Yoru Split RADIANT RANKED", player:"Eggsterr", date:"2026-04-03" },
+      { id:"ahKT51P_kys", title:"ENVY Eggsterr Yoru Split RADIANT MVP", player:"Eggsterr", date:"2026-05-06" },
     ],
     iso: [
     ],
@@ -484,6 +487,7 @@ export const VODS = {
     brimstone: [
       { id:"hKJA4B2DfzQ", title:"ENVY demon1 Brimstone Fracture RADIANT SMOKES", player:"demon1", date:"2026-04-20" },
       { id:"UWYs3vUPN00", title:"ENVY demon1 Brimstone Fracture RADIANT RANKED", player:"demon1", date:"2026-05-05" },
+      { id:"2NWAk4G8jSU", title:"Derrek Brimstone Fracture RADIANT RANKED", player:"Derrek", date:"2026-05-06" },
     ],
     astra: [
     ],
@@ -568,6 +572,7 @@ export const VODS = {
     ],
     reyna: [
       { id:"bFHRVyIIoco", title:"Inspire Reyna Pearl PRO RANKED", player:"Inspire", date:"2026-03-14" },
+      { id:"8yV47AL3xZw", title:"RID gyen Reyna Pearl RADIANT RANKED", player:"gyen", date:"2026-05-06" },
     ],
     raze: [
       { id:"LP4a3zQsxfw", title:"MIBR zekken Raze Pearl", player:"zekken", date:"2026-04-30" },
@@ -591,6 +596,8 @@ export const VODS = {
       { id:"3GD96bcKKH8", title:"C9 OXY Phoenix Pearl RADIANT FLASHES", player:"OXY", date:"2026-05-02" },
       { id:"Mxta2gfKRtQ", title:"ShahZaM Phoenix Pearl RADIANT RANKED", player:"ShahZaM", date:"2026-05-04" },
       { id:"UlYLll5xZ8s", title:"Sacy Phoenix Pearl RADIANT LATAM MVP", player:"Sacy", date:"2026-05-05" },
+      { id:"dMPUHmGEgLc", title:"FUR koalanoob Phoenix Pearl RADIANT MVP", player:"koalanoob", date:"2026-05-06" },
+
     ],
     yoru: [
       { id:"qujRF2QbAfU", title:"ENVY Eggsterr Yoru Pearl YORU MASTERY", player:"Eggsterr", date:"2026-03-13" },
@@ -766,6 +773,7 @@ export const VODS = {
       { id:"nlrQC27p5GM", title:"GEN Foxy9 Reyna Breeze RADIANT RANKED", player:"Foxy9", date:"2026-02-12" },
       { id:"6VOr58aGyR8", title:"florescent Reyna Breeze ONE TAPS", player:"florescent", date:"2026-05-04" },
       { id:"0bH512luOs4", title:"ENVY ion Reyna Breeze RADIANT AIMER", player:"ion2x", date:"2026-05-05" },
+      { id:"Q3iaXyHuFak", title:"Subroza Reyna Breeze RADIANT RANKED", player:"Subroza", date:"2026-05-06" },
     ],
     raze: [
     ],
@@ -875,6 +883,7 @@ export const VODS = {
     raze: [
       { id:"Put7KPLtquc", title:"NRG s0m Raze Lotus DOMINATION RADIANT", player:"s0m", date:"2026-05-01" },
       { id:"x33_vbD-uWk", title:"NRG s0m Raze Lotus RADIANT MVP", player:"s0m", date:"2026-05-02" },
+      { id:"g2TmzFmtT1s", title:"NAVI hiro Raze Lotus RADIANT EU", player:"hiro", date:"2026-05-06" },
     ],
     neon: [
       { id:"diXmbYFTe4c", title:"MIBR zekken Neon Lotus RADIANT RANKED", player:"zekken", date:"2026-04-30" },
