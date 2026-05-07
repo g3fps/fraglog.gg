@@ -687,7 +687,7 @@ export const VODS = {
     sova: [
       { id:"Sn41Z_-NG18", title:"NRG brawk Sova Pearl RADIANT LINEUPS", player:"brawk", date:"2026-04-14" },
       { id:"XlipvE2uLno", title:"NRG brawk Sova Pearl WORLD CHAMP RANKED", player:"brawk", date:"2026-04-01" },
-      { id:"wwGD71w064w", title:"NRG brawk Sova Pearl RADIANT RANKED", player:"brawk", date:"2026-05-05" }
+      { id:"wwGD71w064w", title:"NRG brawk Sova Pearl RADIANT RANKED", player:"brawk", date:"2026-05-05" },
       { id:"Ih-hJ-99HiU", title:"Derrek Sova Pearl RADIANT RANKED", player:"Derrek", date:"2026-01-25" },
     ],
     breach: [
