@@ -129,6 +129,7 @@ export const VODS = {
       { id:"znbUo2MMtvc", title:"TL nAts Cypher Ascent RADIANT RANKED", player:"nAts", date:"2026-05-05" },
       { id:"ZbCAww1kDXw", title:"TL nAts Cypher Ascent RADIANT SENTI", player:"nAts", date:"2025-07-24" },
       { id:"RtsWcdaazg4", title:"100T Hiko Cypher Ascent RADIANT SETUPS", player:"Hiko", date:"2026-05-07" },
+      { id:"c1GGvXBPywM", title:"NAVI hiro Cypher Ascent RADIANT SENTI", player:"hiro", date:"2026-05-09" },
 
     ],
     killjoy: [
@@ -502,6 +503,7 @@ export const VODS = {
       { id:"BvvQX13GcXs", title:"C9 OXY Skye Split RADIANT MVPS", player:"OXY", date:"2026-05-02" },
       { id:"jG2KIYjMPBU", title:"NRG s0m Skye Split RADIANT UTIL", player:"s0m", date:"2026-05-04" },
       { id:"TpgxS87F_14", title:"C9 OXY Skye Split RADIANT FLASHES", player:"OXY", date:"2026-05-05" },
+      { id:"UNkEEqlESG8", title:"s0m Skye Split RADIANT INITIATOR", player:"s0m", date:"2026-05-09" },
     ],
     kayo: [
     ],
@@ -918,6 +920,7 @@ export const VODS = {
       { id:"eVIQ-AGBl20", title:"Tarik Iso Breeze RADIANT RANKED", player:"Tarik", date:"2026-05-07" }
     ],
     waylay: [
+      { id:"hprfGTVzSeI", title:"s0m Waylay Breeze RADIANT RANKED", player:"s0m", date:"2026-05-09" },
     ],
     omen: [
     ],
