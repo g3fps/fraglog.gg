@@ -163,25 +163,33 @@ async function renderMyVods() {
   const mapName = id => MAPS_DATA.find(m=>m.id===id)?.name || id;
   const agentName = id => AGENTS_DATA.find(a=>a.id===id)?.name || id;
 
-  grid.innerHTML = data.map(v => `
-    <div class="video-card">
-      <div class="video-thumb" data-vid="${v.video_id}" style="cursor:pointer">
-        <img src="https://img.youtube.com/vi/${v.video_id}/mqdefault.jpg" alt="${v.title}" loading="lazy">
-        <div class="play-overlay"><div class="play-icon"><div class="play-tri"></div></div></div>
-      </div>
-      <div class="video-info">
-        <div class="video-tag-row">
-          <span class="video-map-tag">${mapName(v.map_id)}</span>
-          <span class="video-agent-tag">${agentName(v.agent_id)}</span>
+  grid.innerHTML = data.map(v => {
+    const noteClass = getUserNote(v.video_id) ? "has-note" : "";
+    const noteText = getUserNote(v.video_id) ? "📝 View notes" : "📝 Add notes";
+    const safeTitle = v.title.replace(/'/g, "\\'");
+    return `
+      <div class="video-card">
+        <div class="video-thumb" data-vid="${v.video_id}" style="cursor:pointer">
+          <img src="https://img.youtube.com/vi/${v.video_id}/mqdefault.jpg" alt="${v.title}" loading="lazy">
+          <div class="play-overlay"><div class="play-icon"><div class="play-tri"></div></div></div>
         </div>
-        <div class="video-title" data-vid="${v.video_id}" style="cursor:pointer">${v.title}</div>
-        <div class="video-meta-row">
-          <span class="video-date">${v.date ? new Date(v.date).toLocaleDateString('en-US',{month:'short',year:'numeric'}) : ''}</span>
-          <button class="mv-delete-btn" onclick="deleteMyVod('${v.id}')">✕ Remove</button>
+        <div class="video-info">
+          <div class="video-tag-row">
+            <span class="video-map-tag">${mapName(v.map_id)}</span>
+            <span class="video-agent-tag">${agentName(v.agent_id)}</span>
+          </div>
+          <div class="video-title" data-vid="${v.video_id}" style="cursor:pointer">${v.title}</div>
+          <div class="video-meta-row">
+            <span class="video-date">${v.date ? new Date(v.date).toLocaleDateString('en-US',{month:'short',year:'numeric'}) : ''}</span>
+          </div>
+          <div class="notes-section" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+            <button class="notes-btn ${noteClass}" data-vid="${v.video_id}" onclick="openNotes('${v.video_id}','${safeTitle}','Me',null,'own')">${noteText}</button>
+            <button class="mv-delete-btn" onclick="deleteMyVod('${v.id}')">✕ Remove</button>
+          </div>
         </div>
       </div>
-    </div>
-  `).join("");
+    `;
+  }).join("");
 
   grid.onclick = e => {
     const el = e.target.closest("[data-vid]");
@@ -194,6 +202,11 @@ async function deleteMyVod(id) {
   const sb = initSupabase();
   await sb.from("user_vods").delete().eq("id", id).eq("user_id", currentUser.id);
   renderMyVods();
+}
+
+function onNoteChange(videoId) {
+  const btn = document.querySelector(`.notes-btn[data-vid="${videoId}"]`);
+  if (btn) { btn.classList.add("has-note"); btn.textContent = "📝 View notes"; }
 }
 
 function onAuthChange() { renderMyVods(); }

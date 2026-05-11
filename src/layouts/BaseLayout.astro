@@ -84,6 +84,10 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
         <span class="notes-char-count" id="notes-char-count">0 characters</span>
         <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
           <span class="notes-saved-msg" id="notes-saved-msg">✓ Saved</span>
+          <div id="coach-mode-toggle" style="display:none;align-items:center;gap:0;border:1px solid var(--border);border-radius:6px;overflow:hidden;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1px">
+            <button id="toggle-own" onclick="setCoachMode('own')" style="padding:5px 10px;background:var(--red);color:#fff;border:none;cursor:pointer;text-transform:uppercase">Your Gameplay</button>
+            <button id="toggle-pro" onclick="setCoachMode('pro')" style="padding:5px 10px;background:var(--surface2);color:var(--muted);border:none;cursor:pointer;text-transform:uppercase">Pro</button>
+          </div>
           <button class="notes-save-btn" style="background:var(--surface2);color:var(--muted);border:1px solid var(--border)" onclick="coachMe()" id="notes-coach-btn">✨ Coach me</button>
           <button class="notes-save-btn" onclick="saveNoteFromModal()">Save Notes</button>
         </div>
@@ -286,9 +290,22 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
   }
 
   let currentNoteVideoId = null;
+  let currentCoachMode = 'pro';
 
-  function openNotes(videoId, title, player, adminNote) {
+  function setCoachMode(mode) {
+    currentCoachMode = mode;
+    document.getElementById('toggle-own').style.background = mode === 'own' ? 'var(--red)' : 'var(--surface2)';
+    document.getElementById('toggle-own').style.color = mode === 'own' ? '#fff' : 'var(--muted)';
+    document.getElementById('toggle-pro').style.background = mode === 'pro' ? 'var(--red)' : 'var(--surface2)';
+    document.getElementById('toggle-pro').style.color = mode === 'pro' ? '#fff' : 'var(--muted)';
+    // clear any existing coach output when switching modes
+    document.getElementById('notes-ai-box').style.display = 'none';
+    document.getElementById('notes-ai-text').innerHTML = '';
+  }
+
+  function openNotes(videoId, title, player, adminNote, mode = 'pro') {
     currentNoteVideoId = videoId;
+    currentCoachMode = mode;
     document.getElementById("notes-modal-title").textContent = title;
     document.getElementById("notes-modal-meta").textContent = player;
     const adminBox = document.getElementById("notes-admin-box");
@@ -300,6 +317,10 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
     document.getElementById("notes-saved-msg").style.display = "none";
     document.getElementById("notes-ai-box").style.display = "none";
     document.getElementById("notes-ai-text").innerHTML = "";
+    // show/hide toggle and set active state
+    const toggle = document.getElementById('coach-mode-toggle');
+    toggle.style.display = mode === 'own' ? 'flex' : 'none';
+    setCoachMode(mode);
     document.getElementById("notes-modal").classList.add("open");
     document.body.style.overflow = "hidden";
     setTimeout(() => ta.focus(), 100);
@@ -334,7 +355,7 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
       const response = await fetch("/api/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ notes, title, player })
+        body: JSON.stringify({ notes, title, player, mode: currentCoachMode })
       });
 
       if (!response.ok) throw new Error("API error: " + response.status);
