@@ -116,6 +116,7 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
   let authMode = "login";
   let userFavorites = [];
   let userNotes = {};
+  let userCoach = {};
   let userWatched = [];
 
   async function initAuth() {
@@ -138,9 +139,13 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
     const sb = initSupabase();
     const { data: favs } = await sb.from("favorites").select("video_id").eq("user_id", currentUser.id);
     userFavorites = (favs||[]).map(f => f.video_id);
-    const { data: notes } = await sb.from("notes").select("video_id, content").eq("user_id", currentUser.id);
+    const { data: notes } = await sb.from("notes").select("video_id, content, coach_text, coach_mode").eq("user_id", currentUser.id);
     userNotes = {};
-    (notes||[]).forEach(n => userNotes[n.video_id] = n.content);
+    userCoach = {};
+    (notes||[]).forEach(n => {
+      userNotes[n.video_id] = n.content;
+      if (n.coach_text) userCoach[n.video_id] = { text: n.coach_text, mode: n.coach_mode || 'pro' };
+    });
     const { data: watched } = await sb.from("watched").select("video_id").eq("user_id", currentUser.id);
     userWatched = (watched||[]).map(w => w.video_id);
   }
@@ -239,7 +244,7 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
   async function signOut() {
     const sb = initSupabase();
     await sb.auth.signOut();
-    currentUser = null; userFavorites = []; userNotes = {}; userWatched = [];
+    currentUser = null; userFavorites = []; userNotes = {}; userCoach = {}; userWatched = [];
     renderNav();
     document.cookie = 'sb-access-token=; path=/; max-age=0';
     document.cookie = 'sb-refresh-token=; path=/; max-age=0';
@@ -298,9 +303,17 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
     document.getElementById('toggle-own').style.color = mode === 'own' ? '#fff' : 'var(--muted)';
     document.getElementById('toggle-pro').style.background = mode === 'pro' ? 'var(--red)' : 'var(--surface2)';
     document.getElementById('toggle-pro').style.color = mode === 'pro' ? '#fff' : 'var(--muted)';
-    // clear any existing coach output when switching modes
-    document.getElementById('notes-ai-box').style.display = 'none';
-    document.getElementById('notes-ai-text').innerHTML = '';
+    // when switching modes, show saved coach text for that mode if it exists
+    const saved = currentNoteVideoId ? userCoach[currentNoteVideoId] : null;
+    const aiBox = document.getElementById('notes-ai-box');
+    const aiText = document.getElementById('notes-ai-text');
+    if (saved && saved.mode === mode) {
+      aiBox.style.display = 'block';
+      aiText.innerHTML = saved.text;
+    } else {
+      aiBox.style.display = 'none';
+      aiText.innerHTML = '';
+    }
   }
 
   function openNotes(videoId, title, player, adminNote, mode = 'pro') {
@@ -315,11 +328,20 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
     ta.value = getUserNote(videoId);
     document.getElementById("notes-char-count").textContent = ta.value.length + " characters";
     document.getElementById("notes-saved-msg").style.display = "none";
-    document.getElementById("notes-ai-box").style.display = "none";
-    document.getElementById("notes-ai-text").innerHTML = "";
     // show/hide toggle and set active state
     const toggle = document.getElementById('coach-mode-toggle');
     toggle.style.display = mode === 'own' ? 'flex' : 'none';
+    // restore saved coach output if it exists for this mode
+    const saved = userCoach[videoId];
+    const aiBox = document.getElementById('notes-ai-box');
+    const aiText = document.getElementById('notes-ai-text');
+    if (saved && saved.mode === mode) {
+      aiBox.style.display = 'block';
+      aiText.innerHTML = saved.text;
+    } else {
+      aiBox.style.display = 'none';
+      aiText.innerHTML = '';
+    }
     setCoachMode(mode);
     document.getElementById("notes-modal").classList.add("open");
     document.body.style.overflow = "hidden";
@@ -371,6 +393,16 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
         .replace(/\n\n+/g, '</p><p>')
         .replace(/\n/g, '<br>');
       aiText.innerHTML = '<p>' + html + '</p>';
+
+      // persist coach output
+      if (currentUser && currentNoteVideoId) {
+        userCoach[currentNoteVideoId] = { text: '<p>' + html + '</p>', mode: currentCoachMode };
+        const sb = initSupabase();
+        await sb.from("notes").upsert(
+          { user_id: currentUser.id, video_id: currentNoteVideoId, coach_text: raw, coach_mode: currentCoachMode, updated_at: new Date().toISOString() },
+          { onConflict: "user_id,video_id" }
+        );
+      }
     } catch (e) {
       aiText.innerHTML = '<span style="color:var(--red)">Something went wrong. Try again.</span>';
     }
