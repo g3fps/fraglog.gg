@@ -56,42 +56,52 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
     </div>
   </div>
 
-  <!-- Notes Modal -->
-  <div class="notes-modal-backdrop" id="notes-modal" onclick="closeNotesModal(event)">
-    <div class="notes-modal">
-      <div class="notes-modal-header">
-        <div>
-          <div class="notes-modal-title" id="notes-modal-title"></div>
-          <div class="notes-modal-meta" id="notes-modal-meta"></div>
-        </div>
-        <button class="notes-modal-close" onclick="closeNotesDirect()">✕</button>
-      </div>
-      <div class="notes-modal-body">
-        <div class="notes-admin-box" id="notes-admin-box" style="display:none">
-          <div class="notes-admin-label">💡 Creator Note</div>
-          <div class="notes-admin-text" id="notes-admin-text"></div>
-        </div>
-        <div id="notes-ai-box" style="display:none;background:var(--darker);border-left:2px solid #7B8FA1;padding:12px 14px;margin-bottom:12px;border-radius:4px">
-          <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#7B8FA1;margin-bottom:8px">✨ Coach</div>
-          <div id="notes-ai-text" style="font-size:13px;color:var(--text);line-height:1.7"></div>
-        </div>
-        <div class="notes-user-box">
-          <div class="notes-user-label">Your Notes</div>
-          <textarea class="notes-textarea" id="notes-textarea" placeholder="Write anything — timestamps, things to study, key moments..."></textarea>
-        </div>
-      </div>
-      <div class="notes-modal-footer">
-        <span class="notes-char-count" id="notes-char-count">0 characters</span>
-        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-          <span class="notes-saved-msg" id="notes-saved-msg">✓ Saved</span>
-          <div id="coach-mode-toggle" style="display:none;align-items:center;gap:0;border:1px solid var(--border);border-radius:6px;overflow:hidden;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1px">
-            <button id="toggle-own" onclick="setCoachMode('own')" style="padding:5px 10px;background:var(--red);color:#fff;border:none;cursor:pointer;text-transform:uppercase">Your Gameplay</button>
-            <button id="toggle-pro" onclick="setCoachMode('pro')" style="padding:5px 10px;background:var(--surface2);color:var(--muted);border:none;cursor:pointer;text-transform:uppercase">Pro</button>
+  <!-- Video Modal -->
+  <div class="video-modal-backdrop" id="video-modal" onclick="closeVideoModal(event)">
+    <div class="video-modal">
+
+      <!-- Left: video + meta -->
+      <div class="video-modal-left">
+        <div class="video-modal-embed">
+          <iframe id="vm-iframe" src="" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+          <div class="video-modal-embed-fallback" id="vm-fallback">
+            <div style="font-size:32px">▶</div>
+            <div>Embedding disabled for this video</div>
+            <a id="vm-fallback-link" href="" target="_blank" rel="noopener" style="color:var(--red);font-family:'DM Mono',monospace;font-size:11px;letter-spacing:1px">Watch on YouTube →</a>
           </div>
-          <button class="notes-save-btn" style="background:var(--surface2);color:var(--muted);border:1px solid var(--border)" onclick="coachMe()" id="notes-coach-btn">✨ Coach me</button>
-          <button class="notes-save-btn" onclick="saveNoteFromModal()">Save Notes</button>
+        </div>
+        <div class="video-modal-info">
+          <div class="video-modal-title" id="vm-title"></div>
+          <div class="video-modal-meta">
+            <a class="video-modal-player" id="vm-player" href=""></a>
+            <span class="video-modal-stat" id="vm-kd" style="display:none"></span>
+            <span class="video-modal-stat" id="vm-date" style="display:none"></span>
+          </div>
+          <div class="video-modal-actions" id="vm-actions"></div>
         </div>
       </div>
+
+      <!-- Right: notes -->
+      <div class="video-modal-right">
+        <div class="video-modal-right-header">
+          <div class="video-modal-right-title">Notes</div>
+          <button class="video-modal-close" onclick="closeVideoModalDirect()">✕</button>
+        </div>
+        <div class="video-modal-right-body" id="vm-body"></div>
+        <div class="video-modal-right-footer" id="vm-footer" style="display:none">
+          <span class="vm-char-count" id="vm-char-count">0 characters</span>
+          <div class="vm-footer-right">
+            <span class="vm-saved-msg" id="vm-saved-msg">✓ Saved</span>
+            <div class="vm-coach-toggle" id="vm-coach-toggle">
+              <button id="vm-toggle-own" onclick="setVmCoachMode('own')">Your Gameplay</button>
+              <button id="vm-toggle-pro" onclick="setVmCoachMode('pro')">Pro</button>
+            </div>
+            <button class="vm-save-btn secondary" onclick="vmCoachMe()" id="vm-coach-btn">✨ Coach me</button>
+            <button class="vm-save-btn primary" onclick="vmSaveNote()">Save</button>
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
 
@@ -156,8 +166,6 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
     if (currentUser) {
       const email = currentUser.email;
       const fallbackName = email.split("@")[0];
-
-      // Load profile for username + avatar
       let username = fallbackName;
       let avatarUrl = null;
       try {
@@ -166,11 +174,9 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
         if (profile?.username) username = profile.username;
         if (profile?.avatar_url) avatarUrl = profile.avatar_url;
       } catch(e) {}
-
       const avatarHtml = avatarUrl
         ? `<img src="${avatarUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%" alt="">`
         : email[0].toUpperCase();
-
       nr.innerHTML = `<a class="user-pill" href="/settings" style="text-decoration:none"><div class="user-avatar" style="overflow:hidden">${avatarHtml}</div>${username}</a>
         <button class="auth-btn" onclick="signOut()">Sign Out</button>`;
     } else {
@@ -209,10 +215,8 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
     const errEl = document.getElementById("auth-error");
     const btn = document.querySelector(".auth-modal .primary");
     const sb = initSupabase();
-
     if (!email || !pass) { errEl.textContent = "Please fill in all fields."; errEl.style.display = "block"; return; }
     btn.textContent = "Please wait..."; btn.disabled = true;
-
     let error;
     if (authMode === "register") {
       if (pass !== confirm) { errEl.textContent = "Passwords don't match."; errEl.style.display = "block"; btn.textContent = "Create Account"; btn.disabled = false; return; }
@@ -225,11 +229,9 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
       error = e;
       if (!e) currentUser = data.user;
     }
-
     btn.disabled = false;
     btn.textContent = authMode==="login" ? "Sign In" : "Create Account";
     if (error) { errEl.textContent = error.message; errEl.style.display = "block"; return; }
-
     await loadUserData();
     const session = (await sb.auth.getSession()).data.session;
     if (session) {
@@ -294,146 +296,282 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
     );
   }
 
-  let currentNoteVideoId = null;
-  let currentCoachMode = 'pro';
+  // ── Video Modal ──────────────────────────────────────────────
+  let vmVideoId = null;
+  let vmCoachMode = 'pro';
+  let vmAgent = null;
+  let vmMap = null;
+  let vmCurrentNotes = '';
 
-  function setCoachMode(mode) {
-    currentCoachMode = mode;
-    document.getElementById('toggle-own').style.background = mode === 'own' ? 'var(--red)' : 'var(--surface2)';
-    document.getElementById('toggle-own').style.color = mode === 'own' ? '#fff' : 'var(--muted)';
-    document.getElementById('toggle-pro').style.background = mode === 'pro' ? 'var(--red)' : 'var(--surface2)';
-    document.getElementById('toggle-pro').style.color = mode === 'pro' ? '#fff' : 'var(--muted)';
-    // when switching modes, show saved coach text for that mode if it exists
-    const saved = currentNoteVideoId ? userCoach[currentNoteVideoId] : null;
-    const aiBox = document.getElementById('notes-ai-box');
-    const aiText = document.getElementById('notes-ai-text');
-    if (saved && saved.mode === mode) {
-      aiBox.style.display = 'block';
-      aiText.innerHTML = saved.text;
+  function openVideo(videoId, title, player, opts = {}) {
+    vmVideoId = videoId;
+    vmCoachMode = opts.mode || 'pro';
+    vmAgent = opts.agent || null;
+    vmMap = opts.map || null;
+    vmCurrentNotes = getUserNote(videoId) || '';
+
+    // embed
+    const iframe = document.getElementById('vm-iframe');
+    const fallback = document.getElementById('vm-fallback');
+    iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`;
+    iframe.style.display = 'block';
+    fallback.style.display = 'none';
+    document.getElementById('vm-fallback-link').href = `https://youtube.com/watch?v=${videoId}`;
+
+    // meta
+    document.getElementById('vm-title').textContent = title;
+    const playerEl = document.getElementById('vm-player');
+    playerEl.textContent = player;
+    playerEl.href = opts.playerHref || '';
+
+    const kdEl = document.getElementById('vm-kd');
+    if (opts.kd) { kdEl.textContent = opts.kd; kdEl.style.display = ''; }
+    else { kdEl.style.display = 'none'; }
+
+    const dateEl = document.getElementById('vm-date');
+    if (opts.date) { dateEl.textContent = opts.date; dateEl.style.display = ''; }
+    else { dateEl.style.display = 'none'; }
+
+    // actions
+    renderVmActions(videoId);
+
+    // notes panel
+    renderVmNotes(videoId, opts.adminNote, vmCoachMode);
+
+    document.getElementById('video-modal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function renderVmActions(videoId) {
+    const actions = document.getElementById('vm-actions');
+    const ytHref = `https://youtube.com/watch?v=${videoId}`;
+    if (currentUser) {
+      const favText = isFav(videoId) ? "♥ Saved" : "♡ Save";
+      const favClass = isFav(videoId) ? "active" : "";
+      const watchText = isWatched(videoId) ? "✓ Watched" : "✓ Mark watched";
+      const watchClass = isWatched(videoId) ? "watched" : "";
+      actions.innerHTML = `
+        <button class="vm-action-btn ${favClass}" id="vm-fav-btn" onclick="toggleFav('${videoId}', this)">${favText}</button>
+        <button class="vm-action-btn ${watchClass}" id="vm-watched-btn" onclick="toggleWatched('${videoId}', this)">${watchText}</button>
+        <a class="vm-yt-link" href="${ytHref}" target="_blank" rel="noopener">↗ YouTube</a>
+      `;
     } else {
-      aiBox.style.display = 'none';
-      aiText.innerHTML = '';
+      actions.innerHTML = `<a class="vm-yt-link" href="${ytHref}" target="_blank" rel="noopener">↗ YouTube</a>`;
     }
   }
 
-  function openNotes(videoId, title, player, adminNote, mode = 'pro') {
-    currentNoteVideoId = videoId;
-    currentCoachMode = mode;
-    document.getElementById("notes-modal-title").textContent = title;
-    document.getElementById("notes-modal-meta").textContent = player;
-    const adminBox = document.getElementById("notes-admin-box");
-    if (adminNote) { adminBox.style.display = "block"; document.getElementById("notes-admin-text").textContent = adminNote; }
-    else { adminBox.style.display = "none"; }
-    const ta = document.getElementById("notes-textarea");
-    ta.value = getUserNote(videoId);
-    document.getElementById("notes-char-count").textContent = ta.value.length + " characters";
-    document.getElementById("notes-saved-msg").style.display = "none";
-    // show/hide toggle and set active state
-    const toggle = document.getElementById('coach-mode-toggle');
-    toggle.style.display = mode === 'own' ? 'flex' : 'none';
-    // restore saved coach output if it exists for this mode
-    const saved = userCoach[videoId];
-    const aiBox = document.getElementById('notes-ai-box');
-    const aiText = document.getElementById('notes-ai-text');
-    if (saved && saved.mode === mode) {
-      aiBox.style.display = 'block';
-      aiText.innerHTML = saved.text;
-    } else {
-      aiBox.style.display = 'none';
-      aiText.innerHTML = '';
-    }
-    setCoachMode(mode);
-    document.getElementById("notes-modal").classList.add("open");
-    document.body.style.overflow = "hidden";
-    setTimeout(() => ta.focus(), 100);
-  }
+  function renderVmNotes(videoId, adminNote, mode) {
+    const body = document.getElementById('vm-body');
+    const footer = document.getElementById('vm-footer');
 
-  async function saveNoteFromModal() {
-    const text = document.getElementById("notes-textarea").value;
-    await saveNote(currentNoteVideoId, text);
-    document.getElementById("notes-saved-msg").style.display = "inline";
-    if (typeof onNoteChange === 'function') onNoteChange(currentNoteVideoId);
-  }
-
-  async function coachMe() {
-    const notes = document.getElementById("notes-textarea").value.trim();
-    if (!notes) {
-      alert("Write some notes first.");
+    if (!currentUser) {
+      body.innerHTML = `<div class="vm-login-prompt"><span onclick="openAuth()" style="color:var(--red);cursor:pointer">Sign in</span> to save notes &amp; get AI coaching</div>`;
+      footer.style.display = 'none';
       return;
     }
 
-    const title = document.getElementById("notes-modal-title").textContent;
-    const player = document.getElementById("notes-modal-meta").textContent;
-    const btn = document.getElementById("notes-coach-btn");
-    const aiBox = document.getElementById("notes-ai-box");
-    const aiText = document.getElementById("notes-ai-text");
+    const saved = userCoach[videoId];
+    const hasCoach = saved && saved.mode === mode;
 
-    btn.textContent = "✨ Coaching...";
-    btn.disabled = true;
-    aiBox.style.display = "block";
-    aiText.innerHTML = '<span style="color:var(--muted)">Analyzing your notes...</span>';
-
-    try {
-      const response = await fetch("/api/analyze", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ notes, title, player, mode: currentCoachMode })
-      });
-
-      if (!response.ok) throw new Error("API error: " + response.status);
-
-      const data = await response.json();
-      const raw = data.text || "";
-      const html = raw
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-        .replace(/^#{1,3}\s+(.+)$/gm, '<strong>$1</strong>')
-        .replace(/\n\n+/g, '</p><p>')
-        .replace(/\n/g, '<br>');
-      aiText.innerHTML = '<p>' + html + '</p>';
-
-      // persist coach output
-      if (currentUser && currentNoteVideoId) {
-        userCoach[currentNoteVideoId] = { text: '<p>' + html + '</p>', mode: currentCoachMode };
-        const sb = initSupabase();
-        await sb.from("notes").upsert(
-          { user_id: currentUser.id, video_id: currentNoteVideoId, coach_text: raw, coach_mode: currentCoachMode, updated_at: new Date().toISOString() },
-          { onConflict: "user_id,video_id" }
-        );
-      }
-    } catch (e) {
-      aiText.innerHTML = '<span style="color:var(--red)">Something went wrong. Try again.</span>';
+    if (hasCoach) {
+      renderCoachMode(saved.text, adminNote);
+    } else {
+      renderNotesMode(videoId, adminNote);
     }
 
-    btn.textContent = "✨ Coach me";
+    const toggle = document.getElementById('vm-coach-toggle');
+    if (toggle) toggle.style.display = mode === 'own' ? 'flex' : 'none';
+    setVmCoachMode(mode);
+  }
+
+  function renderNotesMode(videoId, adminNote) {
+    const body = document.getElementById('vm-body');
+    const footer = document.getElementById('vm-footer');
+
+    const saved = userCoach[videoId || vmVideoId];
+    const hasCoach = saved && saved.mode === vmCoachMode;
+
+    let html = '';
+    if (adminNote) {
+      html += `<div class="vm-admin-box">
+        <div class="vm-admin-label">💡 Creator Note</div>
+        <div class="vm-admin-text">${adminNote}</div>
+      </div>`;
+    }
+    if (hasCoach) {
+      html += `<button onclick="switchToCoachMode()" style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;background:rgba(255,70,85,0.1);border:1px solid rgba(255,70,85,0.3);color:var(--red);padding:6px 12px;border-radius:6px;cursor:pointer;align-self:flex-start">✨ View coaching →</button>`;
+    }
+    html += `<div style="display:flex;flex-direction:column;flex:1;min-height:0">
+      <div class="vm-notes-label">Your Notes</div>
+      <textarea class="vm-notes-textarea" id="vm-textarea" placeholder="Write anything — timestamps, things to study, key moments...">${getUserNote(videoId || vmVideoId)}</textarea>
+    </div>`;
+
+    body.innerHTML = html;
+    footer.style.display = 'flex';
+    document.getElementById('vm-coach-btn').textContent = '✨ Coach me';
+
+    const ta = document.getElementById('vm-textarea');
+    document.getElementById('vm-char-count').textContent = ta.value.length + ' characters';
+    ta.addEventListener('input', () => {
+      document.getElementById('vm-char-count').textContent = ta.value.length + ' characters';
+      document.getElementById('vm-saved-msg').style.display = 'none';
+    });
+  }
+
+  function switchToCoachMode() {
+    const saved = userCoach[vmVideoId];
+    if (saved) renderCoachMode(saved.text, null);
+  }
+
+  function renderCoachMode(raw, adminNote) {
+    // capture notes from textarea before it disappears
+    const ta = document.getElementById('vm-textarea');
+    if (ta && ta.value.trim()) vmCurrentNotes = ta.value.trim();
+
+    const body = document.getElementById('vm-body');
+    const footer = document.getElementById('vm-footer');
+
+    body.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
+        <div class="vm-ai-label" style="margin-bottom:0">✨ AI Coach</div>
+        <button onclick="switchToNotesMode()" style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;background:none;border:none;color:var(--muted);cursor:pointer;padding:0">← Notes</button>
+      </div>
+      <div class="vm-ai-text" id="vm-ai-text" style="flex:1;overflow-y:auto;min-height:0">${renderCoachHtml(raw)}</div>`;
+
+    footer.style.display = 'flex';
+    document.getElementById('vm-coach-btn').textContent = '✨ Regenerate';
+
+    // char count not relevant in coach mode
+    document.getElementById('vm-char-count').textContent = '';
+  }
+
+  function switchToNotesMode() {
+    const ta = document.getElementById('vm-textarea');
+    if (ta) vmCurrentNotes = ta.value.trim();
+    renderNotesMode(vmVideoId, null);
+    const toggle = document.getElementById('vm-coach-toggle');
+    if (toggle) toggle.style.display = vmCoachMode === 'own' ? 'flex' : 'none';
+  }
+
+  function setVmCoachMode(mode) {
+    vmCoachMode = mode;
+    const ownBtn = document.getElementById('vm-toggle-own');
+    const proBtn = document.getElementById('vm-toggle-pro');
+    if (ownBtn) {
+      ownBtn.style.background = mode === 'own' ? 'var(--red)' : 'var(--surface2)';
+      ownBtn.style.color = mode === 'own' ? '#fff' : 'var(--muted)';
+    }
+    if (proBtn) {
+      proBtn.style.background = mode === 'pro' ? 'var(--red)' : 'var(--surface2)';
+      proBtn.style.color = mode === 'pro' ? '#fff' : 'var(--muted)';
+    }
+  }
+
+  function renderCoachHtml(raw) {
+    const escaped = raw
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+
+    // Split into sections by bold headers (** or #)
+    const withHeaders = escaped
+      .replace(/\*\*(.+?)\*\*/g, (_, t) => `<strong>${t}</strong>`)
+      .replace(/^#{1,3}\s+(.+)$/gm, (_, t) => `<div class="vm-coach-section-header">${t}</div>`);
+
+    // Paragraphs and line breaks
+    const withBreaks = withHeaders
+      .replace(/\n\n+/g, '</p><p>')
+      .replace(/\n/g, '<br>');
+
+    return '<p>' + withBreaks + '</p>';
+  }
+
+  async function vmSaveNote() {
+    const ta = document.getElementById('vm-textarea');
+    if (!ta) return;
+    await saveNote(vmVideoId, ta.value);
+    document.getElementById('vm-saved-msg').style.display = 'inline';
+    if (typeof onNoteChange === 'function') onNoteChange(vmVideoId);
+  }
+
+  async function vmCoachMe() {
+    const ta = document.getElementById('vm-textarea');
+    const notes = ta ? ta.value.trim() : vmCurrentNotes;
+    if (!notes) { alert('Write some notes first.'); return; }
+    if (ta) vmCurrentNotes = ta.value.trim();
+
+    const btn = document.getElementById('vm-coach-btn');
+    const body = document.getElementById('vm-body');
+
+    btn.textContent = '✨ Coaching...';
+    btn.disabled = true;
+
+    // show loading state in body
+    body.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;gap:12px;color:var(--muted)">
+      <div style="font-family:'DM Mono',monospace;font-size:11px;letter-spacing:2px;text-transform:uppercase">Analyzing your notes...</div>
+    </div>`;
+
+    try {
+      const response = await fetch('/api/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          notes: notes,
+          title: document.getElementById('vm-title').textContent,
+          player: document.getElementById('vm-player').textContent,
+          mode: vmCoachMode,
+          agent: vmAgent,
+          map: vmMap
+        })
+      });
+      if (!response.ok) throw new Error('API error');
+      const data = await response.json();
+      const raw = data.text || '';
+
+      if (currentUser && vmVideoId) {
+        userCoach[vmVideoId] = { text: raw, mode: vmCoachMode };
+        const sb = initSupabase();
+        await sb.from('notes').upsert(
+          { user_id: currentUser.id, video_id: vmVideoId, coach_text: raw, coach_mode: vmCoachMode, updated_at: new Date().toISOString() },
+          { onConflict: 'user_id,video_id' }
+        );
+      }
+
+      renderCoachMode(raw, null);
+    } catch(e) {
+      body.innerHTML = `<div style="padding:1rem;color:var(--red);font-family:'DM Mono',monospace;font-size:12px">Something went wrong. Try again.</div>`;
+    }
+
+    btn.textContent = '✨ Regenerate';
     btn.disabled = false;
   }
 
-  function closeNotesDirect() {
-    document.getElementById("notes-modal").classList.remove("open");
-    document.body.style.overflow = "";
-    document.getElementById("notes-ai-box").style.display = "none";
-    document.getElementById("notes-ai-text").innerHTML = "";
-    currentNoteVideoId = null;
+  function closeVideoModalDirect() {
+    document.getElementById('vm-iframe').src = '';
+    document.getElementById('video-modal').classList.remove('open');
+    document.body.style.overflow = '';
+    vmVideoId = null;
+    vmAgent = null;
+    vmMap = null;
+    vmCurrentNotes = '';
   }
-  function closeNotesModal(e) {
-    if (e.target === document.getElementById("notes-modal")) closeNotesDirect();
+
+  function closeVideoModal(e) {
+    if (e.target === document.getElementById('video-modal')) closeVideoModalDirect();
+  }
+
+  // Legacy shim — openNotes routes into openVideo for unmigrated pages
+  function openNotes(videoId, title, player, adminNote, mode = 'pro') {
+    openVideo(videoId, title, player, { adminNote, mode });
   }
 
   document.addEventListener("DOMContentLoaded", () => {
-    const ta = document.getElementById("notes-textarea");
-    if (ta) ta.addEventListener("input", () => {
-      document.getElementById("notes-char-count").textContent = ta.value.length + " characters";
-      document.getElementById("notes-saved-msg").style.display = "none";
-    });
     document.getElementById("footer-year").textContent = `© ${new Date().getFullYear()} fraglog.gg — All rights reserved`;
     initAuth().catch(e => console.warn("Auth init failed", e));
   });
 
   document.addEventListener("keydown", e => {
-    if (e.key === "Escape") { closeNotesDirect(); closeAuthModalDirect(); }
+    if (e.key === "Escape") { closeVideoModalDirect(); closeAuthModalDirect(); }
   });
   </script>
 </body>

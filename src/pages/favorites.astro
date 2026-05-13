@@ -65,37 +65,37 @@ function renderFavorites() {
   }
 
   container.innerHTML = `<div class="video-grid">${found.map(v => `
-    <div class="video-card" id="vc-${v.id}">
-      <div class="video-thumb" data-vid="${v.id}" style="cursor:pointer">
+    <div class="video-card"
+      data-vid="${v.id}"
+      data-title="${v.title.replace(/"/g, '&quot;')}"
+      data-player="${v.player}"
+      data-note="${(v.note || '').replace(/"/g, '&quot;')}"
+      style="cursor:pointer"
+    >
+      <div class="video-thumb">
         <img src="https://img.youtube.com/vi/${v.id}/mqdefault.jpg" alt="${v.title}" loading="lazy">
         <div class="play-overlay"><div class="play-icon"><div class="play-tri"></div></div></div>
       </div>
-      <button class="fav-btn active" onclick="toggleFav('${v.id}',this)" title="Remove from favorites">♥</button>
       <div class="video-info">
         <div class="video-tag-row">
           <span class="video-map-tag">${v.mapName}</span>
           <span class="video-agent-tag">${v.agentName}</span>
         </div>
-        <div class="video-title" data-vid="${v.id}" style="cursor:pointer">${v.title}</div>
+        <div class="video-title">${v.title}</div>
         <div class="video-meta-row">
           <span class="video-player">${v.player}</span>
           ${v.date ? `<span class="video-date">${new Date(v.date).toLocaleDateString('en-US',{month:'short',year:'numeric'})}</span>` : ''}
-        </div>
-        <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);display:flex;gap:6px;flex-wrap:wrap">
-          <button class="notes-btn ${getUserNote(v.id)?'has-note':''}" onclick="openNotes('${v.id}','${v.title.replace(/'/g,"\\'")}','${v.player}')">
-            📝 ${getUserNote(v.id) ? 'View notes' : 'Add notes'}
-          </button>
-          <button class="notes-btn ${isWatched(v.id)?'watched':''}" onclick="toggleWatched('${v.id}',this)">
-            ${isWatched(v.id) ? '✓ Watched' : '✓ Mark watched'}
-          </button>
         </div>
       </div>
     </div>
   `).join("")}</div>`;
 
   container.onclick = e => {
-    const el = e.target.closest("[data-vid]");
-    if (el && !e.target.closest("button")) window.open("https://youtube.com/watch?v=" + el.dataset.vid, "_blank");
+    const card = e.target.closest('.video-card[data-vid]');
+    if (!card || e.target.closest('button') || e.target.closest('a')) return;
+    openVideo(card.dataset.vid, card.dataset.title, card.dataset.player, {
+      adminNote: card.dataset.note || ''
+    });
   };
 }
 
