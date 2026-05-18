@@ -193,7 +193,7 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
     userTimestamps[videoId] = seconds;
     const sb = initSupabase();
     await sb.from('watched').upsert(
-      { user_id: currentUser.id, video_id: videoId, timestamp: seconds, updated_at: new Date().toISOString() },
+      { user_id: currentUser.id, video_id: videoId, resume_at: seconds, updated_at: new Date().toISOString() },
       { onConflict: 'user_id,video_id' }
     );
   }
@@ -229,11 +229,11 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
       userNotes[n.video_id] = n.content;
       if (n.coach_text) userCoach[n.video_id] = { text: n.coach_text, mode: n.coach_mode || 'pro' };
     });
-    const { data: watched } = await sb.from("watched").select("video_id, timestamp").eq("user_id", currentUser.id);
+    const { data: watched } = await sb.from("watched").select("video_id, resume_at").eq("user_id", currentUser.id);
     userWatched = (watched||[]).map(w => w.video_id);
     userTimestamps = {};
     (watched||[]).forEach(w => {
-      if (w.timestamp) userTimestamps[w.video_id] = w.timestamp;
+      if (w.resume_at) userTimestamps[w.video_id] = w.resume_at;
     });
   }
 
