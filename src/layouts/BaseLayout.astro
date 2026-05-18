@@ -26,6 +26,7 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <script defer src="https://cdn.vercel-insights.com/v1/script.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" is:inline></script>
+  <script src="https://www.youtube.com/iframe_api" is:inline></script>
 </head>
 <body>
   <div id="map-bg-layer"></div>
@@ -63,7 +64,7 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
       <!-- Left: video + meta -->
       <div class="video-modal-left">
         <div class="video-modal-embed">
-          <iframe id="vm-iframe" src="" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+          <div id="yt-player"></div>
           <div class="video-modal-embed-fallback" id="vm-fallback">
             <div style="font-size:32px">▶</div>
             <div>Embedding disabled for this video</div>
@@ -128,6 +129,78 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
   let userNotes = {};
   let userCoach = {};
   let userWatched = [];
+  let userTimestamps = {};
+
+  // ── YouTube IFrame API ────────────────────────────────────────
+  let ytPlayer = null;
+  let ytReady = false;
+  let ytPendingVideoId = null;
+  let ytPendingStart = 0;
+  let ytTimestampSaveInterval = null;
+
+  window.onYouTubeIframeAPIReady = function() {
+    ytReady = true;
+    ytPlayer = new YT.Player('yt-player', {
+      height: '100%',
+      width: '100%',
+      playerVars: { autoplay: 1, rel: 0, modestbranding: 1 },
+      events: {
+        onReady: function(e) {
+          if (ytPendingVideoId) {
+            e.target.loadVideoById({ videoId: ytPendingVideoId, startSeconds: ytPendingStart });
+            ytPendingVideoId = null;
+            ytPendingStart = 0;
+          }
+        },
+        onStateChange: function(e) {
+          // YT.PlayerState.PAUSED = 2, ENDED = 0
+          if (e.data === 2 || e.data === 0) {
+            saveTimestamp(vmVideoId, Math.floor(e.target.getCurrentTime()));
+          }
+        },
+        onError: function() {
+          // Embedding disabled — show fallback
+          document.getElementById('yt-player').style.display = 'none';
+          document.getElementById('vm-fallback').style.display = 'flex';
+        }
+      }
+    });
+  };
+
+  function loadYtVideo(videoId, startSeconds) {
+    document.getElementById('yt-player').style.display = 'block';
+    document.getElementById('vm-fallback').style.display = 'none';
+
+    if (ytPlayer && typeof ytPlayer.loadVideoById === 'function') {
+      ytPlayer.loadVideoById({ videoId, startSeconds: startSeconds || 0 });
+    } else {
+      ytPendingVideoId = videoId;
+      ytPendingStart = startSeconds || 0;
+    }
+
+    // Save timestamp every 10 seconds while watching
+    clearInterval(ytTimestampSaveInterval);
+    ytTimestampSaveInterval = setInterval(() => {
+      if (ytPlayer && typeof ytPlayer.getCurrentTime === 'function' && vmVideoId) {
+        const t = Math.floor(ytPlayer.getCurrentTime());
+        if (t > 0) saveTimestamp(vmVideoId, t);
+      }
+    }, 10000);
+  }
+
+  async function saveTimestamp(videoId, seconds) {
+    if (!currentUser || !videoId || !seconds) return;
+    userTimestamps[videoId] = seconds;
+    const sb = initSupabase();
+    await sb.from('watched').upsert(
+      { user_id: currentUser.id, video_id: videoId, timestamp: seconds, updated_at: new Date().toISOString() },
+      { onConflict: 'user_id,video_id' }
+    );
+  }
+
+  function getTimestamp(videoId) {
+    return userTimestamps[videoId] || 0;
+  }
 
   async function initAuth() {
     const sb = initSupabase();
@@ -156,8 +229,12 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
       userNotes[n.video_id] = n.content;
       if (n.coach_text) userCoach[n.video_id] = { text: n.coach_text, mode: n.coach_mode || 'pro' };
     });
-    const { data: watched } = await sb.from("watched").select("video_id").eq("user_id", currentUser.id);
+    const { data: watched } = await sb.from("watched").select("video_id, timestamp").eq("user_id", currentUser.id);
     userWatched = (watched||[]).map(w => w.video_id);
+    userTimestamps = {};
+    (watched||[]).forEach(w => {
+      if (w.timestamp) userTimestamps[w.video_id] = w.timestamp;
+    });
   }
 
   async function renderNav() {
@@ -246,7 +323,7 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
   async function signOut() {
     const sb = initSupabase();
     await sb.auth.signOut();
-    currentUser = null; userFavorites = []; userNotes = {}; userCoach = {}; userWatched = [];
+    currentUser = null; userFavorites = []; userNotes = {}; userCoach = {}; userWatched = []; userTimestamps = {};
     renderNav();
     document.cookie = 'sb-access-token=; path=/; max-age=0';
     document.cookie = 'sb-refresh-token=; path=/; max-age=0';
@@ -310,12 +387,9 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
     vmMap = opts.map || null;
     vmCurrentNotes = getUserNote(videoId) || '';
 
-    // embed
-    const iframe = document.getElementById('vm-iframe');
-    const fallback = document.getElementById('vm-fallback');
-    iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`;
-    iframe.style.display = 'block';
-    fallback.style.display = 'none';
+    // Load video, resuming from saved timestamp if available
+    const startSeconds = getTimestamp(videoId);
+    loadYtVideo(videoId, startSeconds);
     document.getElementById('vm-fallback-link').href = `https://youtube.com/watch?v=${videoId}`;
 
     // meta
@@ -424,7 +498,6 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
   }
 
   function renderCoachMode(raw, adminNote) {
-    // capture notes from textarea before it disappears
     const ta = document.getElementById('vm-textarea');
     if (ta && ta.value.trim()) vmCurrentNotes = ta.value.trim();
 
@@ -440,8 +513,6 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
 
     footer.style.display = 'flex';
     document.getElementById('vm-coach-btn').textContent = '✨ Regenerate';
-
-    // char count not relevant in coach mode
     document.getElementById('vm-char-count').textContent = '';
   }
 
@@ -473,12 +544,10 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;');
 
-    // Split into sections by bold headers (** or #)
     const withHeaders = escaped
       .replace(/\*\*(.+?)\*\*/g, (_, t) => `<strong>${t}</strong>`)
       .replace(/^#{1,3}\s+(.+)$/gm, (_, t) => `<div class="vm-coach-section-header">${t}</div>`);
 
-    // Paragraphs and line breaks
     const withBreaks = withHeaders
       .replace(/\n\n+/g, '</p><p>')
       .replace(/\n/g, '<br>');
@@ -506,7 +575,6 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
     btn.textContent = '✨ Coaching...';
     btn.disabled = true;
 
-    // show loading state in body
     body.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;gap:12px;color:var(--muted)">
       <div style="font-family:'DM Mono',monospace;font-size:11px;letter-spacing:2px;text-transform:uppercase">Analyzing your notes...</div>
     </div>`;
@@ -547,7 +615,13 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
   }
 
   function closeVideoModalDirect() {
-    document.getElementById('vm-iframe').src = '';
+    // Save timestamp before closing
+    if (ytPlayer && typeof ytPlayer.getCurrentTime === 'function' && vmVideoId) {
+      const t = Math.floor(ytPlayer.getCurrentTime());
+      if (t > 0) saveTimestamp(vmVideoId, t);
+      ytPlayer.stopVideo();
+    }
+    clearInterval(ytTimestampSaveInterval);
     document.getElementById('video-modal').classList.remove('open');
     document.body.style.overflow = '';
     vmVideoId = null;
@@ -560,7 +634,7 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
     if (e.target === document.getElementById('video-modal')) closeVideoModalDirect();
   }
 
-  // Legacy shim — openNotes routes into openVideo for unmigrated pages
+  // Legacy shim
   function openNotes(videoId, title, player, adminNote, mode = 'pro') {
     openVideo(videoId, title, player, { adminNote, mode });
   }
