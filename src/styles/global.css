@@ -810,7 +810,7 @@ footer {
   position: fixed; inset: 0; z-index: 1000;
   background: rgba(0,0,0,0.85);
   display: none; align-items: center; justify-content: center;
-  padding: 1rem; backdrop-filter: blur(8px);
+  padding: 0.5rem; backdrop-filter: blur(8px);
 }
 .video-modal-backdrop.open { display: flex; animation: fadeIn 0.2s ease; }
 
@@ -818,10 +818,10 @@ footer {
   background: var(--darker);
   border: 1px solid var(--border);
   border-radius: 12px;
-  width: 100%; max-width: 1500px;
+  width: 100%; max-width: 1800px;
   min-width: 700px; min-height: 400px;
   position: relative;
-  padding-right: 500px;
+  padding-right: 560px;
   overflow: auto;
   resize: both;
 }
@@ -908,7 +908,7 @@ footer {
   position: absolute;
   min-height: 600px;
   top: 0; right: 0; bottom: 0;
-  width: 500px;
+  width: 560px;
 }
 .video-modal-right-header {
   padding: 14px 16px; border-bottom: 1px solid var(--border);
@@ -1032,6 +1032,85 @@ footer {
 .vm-save-btn.primary { background: var(--red); color: #fff; }
 .vm-save-btn.primary:hover { background: #e03040; }
 .vm-save-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ── ROUND TABLE ─────────────────────────────────────────── */
+.vm-rounds-scroll {
+  flex: 1; min-height: 0; overflow-y: auto;
+  border: 1px solid var(--border); border-radius: 4px;
+  background: var(--darker);
+  display: flex; flex-direction: column;
+}
+.vm-rounds-table { flex: 1; }
+.vm-rounds-header {
+  display: grid; grid-template-columns: 32px 1fr 1fr;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border);
+  font-family: 'DM Mono', monospace; font-size: 9px;
+  letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted);
+  position: sticky; top: 0; background: var(--darker); z-index: 1;
+}
+.vm-round-row {
+  display: grid; grid-template-columns: 32px 1fr 1fr;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.vm-round-row:last-child { border-bottom: none; }
+.vm-round-num {
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  color: var(--muted); border-right: 1px solid rgba(255,255,255,0.04);
+  flex-shrink: 0;
+}
+.vm-round-input {
+  background: none; border: none; border-right: 1px solid rgba(255,255,255,0.04);
+  color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 12px;
+  padding: 6px 8px; outline: none; width: 100%;
+  transition: background 0.1s;
+}
+.vm-round-input:last-child { border-right: none; }
+.vm-round-input:focus { background: rgba(255,255,255,0.03); }
+.vm-round-input::placeholder { color: var(--muted); opacity: 0.5; }
+.vm-add-round-btn {
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  letter-spacing: 1px; text-transform: uppercase;
+  background: none; border: none; border-top: 1px solid var(--border);
+  color: var(--muted); padding: 8px; cursor: pointer;
+  text-align: center; width: 100%; flex-shrink: 0;
+  transition: color 0.15s;
+}
+.vm-add-round-btn:hover { color: var(--text); }
+
+/* ── FOLLOW-UP ───────────────────────────────────────────── */
+.vm-followup-box {
+  display: flex; align-items: center; gap: 8px;
+  border-top: 1px solid var(--border);
+  padding: 10px 0 0; flex-shrink: 0;
+}
+.vm-followup-input {
+  flex: 1; background: var(--darker); border: 1px solid var(--border);
+  color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 13px;
+  padding: 8px 12px; border-radius: 4px; outline: none;
+  transition: border-color 0.15s;
+}
+.vm-followup-input:focus { border-color: rgba(255,70,85,0.4); }
+.vm-followup-input::placeholder { color: var(--muted); }
+.vm-followup-btn {
+  background: var(--surface2); border: 1px solid var(--border);
+  color: var(--text); font-size: 16px; width: 36px; height: 36px;
+  border-radius: 4px; cursor: pointer; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s;
+}
+.vm-followup-btn:hover { background: var(--red); border-color: var(--red); color: #fff; }
+.vm-followup-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.vm-followup-response {
+  border-top: 1px solid var(--border);
+  margin-top: 12px; padding-top: 12px;
+}
+.vm-followup-question {
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  letter-spacing: 1px; text-transform: uppercase;
+  color: var(--red); margin-bottom: 8px;
+}
 
 /* ── RESPONSIVE ──────────────────────────────────────────── */
 @media (max-width: 768px) {

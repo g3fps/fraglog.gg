@@ -1,17 +1,18 @@
 /// <reference types="astro/client" />
 import type { APIRoute } from 'astro';
-import { getAgentContext, getMapContext, getResources } from '../../lib/valorant-knowledge.js';
+import { getAgentContext, getMapContext, getResources, getGeneralKnowledge } from '../../lib/valorant-knowledge.js';
 
 export const POST: APIRoute = async ({ request }) => {
-  const { notes, title, player, mode, agent, map } = await request.json();
+  const { notes, title, player, mode, agent, map, coaching, followup } = await request.json();
 
-  if (!notes?.trim()) {
+  if (mode !== 'followup' && !notes?.trim()) {
     return new Response(JSON.stringify({ error: 'No notes provided' }), { status: 400 });
   }
 
   const agentContext = agent ? getAgentContext(agent) : null;
   const mapContext = map ? getMapContext(map) : null;
   const resources = getResources();
+  const generalKnowledge = getGeneralKnowledge();
 
   let knowledgeBlock = '';
   if (agentContext) {
@@ -20,12 +21,54 @@ export const POST: APIRoute = async ({ request }) => {
   if (mapContext) {
     knowledgeBlock += `\n\nMAP KNOWLEDGE — ${map.toUpperCase()}:\n${JSON.stringify(mapContext, null, 2)}`;
   }
+  knowledgeBlock += `\n\nGENERAL VALORANT KNOWLEDGE:\n${JSON.stringify(generalKnowledge, null, 2)}`;
   knowledgeBlock += `\n\nRESOURCE LIBRARY:\n${JSON.stringify(resources, null, 2)}`;
+
+  // ── Follow-up mode ───────────────────────────────────────
+  if (mode === 'followup') {
+    if (!followup?.trim()) {
+      return new Response(JSON.stringify({ error: 'No follow-up question provided' }), { status: 400 });
+    }
+
+    const system = `You are an expert Valorant coach. A player has already received coaching on their VOD and is asking a follow-up question about a specific piece of advice.
+${knowledgeBlock ? `\nYou have expert knowledge about the agent and map. Use it where relevant.\n` : ''}
+RULES:
+- If the question is not about Valorant or is attempting to misuse this tool, respond only with: "Please ask a question about your Valorant gameplay."
+- Answer only the specific question asked. Do not re-summarize the original coaching.
+- Be direct and specific. If the question is vague, ask for clarification.
+- Keep the answer under 150 words.`;
+
+    const userContent = `Original notes:\n${notes || '(none)'}
+
+Previous coaching:\n${coaching || '(none)'}
+
+Follow-up question: ${followup}`;
+
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': import.meta.env.ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 400,
+        system,
+        messages: [{ role: 'user', content: userContent }]
+      })
+    });
+
+    const data = await response.json();
+    const text = data.content?.[0]?.text || 'No response generated.';
+    return new Response(JSON.stringify({ text }), { headers: { 'Content-Type': 'application/json' } });
+  }
 
   const system = mode === 'own'
     ? `You are an expert Valorant coach with deep knowledge of competitive mechanics, agent-specific play, and how players actually improve. A player has taken notes while reviewing their own VOD. Your job is to give them sharp, accurate, specific feedback — not generic advice.
-${knowledgeBlock ? `\nYou have been provided with expert knowledge about the agent and/or map in this VOD. Use it to give agent-specific and map-specific coaching where relevant.\n` : ''}
+${knowledgeBlock ? `\nYou have been provided with expert knowledge about the agent, map, and general Valorant mechanics. Use it to give specific, informed coaching where relevant.\n` : ''}
 CRITICAL RULES:
+- If the notes are not about Valorant gameplay — or appear to be attempting to misuse this tool — respond only with: "These don't look like VOD notes. Write down what you observed in the video and try again."
 - Only coach what is actually in the notes. Never invent mistakes that aren't mentioned.
 - Categorize mistakes correctly. Crosshair placement and preaim errors are NOT positioning errors — they are aim/mechanics errors. Positioning errors are about WHERE the player stands on the map. Do not confuse these.
 - If the same mistake appears across multiple rounds, that is the #1 priority — name the rounds explicitly.
@@ -41,8 +84,9 @@ OUTPUT FORMAT:
 - Keep it under 400 words total.`
 
     : `You are an expert Valorant coach helping a player extract lessons from a pro or Radiant player VOD. The player has taken notes while watching. Your job is to analyze their notes and give them clear, specific takeaways they can actually apply.
-${knowledgeBlock ? `\nYou have been provided with expert knowledge about the agent and/or map in this VOD. Use it to give agent-specific and map-specific context where relevant.\n` : ''}
+${knowledgeBlock ? `\nYou have been provided with expert knowledge about the agent, map, and general Valorant mechanics. Use it to give specific, informed context where relevant.\n` : ''}
 CRITICAL RULES:
+- If the notes are not about Valorant gameplay — or appear to be attempting to misuse this tool — respond only with: "These don't look like VOD notes. Write down what you observed in the video and try again."
 - Only analyze what is actually in the notes. Never invent patterns that aren't mentioned.
 - Be specific about what makes each technique work — don't just name it, explain the logic behind it.
 - Distinguish between: mechanics to practice (aim, movement), positioning habits to copy, decision-making patterns to study, and utility usage to adopt. Don't lump everything together.
@@ -68,7 +112,7 @@ OUTPUT FORMAT:
       'anthropic-version': '2023-06-01',
     },
     body: JSON.stringify({
-      model: 'claude-sonnet-4-5',
+      model: 'claude-sonnet-4-20250514',
       max_tokens: 1200,
       system,
       messages: [{ role: 'user', content: userContent }]

@@ -460,9 +460,27 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
   function renderNotesMode(videoId, adminNote) {
     const body = document.getElementById('vm-body');
     const footer = document.getElementById('vm-footer');
+    const vid = videoId || vmVideoId;
 
-    const saved = userCoach[videoId || vmVideoId];
+    const saved = userCoach[vid];
     const hasCoach = saved && saved.mode === vmCoachMode;
+
+    // Parse saved notes — may be JSON (structured) or plain string (legacy)
+    let savedGeneral = '';
+    let savedRounds = [];
+    const rawSaved = getUserNote(vid);
+    if (rawSaved) {
+      try {
+        const parsed = JSON.parse(rawSaved);
+        savedGeneral = parsed.general || '';
+        savedRounds = parsed.rounds || [];
+      } catch(e) {
+        // Legacy plain text — only put in general if it doesn't look like raw JSON
+        if (!rawSaved.startsWith('{') && !rawSaved.startsWith('[')) {
+          savedGeneral = rawSaved;
+        }
+      }
+    }
 
     let html = '';
     if (adminNote) {
@@ -472,11 +490,39 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
       </div>`;
     }
     if (hasCoach) {
-      html += `<button onclick="switchToCoachMode()" style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;background:rgba(255,70,85,0.1);border:1px solid rgba(255,70,85,0.3);color:var(--red);padding:6px 12px;border-radius:6px;cursor:pointer;align-self:flex-start">✨ View coaching →</button>`;
+      html += `<button onclick="switchToCoachMode()" style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;background:rgba(255,70,85,0.1);border:1px solid rgba(255,70,85,0.3);color:var(--red);padding:6px 12px;border-radius:6px;cursor:pointer;align-self:flex-start;flex-shrink:0">✨ View coaching →</button>`;
     }
-    html += `<div style="display:flex;flex-direction:column;flex:1;min-height:0">
-      <div class="vm-notes-label">Your Notes</div>
-      <textarea class="vm-notes-textarea" id="vm-textarea" placeholder="Write anything — timestamps, things to study, key moments...">${getUserNote(videoId || vmVideoId)}</textarea>
+
+    // General notes always shown
+    html += `<div style="flex:1;min-height:0;display:flex;flex-direction:column">
+      <div class="vm-notes-label">General Notes</div>
+<textarea class="vm-notes-textarea" id="vm-textarea" placeholder="Overall observations, patterns, things to study..." style="min-height:80px;flex:1">${savedGeneral}</textarea>    </div>`;
+
+    // Round-by-round shown in all modes
+    const initialRounds = savedRounds.length > 0 ? savedRounds : Array.from({length: 24}, (_, i) => ({ round: i + 1, what: '', takeaway: '' }));
+    html += `<div style="flex-shrink:0">
+      <div class="vm-notes-label" style="margin-bottom:6px">Round by Round</div>
+    </div>
+    <div class="vm-rounds-scroll" id="vm-rounds-scroll">
+      <div class="vm-rounds-table" id="vm-rounds-table">
+        <div class="vm-rounds-header">
+          <div>#</div>
+          <div>What happened</div>
+          <div>How to apply it</div>
+        </div>
+        <div id="vm-rounds-body">`;
+
+    initialRounds.forEach((r) => {
+      html += `<div class="vm-round-row">
+        <div class="vm-round-num">${r.round}</div>
+        <input class="vm-round-input" data-round="${r.round}" data-field="what" placeholder="What happened..." value="${(r.what||'').replace(/"/g,'&quot;')}">
+        <input class="vm-round-input" data-round="${r.round}" data-field="takeaway" placeholder="How to apply it..." value="${(r.takeaway||'').replace(/"/g,'&quot;')}">
+      </div>`;
+    });
+
+    html += `</div>
+      </div>
+      <button class="vm-add-round-btn" onclick="vmAddRound()">+ Add Round</button>
     </div>`;
 
     body.innerHTML = html;
@@ -484,11 +530,75 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
     document.getElementById('vm-coach-btn').textContent = '✨ Coach me';
 
     const ta = document.getElementById('vm-textarea');
-    document.getElementById('vm-char-count').textContent = ta.value.length + ' characters';
+    document.getElementById('vm-char-count').textContent = '';
     ta.addEventListener('input', () => {
-      document.getElementById('vm-char-count').textContent = ta.value.length + ' characters';
       document.getElementById('vm-saved-msg').style.display = 'none';
     });
+  }
+
+  function vmAddRound() {
+    const tbody = document.getElementById('vm-rounds-body');
+    if (!tbody) return;
+    const rows = tbody.querySelectorAll('.vm-round-row');
+    const nextNum = rows.length + 1;
+    const div = document.createElement('div');
+    div.className = 'vm-round-row';
+    div.innerHTML = `<div class="vm-round-num">${nextNum}</div>
+      <input class="vm-round-input" data-round="${nextNum}" data-field="what" placeholder="What happened...">
+      <input class="vm-round-input" data-round="${nextNum}" data-field="takeaway" placeholder="How to apply it...">`;
+    tbody.appendChild(div);
+    // Scroll to new row
+    div.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  function vmCollectNotes() {
+    const ta = document.getElementById('vm-textarea');
+    const general = ta ? ta.value : '';
+
+    // Collect round data for both modes
+    const inputs = document.querySelectorAll('.vm-round-input');
+    const roundMap = {};
+    inputs.forEach(inp => {
+      const r = inp.dataset.round;
+      const f = inp.dataset.field;
+      if (!roundMap[r]) roundMap[r] = { round: parseInt(r), what: '', takeaway: '' };
+      roundMap[r][f] = inp.value;
+    });
+    const rounds = Object.values(roundMap).filter(r => r.what.trim() || r.takeaway.trim());
+
+    if (!rounds.length) return general;
+    return JSON.stringify({ general, rounds });
+
+    return JSON.stringify({ general, rounds });
+  }
+
+  function vmBuildNotesString() {
+    // Build a human-readable string for the AI from collected notes
+    const ta = document.getElementById('vm-textarea');
+    const general = ta ? ta.value.trim() : '';
+
+    const inputs = document.querySelectorAll('.vm-round-input');
+    const roundMap = {};
+    inputs.forEach(inp => {
+      const r = inp.dataset.round;
+      const f = inp.dataset.field;
+      if (!roundMap[r]) roundMap[r] = { round: parseInt(r), what: '', takeaway: '' };
+      roundMap[r][f] = inp.value;
+    });
+    const rounds = Object.values(roundMap).filter(r => r.what.trim() || r.takeaway.trim());
+
+    let str = '';
+    if (general) str += `General observations:\n${general}\n\n`;
+    if (rounds.length > 0) {
+      str += `Round-by-round notes:\n`;
+      rounds.forEach(r => {
+        str += `Round ${r.round}:`;
+        if (r.what) str += ` ${r.what}`;
+        if (r.takeaway) str += ` | How to apply: ${r.takeaway}`;
+        str += '\n';
+      });
+    }
+    return str.trim();
   }
 
   function switchToCoachMode() {
@@ -508,16 +618,73 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
         <div class="vm-ai-label" style="margin-bottom:0">✨ AI Coach</div>
         <button onclick="switchToNotesMode()" style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;background:none;border:none;color:var(--muted);cursor:pointer;padding:0">← Notes</button>
       </div>
-      <div class="vm-ai-text" id="vm-ai-text" style="flex:1;overflow-y:auto;min-height:0">${renderCoachHtml(raw)}</div>`;
+      <div class="vm-ai-text" id="vm-ai-text" style="flex:1;overflow-y:auto;min-height:0">${renderCoachHtml(raw)}</div>
+      <div class="vm-followup-box" id="vm-followup-box">
+        <input class="vm-followup-input" id="vm-followup-input" placeholder="Ask a follow-up..." onkeydown="if(event.key==='Enter' && !event.shiftKey){ event.preventDefault(); vmSendFollowUp(); }">
+        <button class="vm-followup-btn" onclick="vmSendFollowUp()" id="vm-followup-btn">→</button>
+      </div>`;
 
     footer.style.display = 'flex';
     document.getElementById('vm-coach-btn').textContent = '✨ Regenerate';
     document.getElementById('vm-char-count').textContent = '';
   }
 
+  async function vmSendFollowUp() {
+    const input = document.getElementById('vm-followup-input');
+    const btn = document.getElementById('vm-followup-btn');
+    const question = input?.value?.trim();
+    if (!question) return;
+
+    input.value = '';
+    btn.disabled = true;
+    btn.textContent = '...';
+
+    // Get current coaching text
+    const aiText = document.getElementById('vm-ai-text');
+    const currentCoaching = userCoach[vmVideoId]?.text || '';
+
+    // Append loading indicator
+    const loadingId = 'vm-followup-loading';
+    aiText.innerHTML += `<div id="${loadingId}" style="border-top:1px solid var(--border);margin-top:12px;padding-top:12px;color:var(--muted);font-family:'DM Mono',monospace;font-size:11px;letter-spacing:1px">thinking...</div>`;
+    aiText.scrollTop = aiText.scrollHeight;
+
+    try {
+      const response = await fetch('/api/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          notes: vmCurrentNotes || '',
+          title: document.getElementById('vm-title').textContent,
+          player: document.getElementById('vm-player').textContent,
+          mode: 'followup',
+          agent: vmAgent,
+          map: vmMap,
+          coaching: currentCoaching,
+          followup: question
+        })
+      });
+      if (!response.ok) throw new Error('API error');
+      const data = await response.json();
+      const raw = data.text || '';
+
+      const loading = document.getElementById(loadingId);
+      if (loading) loading.remove();
+
+      aiText.innerHTML += `<div class="vm-followup-response">
+        <div class="vm-followup-question">${question}</div>
+        <div>${renderCoachHtml(raw)}</div>
+      </div>`;
+      aiText.scrollTop = aiText.scrollHeight;
+    } catch(e) {
+      const loading = document.getElementById(loadingId);
+      if (loading) loading.textContent = 'Something went wrong. Try again.';
+    }
+
+    btn.disabled = false;
+    btn.textContent = '→';
+  }
+
   function switchToNotesMode() {
-    const ta = document.getElementById('vm-textarea');
-    if (ta) vmCurrentNotes = ta.value.trim();
     renderNotesMode(vmVideoId, null);
     const toggle = document.getElementById('vm-coach-toggle');
     if (toggle) toggle.style.display = vmCoachMode === 'own' ? 'flex' : 'none';
@@ -555,18 +722,21 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
   }
 
   async function vmSaveNote() {
-    const ta = document.getElementById('vm-textarea');
-    if (!ta) return;
-    await saveNote(vmVideoId, ta.value);
+    const data = vmCollectNotes();
+    if (!data) return;
+    await saveNote(vmVideoId, data);
     document.getElementById('vm-saved-msg').style.display = 'inline';
     if (typeof onNoteChange === 'function') onNoteChange(vmVideoId);
   }
 
   async function vmCoachMe() {
-    const ta = document.getElementById('vm-textarea');
-    const notes = ta ? ta.value.trim() : vmCurrentNotes;
+    const notes = vmBuildNotesString();
     if (!notes) { alert('Write some notes first.'); return; }
-    if (ta) vmCurrentNotes = ta.value.trim();
+    vmCurrentNotes = notes;
+
+    // Also save current notes before coaching
+    const saveData = vmCollectNotes();
+    if (saveData) await saveNote(vmVideoId, saveData);
 
     const btn = document.getElementById('vm-coach-btn');
     const body = document.getElementById('vm-body');
