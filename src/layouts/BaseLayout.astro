@@ -34,6 +34,19 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
   <div id="map-bg-layer"></div>
   <slot />
 
+  <!-- Coaching Data Sharing Popup -->
+  <div class="coaching-share-backdrop" id="coaching-share-modal">
+    <div class="coaching-share-modal">
+      <div class="coaching-share-icon">🧠</div>
+      <h3 class="coaching-share-title">Help improve FragLog's AI Coach</h3>
+      <p class="coaching-share-body">Can we anonymously use your VOD notes and coaching responses to improve the AI coach for everyone? Your data is never sold or shared with third parties.</p>
+      <div class="coaching-share-actions">
+        <button class="coaching-share-btn secondary" onclick="setShareCoaching(false)">No thanks</button>
+        <button class="coaching-share-btn primary" onclick="setShareCoaching(true)">Yes, share anonymously</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Auth Modal -->
   <div class="auth-modal-backdrop" id="auth-modal" onclick="closeAuthModal(event)">
     <div class="auth-modal">
@@ -132,6 +145,7 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
   let userCoach = {};
   let userWatched = [];
   let userTimestamps = {};
+  let userShareCoaching = null; // null = never asked, true/false = preference set
 
   // ── YouTube IFrame API ────────────────────────────────────────
   let ytPlayer = null;
@@ -242,6 +256,10 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
     (watched||[]).forEach(w => {
       if (w.resume_at) userTimestamps[w.video_id] = w.resume_at;
     });
+
+    // Load share_coaching preference
+    const { data: profile } = await sb.from('profiles').select('share_coaching').eq('id', currentUser.id).maybeSingle();
+    userShareCoaching = profile?.share_coaching ?? null;
   }
 
   async function renderNav() {
@@ -732,10 +750,38 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
     if (typeof onNoteChange === 'function') onNoteChange(vmVideoId);
   }
 
+  async function setShareCoaching(value) {
+    document.getElementById('coaching-share-modal').classList.remove('open');
+    userShareCoaching = value;
+    if (!currentUser) return;
+    const sb = initSupabase();
+    await sb.from('profiles').upsert(
+      { id: currentUser.id, share_coaching: value, updated_at: new Date().toISOString() },
+      { onConflict: 'id' }
+    );
+    // If they just accepted, proceed with the pending coach request
+    if (value && window.__pendingCoachFn) {
+      window.__pendingCoachFn();
+      window.__pendingCoachFn = null;
+    }
+  }
+
   async function vmCoachMe() {
     const notes = vmBuildNotesString();
     if (!notes) { alert('Write some notes first.'); return; }
     vmCurrentNotes = notes;
+
+    // Show popup if user hasn't been asked yet
+    if (currentUser && userShareCoaching === null) {
+      window.__pendingCoachFn = () => _runCoachMe(notes);
+      document.getElementById('coaching-share-modal').classList.add('open');
+      return;
+    }
+
+    _runCoachMe(notes);
+  }
+
+  async function _runCoachMe(notes) {
 
     // Also save current notes before coaching
     const saveData = vmCollectNotes();
@@ -761,7 +807,9 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
           player: document.getElementById('vm-player').textContent,
           mode: vmCoachMode,
           agent: vmAgent,
-          map: vmMap
+          map: vmMap,
+          userId: currentUser?.id || null,
+          shareCoaching: userShareCoaching === true
         })
       });
       if (!response.ok) throw new Error('API error');

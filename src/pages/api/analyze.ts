@@ -1,9 +1,10 @@
 /// <reference types="astro/client" />
 import type { APIRoute } from 'astro';
+import { createClient } from '@supabase/supabase-js';
 import { getAgentContext, getMapContext, getResources, getGeneralKnowledge } from '../../lib/valorant-knowledge.js';
 
 export const POST: APIRoute = async ({ request }) => {
-  const { notes, title, player, mode, agent, map, coaching, followup } = await request.json();
+  const { notes, title, player, mode, agent, map, coaching, followup, userId, shareCoaching } = await request.json();
 
   if (mode !== 'followup' && !notes?.trim()) {
     return new Response(JSON.stringify({ error: 'No notes provided' }), { status: 400 });
@@ -121,6 +122,27 @@ OUTPUT FORMAT:
 
   const data = await response.json();
   const text = data.content?.[0]?.text || 'No summary generated.';
+
+  // Log training data if user opted in
+  if (shareCoaching === true && userId && text) {
+    try {
+      const sb = createClient(
+        'https://cvdtykmkajmhlxydhzzl.supabase.co',
+        import.meta.env.SUPABASE_SERVICE_KEY || 'sb_publishable_I16eAnYgsA9fd8ZMlmFQtA_RxepSaXi'
+      );
+      await sb.from('coaching_training_data').insert({
+        user_id: userId,
+        notes: notes || null,
+        agent: agent || null,
+        map: map || null,
+        mode,
+        coaching_output: text,
+        created_at: new Date().toISOString()
+      });
+    } catch(e) {
+      // Silently fail — don't break coaching if logging fails
+    }
+  }
 
   return new Response(JSON.stringify({ text }), {
     headers: { 'Content-Type': 'application/json' }

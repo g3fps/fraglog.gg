@@ -88,6 +88,23 @@ if (!user) return Astro.redirect('/');
         </div>
       </div>
 
+      <!-- AI Coaching Data -->
+      <div class="settings-section">
+        <div class="settings-section-title">AI Coaching Data</div>
+        <div class="settings-card">
+          <div class="toggle-row">
+            <div class="toggle-info">
+              <div class="toggle-label">Share coaching data anonymously</div>
+              <div class="toggle-desc">Help improve FragLog's AI coach by sharing your VOD notes and coaching responses. Your data is never sold or shared with third parties.</div>
+            </div>
+            <button class="toggle-btn" id="share-coaching-toggle" onclick="toggleShareCoaching()">
+              <span class="toggle-track"><span class="toggle-thumb"></span></span>
+            </button>
+          </div>
+          <div class="save-status" id="coaching-share-status"></div>
+        </div>
+      </div>
+
       <!-- Danger zone -->
       <div class="settings-section">
         <div class="settings-section-title danger">Danger Zone</div>
@@ -268,6 +285,26 @@ if (!user) return Astro.redirect('/');
   min-height: 16px;
 }
 .danger-description { font-size: 13px; color: var(--muted); margin-bottom: 1rem; line-height: 1.5; }
+
+/* Toggle */
+.toggle-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 1.5rem; }
+.toggle-info { flex: 1; }
+.toggle-label { font-size: 14px; font-weight: 500; color: var(--text); margin-bottom: 4px; }
+.toggle-desc { font-size: 12px; color: var(--muted); line-height: 1.5; }
+.toggle-btn { background: none; border: none; cursor: pointer; padding: 0; flex-shrink: 0; margin-top: 2px; }
+.toggle-track {
+  display: block; width: 40px; height: 22px;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 11px; position: relative; transition: all 0.2s;
+}
+.toggle-thumb {
+  display: block; width: 16px; height: 16px;
+  background: var(--muted); border-radius: 50%;
+  position: absolute; top: 2px; left: 2px;
+  transition: all 0.2s;
+}
+.toggle-btn.active .toggle-track { background: var(--red); border-color: var(--red); }
+.toggle-btn.active .toggle-thumb { background: #fff; left: 20px; }
 </style>
 
 <script is:inline>
@@ -310,6 +347,10 @@ async function init() {
 
   document.getElementById('inp-username').value = profile?.username || '';
   document.getElementById('profile-display-name').textContent = username;
+
+  // Load share_coaching preference
+  const shareCoachingToggle = document.getElementById('share-coaching-toggle');
+  if (profile?.share_coaching === true) shareCoachingToggle.classList.add('active');
 
   // Set avatar
   if (avatarUrl) {
@@ -372,6 +413,25 @@ async function changePassword() {
   setStatus('password-status', '✓ Password updated');
   document.getElementById('inp-password').value = '';
   document.getElementById('inp-password-confirm').value = '';
+}
+
+async function toggleShareCoaching() {
+  const btn = document.getElementById('share-coaching-toggle');
+  const isActive = btn.classList.contains('active');
+  const newValue = !isActive;
+  btn.classList.toggle('active', newValue);
+
+  const sb = getSb();
+  const { error } = await sb.from('profiles').upsert(
+    { id: settingsUser.id, share_coaching: newValue, updated_at: new Date().toISOString() },
+    { onConflict: 'id' }
+  );
+  if (error) {
+    btn.classList.toggle('active', isActive); // revert
+    setStatus('coaching-share-status', 'Error saving. Try again.', 'var(--red)');
+  } else {
+    setStatus('coaching-share-status', newValue ? '✓ Sharing enabled' : '✓ Sharing disabled');
+  }
 }
 
 async function confirmDelete() {

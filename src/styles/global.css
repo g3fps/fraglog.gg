@@ -678,11 +678,48 @@ footer { border-top: 1px solid var(--border); padding: 3rem 2.5rem; margin-top: 
 .vm-followup-response { border-top: 1px solid var(--border); margin-top: 12px; padding-top: 12px; }
 .vm-followup-question { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--red); margin-bottom: 8px; }
 
+/* ── COACHING SHARE POPUP ────────────────────────────────── */
+.coaching-share-backdrop {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.8); z-index: 2000;
+  align-items: center; justify-content: center;
+  backdrop-filter: blur(8px);
+}
+.coaching-share-backdrop.open { display: flex; animation: fadeIn 0.2s ease; }
+.coaching-share-modal {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px; padding: 2rem;
+  width: 90%; max-width: 440px; text-align: center;
+  animation: scaleIn 0.2s ease;
+}
+.coaching-share-icon { font-size: 32px; margin-bottom: 12px; }
+.coaching-share-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 22px; font-weight: 700; letter-spacing: 0.5px;
+  color: var(--text); margin-bottom: 10px;
+}
+.coaching-share-body {
+  font-size: 13px; color: var(--muted); line-height: 1.6; margin-bottom: 1.5rem;
+}
+.coaching-share-actions { display: flex; gap: 10px; justify-content: center; }
+.coaching-share-btn {
+  font-family: 'DM Mono', monospace; font-size: 11px;
+  letter-spacing: 1px; text-transform: uppercase;
+  padding: 10px 20px; border-radius: 4px; cursor: pointer;
+  transition: all 0.15s; border: none;
+}
+.coaching-share-btn.secondary {
+  background: var(--surface2); color: var(--muted); border: 1px solid var(--border);
+}
+.coaching-share-btn.secondary:hover { color: var(--text); }
+.coaching-share-btn.primary { background: var(--red); color: #fff; }
+.coaching-share-btn.primary:hover { background: #e03040; }
+
 /* ── HOMEPAGE ─────────────────────────────────────────────── */
 .home-hero {
   background-color: var(--darker);
   background-size: cover;
-  background-position: center bottom;
+  background-position: center center;
   background-repeat: no-repeat;
   position: relative; overflow: hidden;
 }
