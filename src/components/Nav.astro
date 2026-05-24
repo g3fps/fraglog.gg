@@ -6,17 +6,6 @@ const { crumbs = [], user = null } = Astro.props as { crumbs: { label: string; h
   <div class="nav-top">
     <a class="logo" href="/">FragLog<span>.gg</span></a>
     <div class="nav-top-right">
-      <div class="nav-search-wrap">
-        <input
-          type="text"
-          id="nav-search"
-          class="nav-search-input"
-          placeholder="Search players, maps, agents..."
-          autocomplete="off"
-          oninput="handleNavSearch(this.value)"
-          onfocus="if(this.value.trim() && window.location.pathname !== '/search') handleNavSearch(this.value)"
-        >
-      </div>
       <div class="nav-right" id="nav-right">
         {user ? (
           <>
