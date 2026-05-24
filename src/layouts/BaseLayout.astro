@@ -99,7 +99,7 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
               <button id="vm-toggle-own" onclick="setVmCoachMode('own')">Your Gameplay</button>
               <button id="vm-toggle-pro" onclick="setVmCoachMode('pro')">Pro</button>
             </div>
-            <button class="vm-save-btn secondary" onclick="vmCoachMe()" id="vm-coach-btn">✨ Coach me</button>
+            <button class="vm-save-btn secondary" onclick="vmCoachMe()" id="vm-coach-btn">Coach me</button>
             <button class="vm-save-btn primary" onclick="vmSaveNote()">Save</button>
           </div>
         </div>
@@ -493,7 +493,7 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
       </div>`;
     }
     if (hasCoach) {
-      html += `<button onclick="switchToCoachMode()" style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;background:rgba(255,70,85,0.1);border:1px solid rgba(255,70,85,0.3);color:var(--red);padding:6px 12px;border-radius:6px;cursor:pointer;align-self:flex-start;flex-shrink:0">✨ View coaching →</button>`;
+      html += `<button onclick="switchToCoachMode()" style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;background:rgba(255,70,85,0.1);border:1px solid rgba(255,70,85,0.3);color:var(--red);padding:6px 12px;border-radius:6px;cursor:pointer;align-self:flex-start;flex-shrink:0">View coaching →</button>`;
     }
 
     // General notes always shown
@@ -530,7 +530,7 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
 
     body.innerHTML = html;
     footer.style.display = 'flex';
-    document.getElementById('vm-coach-btn').textContent = '✨ Coach me';
+    document.getElementById('vm-coach-btn').textContent = 'Coach me';
 
     const ta = document.getElementById('vm-textarea');
     document.getElementById('vm-char-count').textContent = '';
@@ -618,7 +618,7 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
 
     body.innerHTML = `
       <div style="display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
-        <div class="vm-ai-label" style="margin-bottom:0">✨ AI Coach</div>
+        <div class="vm-ai-label" style="margin-bottom:0">AI Coach</div>
         <button onclick="switchToNotesMode()" style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;background:none;border:none;color:var(--muted);cursor:pointer;padding:0">← Notes</button>
       </div>
       <div class="vm-ai-text" id="vm-ai-text" style="flex:1;overflow-y:auto;min-height:0">${renderCoachHtml(raw)}</div>
@@ -628,7 +628,7 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
       </div>`;
 
     footer.style.display = 'flex';
-    document.getElementById('vm-coach-btn').textContent = '✨ Regenerate';
+    document.getElementById('vm-coach-btn').textContent = 'Regenerate';
     document.getElementById('vm-char-count').textContent = '';
   }
 
@@ -744,7 +744,7 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
     const btn = document.getElementById('vm-coach-btn');
     const body = document.getElementById('vm-body');
 
-    btn.textContent = '✨ Coaching...';
+    btn.textContent = 'Coaching...';
     btn.disabled = true;
 
     body.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;gap:12px;color:var(--muted)">
@@ -782,7 +782,7 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
       body.innerHTML = `<div style="padding:1rem;color:var(--red);font-family:'DM Mono',monospace;font-size:12px">Something went wrong. Try again.</div>`;
     }
 
-    btn.textContent = '✨ Regenerate';
+    btn.textContent = 'Regenerate';
     btn.disabled = false;
   }
 
