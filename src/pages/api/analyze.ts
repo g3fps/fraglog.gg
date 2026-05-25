@@ -114,12 +114,17 @@ Follow-up question: ${safeFollowup}`;
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-sonnet-4-6',
         max_tokens: 400,
         system,
         messages: [{ role: 'user', content: userContent }]
       })
     });
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      return new Response(JSON.stringify({ error: err.error?.message || 'Anthropic API error' }), { status: 502 });
+    }
 
     const data = await response.json();
     const text = data.content?.[0]?.text || 'No response generated.';
@@ -181,15 +186,20 @@ OUTPUT FORMAT:
       'anthropic-version': '2023-06-01',
     },
     body: JSON.stringify({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-sonnet-4-6',
       max_tokens: 1200,
       system,
       messages: [{ role: 'user', content: userContent }]
     })
   });
 
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    return new Response(JSON.stringify({ error: err.error?.message || 'Anthropic API error' }), { status: 502 });
+  }
+
   const data = await response.json();
-  const text = data.content?.[0]?.text || 'No summary generated.';
+  const text = data.content?.[0]?.text || 'No response generated.';
 
   await sb.from('coaching_usage').upsert(
     { user_id: verifiedUserId, date: today, coaching_count: coachingCount + 1, followup_count: followupCount },
