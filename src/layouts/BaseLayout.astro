@@ -767,12 +767,13 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
   }
 
   async function vmCoachMe() {
+    if (!currentUser) { openAuth(); return; }
     const notes = vmBuildNotesString();
     if (!notes) { alert('Write some notes first.'); return; }
     vmCurrentNotes = notes;
 
     // Show popup if user hasn't been asked yet
-    if (currentUser && userShareCoaching === null) {
+    if (userShareCoaching === null) {
       window.__pendingCoachFn = () => _runCoachMe(notes);
       document.getElementById('coaching-share-modal').classList.add('open');
       return;
@@ -798,9 +799,13 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
     </div>`;
 
     try {
+      const session = (await initSupabase().auth.getSession()).data.session;
       const response = await fetch('/api/analyze', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(session?.access_token ? { 'Authorization': `Bearer ${session.access_token}` } : {})
+        },
         body: JSON.stringify({
           notes: notes,
           title: document.getElementById('vm-title').textContent,
@@ -808,10 +813,10 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
           mode: vmCoachMode,
           agent: vmAgent,
           map: vmMap,
-          userId: currentUser?.id || null,
           shareCoaching: userShareCoaching === true
         })
       });
+      if (response.status === 401) { openAuth(); return; }
       if (!response.ok) throw new Error('API error');
       const data = await response.json();
       const raw = data.text || '';

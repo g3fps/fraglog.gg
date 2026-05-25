@@ -3,31 +3,87 @@ import type { APIRoute } from 'astro';
 import { createClient } from '@supabase/supabase-js';
 import { getAgentContext, getMapContext, getResources, getGeneralKnowledge } from '../../lib/valorant-knowledge.js';
 
-export const POST: APIRoute = async ({ request }) => {
-  const { notes, title, player, mode, agent, map, coaching, followup, userId, shareCoaching } = await request.json();
+// ── In-memory rate limiter ────────────────────────────────
+// Allows 5 requests per IP per 60 seconds
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+const RATE_LIMIT = 5;
+const RATE_WINDOW_MS = 60_000;
 
-  if (mode !== 'followup' && !notes?.trim()) {
+function isRateLimited(ip: string): boolean {
+  const now = Date.now();
+  const entry = rateLimitMap.get(ip);
+  if (!entry || now > entry.resetAt) {
+    rateLimitMap.set(ip, { count: 1, resetAt: now + RATE_WINDOW_MS });
+    return false;
+  }
+  if (entry.count >= RATE_LIMIT) return true;
+  entry.count++;
+  return false;
+}
+
+// ── Input limits ──────────────────────────────────────────
+const MAX_NOTES = 5000;
+const MAX_FIELD = 200;
+
+export const POST: APIRoute = async ({ request }) => {
+  // Rate limit by IP
+  const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+  if (isRateLimited(ip)) {
+    return new Response(JSON.stringify({ error: 'Too many requests. Please wait a moment.' }), { status: 429 });
+  }
+
+  // Require auth — verify session server-side, don't trust client-supplied userId
+  const authHeader = request.headers.get('authorization');
+  const accessToken = authHeader?.replace('Bearer ', '').trim();
+
+  let verifiedUserId: string | null = null;
+  if (accessToken) {
+    try {
+      const sb = createClient(
+        'https://cvdtykmkajmhlxydhzzl.supabase.co',
+        import.meta.env.SUPABASE_SERVICE_KEY
+      );
+      const { data: { user } } = await sb.auth.getUser(accessToken);
+      verifiedUserId = user?.id || null;
+    } catch {
+      // Token invalid or expired
+    }
+  }
+
+  if (!verifiedUserId) {
+    return new Response(JSON.stringify({ error: 'You must be signed in to use the AI coach.' }), { status: 401 });
+  }
+
+  const body = await request.json();
+  const { notes, title, player, mode, agent, map, coaching, followup, shareCoaching } = body;
+
+  // Sanitize + cap all inputs
+  const safeNotes    = typeof notes    === 'string' ? notes.slice(0, MAX_NOTES)   : '';
+  const safeTitle    = typeof title    === 'string' ? title.slice(0, MAX_FIELD)   : '';
+  const safePlayer   = typeof player   === 'string' ? player.slice(0, MAX_FIELD)  : '';
+  const safeAgent    = typeof agent    === 'string' ? agent.slice(0, MAX_FIELD)   : '';
+  const safeMap      = typeof map      === 'string' ? map.slice(0, MAX_FIELD)     : '';
+  const safeFollowup = typeof followup === 'string' ? followup.slice(0, MAX_FIELD): '';
+  const safeCoaching = typeof coaching === 'string' ? coaching.slice(0, MAX_NOTES): '';
+
+  if (mode !== 'followup' && !safeNotes.trim()) {
     return new Response(JSON.stringify({ error: 'No notes provided' }), { status: 400 });
   }
 
-  const agentContext = agent ? getAgentContext(agent) : null;
-  const mapContext = map ? getMapContext(map) : null;
-  const resources = getResources();
+  const agentContext    = safeAgent ? getAgentContext(safeAgent) : null;
+  const mapContext      = safeMap   ? getMapContext(safeMap)     : null;
+  const resources       = getResources();
   const generalKnowledge = getGeneralKnowledge();
 
   let knowledgeBlock = '';
-  if (agentContext) {
-    knowledgeBlock += `\n\nAGENT KNOWLEDGE — ${agent.toUpperCase()}:\n${JSON.stringify(agentContext, null, 2)}`;
-  }
-  if (mapContext) {
-    knowledgeBlock += `\n\nMAP KNOWLEDGE — ${map.toUpperCase()}:\n${JSON.stringify(mapContext, null, 2)}`;
-  }
+  if (agentContext)    knowledgeBlock += `\n\nAGENT KNOWLEDGE — ${safeAgent.toUpperCase()}:\n${JSON.stringify(agentContext, null, 2)}`;
+  if (mapContext)      knowledgeBlock += `\n\nMAP KNOWLEDGE — ${safeMap.toUpperCase()}:\n${JSON.stringify(mapContext, null, 2)}`;
   knowledgeBlock += `\n\nGENERAL VALORANT KNOWLEDGE:\n${JSON.stringify(generalKnowledge, null, 2)}`;
   knowledgeBlock += `\n\nRESOURCE LIBRARY:\n${JSON.stringify(resources, null, 2)}`;
 
-  // ── Follow-up mode ───────────────────────────────────────
+  // ── Follow-up mode ────────────────────────────────────────
   if (mode === 'followup') {
-    if (!followup?.trim()) {
+    if (!safeFollowup.trim()) {
       return new Response(JSON.stringify({ error: 'No follow-up question provided' }), { status: 400 });
     }
 
@@ -39,11 +95,11 @@ RULES:
 - Be direct and specific. If the question is vague, ask for clarification.
 - Keep the answer under 150 words.`;
 
-    const userContent = `Original notes:\n${notes || '(none)'}
+    const userContent = `Original notes:\n${safeNotes || '(none)'}
 
-Previous coaching:\n${coaching || '(none)'}
+Previous coaching:\n${safeCoaching || '(none)'}
 
-Follow-up question: ${followup}`;
+Follow-up question: ${safeFollowup}`;
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -65,6 +121,7 @@ Follow-up question: ${followup}`;
     return new Response(JSON.stringify({ text }), { headers: { 'Content-Type': 'application/json' } });
   }
 
+  // ── Main coaching mode ────────────────────────────────────
   const system = mode === 'own'
     ? `You are an expert Valorant coach with deep knowledge of competitive mechanics, agent-specific play, and how players actually improve. A player has taken notes while reviewing their own VOD. Your job is to give them sharp, accurate, specific feedback — not generic advice.
 ${knowledgeBlock ? `\nYou have been provided with expert knowledge about the agent, map, and general Valorant mechanics. Use it to give specific, informed coaching where relevant.\n` : ''}
@@ -102,8 +159,8 @@ OUTPUT FORMAT:
 - Keep it under 400 words total.`;
 
   const userContent = mode === 'own'
-    ? `VOD: ${title || 'My gameplay'}${agent ? ` | Agent: ${agent}` : ''}${map ? ` | Map: ${map}` : ''}\n\nMy notes:\n${notes}\n\nGive me honest coaching based only on what I wrote above.`
-    : `VOD: ${title}\nPlayer: ${player}${agent ? ` | Agent: ${agent}` : ''}${map ? ` | Map: ${map}` : ''}\n\nMy notes:\n${notes}\n\nWhat are the key lessons and how do I apply them?`;
+    ? `VOD: ${safeTitle || 'My gameplay'}${safeAgent ? ` | Agent: ${safeAgent}` : ''}${safeMap ? ` | Map: ${safeMap}` : ''}\n\nMy notes:\n${safeNotes}\n\nGive me honest coaching based only on what I wrote above.`
+    : `VOD: ${safeTitle}\nPlayer: ${safePlayer}${safeAgent ? ` | Agent: ${safeAgent}` : ''}${safeMap ? ` | Map: ${safeMap}` : ''}\n\nMy notes:\n${safeNotes}\n\nWhat are the key lessons and how do I apply them?`;
 
   const response = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
@@ -123,23 +180,23 @@ OUTPUT FORMAT:
   const data = await response.json();
   const text = data.content?.[0]?.text || 'No summary generated.';
 
-  // Log training data if user opted in
-  if (shareCoaching === true && userId && text) {
+  // Log training data if user opted in — use verified server-side userId only
+  if (shareCoaching === true && verifiedUserId && text) {
     try {
       const sb = createClient(
         'https://cvdtykmkajmhlxydhzzl.supabase.co',
-        import.meta.env.SUPABASE_SERVICE_KEY || 'sb_publishable_I16eAnYgsA9fd8ZMlmFQtA_RxepSaXi'
+        import.meta.env.SUPABASE_SERVICE_KEY
       );
       await sb.from('coaching_training_data').insert({
-        user_id: userId,
-        notes: notes || null,
-        agent: agent || null,
-        map: map || null,
+        user_id: verifiedUserId,
+        notes: safeNotes || null,
+        agent: safeAgent || null,
+        map: safeMap || null,
         mode,
         coaching_output: text,
         created_at: new Date().toISOString()
       });
-    } catch(e) {
+    } catch {
       // Silently fail — don't break coaching if logging fails
     }
   }

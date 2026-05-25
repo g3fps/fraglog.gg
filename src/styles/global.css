@@ -890,3 +890,26 @@ footer { border-top: 1px solid var(--border); padding: 3rem 2.5rem; margin-top: 
 .pro-video-wrap iframe { width: 100%; height: 100%; display: block; border: none; }
 
 @media (max-width: 768px) { .matches-grid { grid-template-columns: 1fr; } }
+
+/* ── FAQ PAGE ────────────────────────────────────────────── */
+.faq-main { min-height: calc(100vh - 80px); position: relative; z-index: 2; }
+.faq-header { margin-bottom: 3rem; padding-bottom: 2rem; border-bottom: 1px solid var(--border); }
+.faq-body { display: flex; flex-direction: column; gap: 3rem; }
+.faq-section { display: flex; flex-direction: column; gap: 0; }
+.faq-section-label { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: var(--red); margin-bottom: 12px; }
+.faq-list { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.faq-item { border-bottom: 1px solid var(--border); }
+.faq-item:last-child { border-bottom: none; }
+.faq-question { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 16px 20px; background: var(--surface); border: none; color: var(--text); cursor: pointer; font-family: 'Barlow Condensed', sans-serif; font-size: 17px; font-weight: 600; letter-spacing: 0.5px; text-align: left; transition: background 0.15s; }
+.faq-question:hover { background: var(--surface2); }
+.faq-item.open .faq-question { background: var(--surface2); color: var(--text); }
+.faq-chevron { color: var(--muted); flex-shrink: 0; transition: transform 0.2s; }
+.faq-item.open .faq-chevron { transform: rotate(180deg); color: var(--red); }
+.faq-answer { max-height: 0; overflow: hidden; transition: max-height 0.25s ease; background: var(--darker); }
+.faq-item.open .faq-answer { max-height: 300px; }
+.faq-answer-inner { padding: 14px 20px 18px; font-size: 14px; color: var(--muted); line-height: 1.7; font-family: 'Barlow', sans-serif; }
+.faq-contact { margin-top: 3rem; padding: 2rem; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); text-align: center; }
+.faq-contact-label { font-family: 'Barlow Condensed', sans-serif; font-size: 20px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--text); margin-bottom: 8px; }
+.faq-contact-sub { font-size: 14px; color: var(--muted); }
+.faq-link { color: var(--red); text-decoration: none; }
+.faq-link:hover { text-decoration: underline; }

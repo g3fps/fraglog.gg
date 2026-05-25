@@ -1,0 +1,172 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Nav from '../components/Nav.astro';
+import Footer from '../components/Footer.astro';
+
+const sbAccess = Astro.cookies.get('sb-access-token')?.value;
+const sbRefresh = Astro.cookies.get('sb-refresh-token')?.value;
+
+let user = null;
+if (sbAccess && sbRefresh) {
+  const { createClient } = await import('@supabase/supabase-js');
+  const sb = createClient(
+    'https://cvdtykmkajmhlxydhzzl.supabase.co',
+    'sb_publishable_I16eAnYgsA9fd8ZMlmFQtA_RxepSaXi'
+  );
+  const { data: { user: u } } = await sb.auth.setSession({ access_token: sbAccess, refresh_token: sbRefresh });
+  user = u;
+}
+
+const faqs = [
+  {
+    category: 'About fraglog',
+    items: [
+      {
+        q: 'What is fraglog.gg?',
+        a: 'fraglog.gg is a VALORANT improvement site and VOD library. You can browse Radiant and pro player gameplay footage filtered by map and agent, take study notes, get AI coaching feedback, and more.'
+      },
+      {
+        q: 'What makes fraglog different from just watching YouTube?',
+        a: 'fraglog lets you filter VODs by map and agent so you can study exactly what you need. You can take structured notes per VOD, get AI coaching based on those notes, and track what you\'ve watched — all in one place - with more features coming soon'
+      }
+    ]
+  },
+  {
+    category: 'VOD Library',
+    items: [
+      {
+        q: 'What types of VODs are on fraglog?',
+        a: 'fraglog has two types: Radiant player POV VODs filterable by map and agent, and Pro Match VODs from VCT and other competitive tournaments.'
+      },
+      {
+        q: 'How do I find VODs for a specific agent on a specific map?',
+        a: 'From the home page or the Ranked tab, select a map, then select your agent. You\'ll see all available VODs for that combination.'
+      },
+      {
+        q: 'Can I submit my own VODs?',
+        a: 'Yes — use the Submit a VOD option in the nav. Submitted VODs are reviewed before being added to the library - we don\'t accept any submissions of players not Radiant ranked or a known pro player. If you want to add your own gameplay for personal review and notes, use the My VODs feature available with an account.'
+      },
+      {
+        q: 'How often are new VODs added?',
+        a: 'New VODs are added as often as possible - my current pace is around 20-30 new VODs daily, but if you want to see a specific one or a new streamer - just submit it with the Submit a VOD form and I\'ll review it as soon as I can!'
+      },
+      {
+        q: 'Why is there not a VOD/not many VODs for \"X\" agent on \"Y\" map?',
+        a: 'We\'re constantly adding new VODs, but some combinations may not be available yet (most of the unavailable combos are not good in high elo). If you\'d like to see a specific VOD, you can submit it using the Submit a VOD form.'
+      }
+    ]
+  },
+  {
+    category: 'Account & Features',
+    items: [
+      {
+        q: 'Do I need an account to watch VODs?',
+        a: 'No — all VODs are publicly viewable. An account unlocks favorites, notes, watched tracking, AI coaching, and My VODs.'
+      },
+      {
+        q: 'What is the Favorites feature?',
+        a: 'You can favorite any VOD to save it for later. Access your favorites from the Favorites tab in the nav.'
+      },
+      {
+        q: 'What is the watched indicator?',
+        a: 'When you open a VOD, you can mark it as watched. Watched VODs show a green indicator so you can track what you\'ve already studied.'
+      },
+      {
+        q: 'What is My VODs?',
+        a: 'My VODs is a private library where you can add your own gameplay footage — VODs you\'ve recorded yourself or VODs not on the website that you want to review and take notes on.'
+      }
+    ]
+  },
+  {
+    category: 'Notes & AI Coaching',
+    items: [
+      {
+        q: 'How do notes work?',
+        a: 'Every VOD has a notes panel. You can write round-by-round observations or general notes while watching. Notes are saved to your account and persist across sessions.'
+      },
+      {
+        q: 'What is the AI Coach?',
+        a: 'After writing notes on a VOD, you can hit "Coach me" to get AI-powered feedback. The coach analyzes your notes and gives actionable advice based on what you observed — covering positioning, ability usage, decision making, and more.'
+      },
+      {
+        q: 'Does the AI Coach work for Pro VODs too?',
+        a: 'Yes. You can take notes while studying pro matches and get coaching feedback on what you noticed — great for understanding why pros make certain decisions.'
+      },
+      {
+        q: 'Are my notes private?',
+        a: 'Yes, your notes are private to your account. You can optionally allow fraglog to anonymously use your notes and coaching responses to improve the AI coach for everyone — you\'ll be asked once.'
+      }
+    ]
+  },
+  {
+    category: 'Pro Matches',
+    items: [
+      {
+        q: 'What is the Pro tab?',
+        a: 'The Pro tab contains full match VODs from VCT and competitive Valorant tournaments. Matches are organized with per-map YouTube timestamps so you can jump straight to a specific map.'
+      },
+      {
+        q: 'Can I filter pro matches by team or event?',
+        a: 'Yes — use the Event filter pills or the team search on the Pro page to find specific matches.'
+      }
+    ]
+  },
+];
+---
+
+<BaseLayout title="FAQ — fraglog.gg" user={user}>
+  <Nav crumbs={[{ label: 'FAQ' }]} user={user} />
+
+  <main class="faq-main">
+    <div class="page-content">
+
+      <div class="faq-header">
+        <div class="header-eyebrow">Help</div>
+        <h1 class="header-title">Frequently Asked Questions</h1>
+        <p class="header-sub">Everything you need to know about fraglog.</p>
+      </div>
+
+      <div class="faq-body">
+        {faqs.map((section, si) => (
+          <div class="faq-section">
+            <div class="faq-section-label">{section.category}</div>
+            <div class="faq-list">
+              {section.items.map((item, ii) => (
+                <div class="faq-item" id={`faq-${si}-${ii}`}>
+                  <button class="faq-question" onclick={`toggleFaq('faq-${si}-${ii}')`}>
+                    <span>{item.q}</span>
+                    <span class="faq-chevron">
+                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                        <path d="M2 5L7 10L12 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                    </span>
+                  </button>
+                  <div class="faq-answer">
+                    <div class="faq-answer-inner">{item.a}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div class="faq-contact">
+        <div class="faq-contact-label">Still have questions?</div>
+        <p class="faq-contact-sub">Reach out on <a href="https://discord.gg/" target="_blank" rel="noopener" class="faq-link">Discord</a> or support the site on <a href="https://ko-fi.com" target="_blank" rel="noopener" class="faq-link">Ko-fi</a>.</p>
+      </div>
+
+    </div>
+  </main>
+
+  <Footer />
+</BaseLayout>
+
+
+<script is:inline>
+function toggleFaq(id) {
+  const item = document.getElementById(id);
+  const isOpen = item.classList.contains('open');
+  item.classList.toggle('open', !isOpen);
+}
+</script>
