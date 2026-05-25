@@ -21,290 +21,38 @@ if (sbAccess && sbRefresh) {
 <BaseLayout title="Util — fraglog.gg" user={user}>
   <Nav crumbs={[{ label: "Util" }]} user={user} />
 
-  <main class="coaching-main">
-    <div class="page-content">
-      <div class="coaching-header">
-        <div class="header-eyebrow">Util</div>
-        <h1 class="header-title">Find Your Lineup</h1>
-        <p class="header-sub">Search smokes, walls, mollies and more by agent or map.</p>
-      </div>
-
-      <div class="search-wrap">
-        <div class="search-box">
-          <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-          <input type="text" id="search-input" class="search-input" placeholder="e.g. viper bind a site smokes..." autocomplete="off">
-          <button class="search-btn" id="search-btn" onclick="searchLineups()"><span id="search-btn-text">Search</span></button>
-        </div>
-      </div>
-
-      <div id="results-section" style="display:none">
-        <div class="results-meta" id="results-meta"></div>
-        <div class="results-grid" id="results-grid"></div>
-      </div>
-
-      <div class="empty-state" id="empty-state" style="display:none">
-        <div class="empty-icon">📭</div>
-        <div class="empty-title">No lineups yet</div>
-        <div class="empty-sub">Check back soon as more lineups get added.</div>
-      </div>
-
-      <div class="no-results" id="no-results" style="display:none">
-        <div class="empty-icon">📭</div>
-        <div class="empty-title">No lineups found</div>
-        <div class="empty-sub">Try different search terms or check back as more lineups get added.</div>
-      </div>
+  <div class="util-coming-soon">
+    <div class="util-cs-inner">
+      <div class="util-cs-eyebrow">Coming Soon</div>
+      <h1 class="util-cs-title">Util Library</h1>
+      <p class="util-cs-sub">Smokes, walls, mollies and more — organized by agent and map. Currently being rebuilt. Check back soon.</p>
     </div>
-  </main>
+  </div>
 
   <Footer />
 </BaseLayout>
 
-<div class="lineup-modal-backdrop" id="lineup-modal" onclick="closeModal(event)">
-  <div class="lineup-modal">
-    <div class="lineup-modal-header">
-      <div>
-        <div class="lineup-modal-title" id="modal-title"></div>
-        <div class="lineup-modal-meta" id="modal-meta"></div>
-      </div>
-      <button class="modal-close" onclick="closeModal()">✕</button>
-    </div>
-    <div class="lineup-modal-body">
-      <div class="modal-map-side">
-        <div class="modal-minimap-wrap">
-          <img id="modal-minimap" src="" alt="" class="modal-minimap-img">
-          <canvas id="modal-canvas" class="modal-canvas"></canvas>
-        </div>
-      </div>
-      <div class="modal-video-side">
-        <div class="modal-video-wrap">
-          <iframe id="modal-video" src="" frameborder="0" allowfullscreen class="modal-video"></iframe>
-        </div>
-        <div class="modal-description" id="modal-description"></div>
-        <div class="modal-tags" id="modal-tags"></div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<style is:global>
-.coaching-main { min-height: calc(100vh - 56px); position: relative; z-index: 2; }
-.coaching-header { margin-bottom: 2.5rem; padding-bottom: 2rem; border-bottom: 1px solid var(--border); }
-.header-eyebrow { font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: var(--red); margin-bottom: 6px; }
-.header-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(36px, 6vw, 64px); letter-spacing: 2px; line-height: 1; margin-bottom: 8px; }
-.header-sub { font-size: 14px; color: var(--muted); font-weight: 300; }
-.search-wrap { margin-bottom: 2.5rem; display: flex; flex-direction: column; gap: 12px; max-width: 700px; }
-.search-box { display: flex; align-items: center; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 0 16px; transition: border-color 0.15s; }
-.search-box:focus-within { border-color: rgba(255,70,85,0.5); }
-.search-icon { color: var(--muted); flex-shrink: 0; }
-.search-input { flex: 1; background: none; border: none; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 14px; padding: 13px 12px; outline: none; }
-.search-input::placeholder { color: var(--muted); }
-.search-btn { font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; padding: 8px 16px; background: var(--red); color: #fff; border: none; border-radius: 6px; cursor: pointer; transition: background 0.15s; flex-shrink: 0; }
-.search-btn:hover { background: #e03040; }
-.search-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-.quick-searches { display: flex; flex-wrap: wrap; gap: 6px; }
-.quick-tag { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; padding: 5px 10px; background: var(--surface); border: 1px solid var(--border); color: var(--muted); border-radius: 4px; cursor: pointer; transition: all 0.15s; }
-.quick-tag:hover { color: var(--text); border-color: rgba(255,255,255,0.2); }
-.results-meta { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); letter-spacing: 1px; margin-bottom: 1rem; }
-.results-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
-.lineup-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; cursor: pointer; transition: all 0.15s; position: relative; min-width: 0; max-width: 100%; }
-.lineup-card:hover { transform: scale(1.02); border-color: rgba(255,70,85,0.3); z-index: 2; }
-.lineup-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: var(--red); transform: scaleX(0); transition: transform 0.2s; z-index: 3; }
-.lineup-card:hover::before { transform: scaleX(1); }
-.card-minimap-wrap { position: relative; height: 200px; background: var(--darker); overflow: hidden; width: 100%; }
-.card-minimap-img { width: 100%; height: 200px; object-fit: contain; padding: 0.5rem; display: block; max-width: 100%; }
-.card-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
-.card-info { padding: 12px 14px; border-top: 1px solid var(--border); }
-.card-agent-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
-.card-agent-img { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; object-position: top; border: 1px solid var(--border); }
-.card-agent-name { font-family: 'DM Mono', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--red); }
-.card-map { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-left: auto; }
-.card-desc { font-size: 12px; color: var(--muted); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.empty-state, .no-results { text-align: center; padding: 5rem 2rem; color: var(--muted); }
-.empty-icon { font-size: 36px; margin-bottom: 1rem; opacity: 0.5; }
-.empty-title { font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 2px; color: var(--text); margin-bottom: 8px; }
-.empty-sub { font-size: 14px; max-width: 400px; margin: 0 auto; line-height: 1.6; }
-.lineup-modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 600; align-items: center; justify-content: center; backdrop-filter: blur(8px); padding: 2rem; }
-.lineup-modal-backdrop.open { display: flex; animation: fadeIn 0.2s ease; }
-.lineup-modal { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; width: 100%; max-width: 900px; max-height: 85vh; overflow: hidden; display: flex; flex-direction: column; animation: scaleIn 0.2s ease; }
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-@keyframes scaleIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
-.lineup-modal-header { display: flex; align-items: flex-start; justify-content: space-between; padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border); flex-shrink: 0; }
-.lineup-modal-title { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 1.5px; }
-.lineup-modal-meta { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--red); text-transform: uppercase; letter-spacing: 1px; margin-top: 3px; }
-.modal-close { background: none; border: 1px solid var(--border); color: var(--muted); width: 30px; height: 30px; border-radius: 6px; cursor: pointer; font-size: 14px; flex-shrink: 0; transition: all 0.15s; }
-.modal-close:hover { color: var(--text); }
-.lineup-modal-body { display: grid; grid-template-columns: 1fr 1fr; flex: 1; overflow: hidden; min-height: 0; }
-.modal-map-side { border-right: 1px solid var(--border); padding: 1.25rem; display: flex; flex-direction: column; gap: 10px; }
-.modal-minimap-wrap { position: relative; flex: 1; background: var(--darker); border-radius: 8px; overflow: hidden; display: flex; align-items: center; justify-content: center; min-height: 200px; }
-.modal-minimap-img { max-width: 100%; max-height: 100%; object-fit: contain; padding: 1rem; display: block; }
-.modal-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
-.modal-video-side { padding: 1.25rem; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; }
-.modal-video-wrap { aspect-ratio: 16/9; background: #000; border-radius: 8px; overflow: hidden; flex-shrink: 0; }
-.modal-video { width: 100%; height: 100%; display: block; }
-.modal-description { font-size: 13px; color: var(--text); line-height: 1.7; }
-.modal-tags { display: flex; flex-wrap: wrap; gap: 5px; }
-.modal-tag { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 1px; text-transform: uppercase; padding: 2px 8px; background: var(--surface2); border: 1px solid var(--border); color: var(--muted); border-radius: 4px; }
-@media (max-width: 768px) { .lineup-modal-body { grid-template-columns: 1fr; } .modal-map-side { border-right: none; border-bottom: 1px solid var(--border); } .results-grid { grid-template-columns: 1fr; } }
+<style>
+.util-coming-soon {
+  min-height: calc(100vh - 160px);
+  display: flex; align-items: center; justify-content: center;
+  position: relative; z-index: 2;
+}
+.util-cs-inner {
+  text-align: center; max-width: 480px; padding: 2rem;
+}
+.util-cs-eyebrow {
+  font-family: 'DM Mono', monospace; font-size: 11px;
+  letter-spacing: 3px; text-transform: uppercase;
+  color: var(--red); margin-bottom: 12px;
+}
+.util-cs-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 56px; font-weight: 800; letter-spacing: 1px;
+  text-transform: uppercase; color: var(--text);
+  line-height: 1; margin-bottom: 16px;
+}
+.util-cs-sub {
+  font-size: 15px; color: var(--muted); line-height: 1.6;
+}
 </style>
-
-<script is:inline>
-let allLineups = [];
-let currentLineup = null;
-
-async function loadLineups() {
-  const sb = initSupabase();
-  const { data } = await sb.from('lineups').select('*').order('created_at', { ascending: false });
-  allLineups = data || [];
-  if (allLineups.length) {
-    showResults(allLineups, null);
-  } else {
-    document.getElementById('empty-state').style.display = 'block';
-  }
-}
-
-async function searchLineups() {
-  const query = document.getElementById('search-input').value.trim();
-  if (!query) { showResults(allLineups, null); return; }
-  const btn = document.getElementById('search-btn');
-  const btnText = document.getElementById('search-btn-text');
-  btn.disabled = true; btnText.textContent = 'Searching...';
-
-  const words = query.toLowerCase().split(/\s+/).filter(Boolean);
-  const matchedLineups = allLineups.filter(l => {
-    const haystack = [
-      l.agent, l.map, l.util_type, l.description, l.title,
-      ...(l.tags || [])
-    ].join(' ').toLowerCase();
-    return words.every(w => haystack.includes(w));
-  }).slice(0, 50);
-
-  btn.disabled = false; btnText.textContent = 'Search';
-  showResults(matchedLineups, query);
-}
-
-function showResults(lineups, query) {
-  document.getElementById('empty-state').style.display = 'none';
-  document.getElementById('no-results').style.display = 'none';
-  if (!lineups.length) {
-    document.getElementById('results-section').style.display = 'none';
-    document.getElementById('no-results').style.display = 'block';
-    return;
-  }
-  document.getElementById('results-section').style.display = 'block';
-  document.getElementById('results-meta').textContent = query
-    ? `${lineups.length} lineup${lineups.length!==1?'s':''} found for "${query}"`
-    : `${lineups.length} lineup${lineups.length!==1?'s':''}`;
-  const grid = document.getElementById('results-grid');
-  grid.innerHTML = lineups.map((l, i) => `
-    <div class="lineup-card" onclick="openLineup(${allLineups.indexOf(l)})">
-      <div class="card-minimap-wrap" id="wrap-${i}">
-        <img class="card-minimap-img" src="/maps/${l.map}-${l.side||'attack'}.png" alt="${l.map}" data-sx="${l.stand_x}" data-sy="${l.stand_y}" data-lx="${l.land_x}" data-ly="${l.land_y}" data-agent="${l.agent}" data-slot="${l.ability_slot||''}" data-wall-end-x="${l.wall_end_x||''}" data-wall-end-y="${l.wall_end_y||''}" data-idx="${i}" onload="onCardImgLoad(this)">
-        <canvas class="card-canvas" id="card-canvas-${i}"></canvas>
-      </div>
-      <div class="card-info">
-        <div class="card-agent-row">
-          <img class="card-agent-img" src="/agents/busts/${l.agent}.png" alt="${l.agent}">
-          <span class="card-agent-name">${l.agent}</span>
-          <span class="card-map">${l.map}</span>
-        </div>
-        ${l.title ? `<div style="font-size:12px;font-weight:500;color:var(--text);margin-bottom:4px">${l.title}</div>` : ''}
-        <div class="card-desc">${l.description}</div>
-      </div>
-    </div>
-  `).join('');
-}
-
-function onCardImgLoad(imgEl) {
-  const i = imgEl.dataset.idx;
-  setTimeout(() => {
-    const canvas = document.getElementById(`card-canvas-${i}`);
-    if (canvas) drawMarkers(canvas, imgEl, imgEl.dataset.sx, imgEl.dataset.sy, imgEl.dataset.lx, imgEl.dataset.ly, imgEl.dataset.agent, imgEl.dataset.slot, 22, imgEl.dataset.wallEndX || null, imgEl.dataset.wallEndY || null);
-  }, 100);
-}
-
-function drawMarkers(canvas, imgEl, sx, sy, lx, ly, agent, slot, size, wallEndX, wallEndY) {
-  const wrap = canvas.parentElement;
-  const wrapW = wrap.offsetWidth;
-  const wrapH = size === 22 ? 200 : wrap.offsetHeight;
-  canvas.width = wrapW;
-  canvas.height = wrapH;
-  const ctx = canvas.getContext('2d');
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-
-  const padding = size === 22 ? 8 : 16;
-  const imgNaturalW = imgEl.naturalWidth;
-  const imgNaturalH = imgEl.naturalHeight;
-  const availW = wrapW - padding * 2;
-  const availH = wrapH - padding * 2;
-  const scale = Math.min(availW / imgNaturalW, availH / imgNaturalH);
-  const renderedW = imgNaturalW * scale;
-  const renderedH = imgNaturalH * scale;
-  const ox = (wrapW - renderedW) / 2;
-  const oy = (wrapH - renderedH) / 2;
-
-  const r = Math.round(size * 0.12);
-  function toX(x){return ox+x*renderedW;} function toY(y){return oy+y*renderedH;}
-  function drawImg(x,y,src,bg){
-    const img=new Image();
-    img.onload=()=>{
-      ctx.save();
-      ctx.beginPath();
-      ctx.moveTo(x-size/2+r,y-size/2);ctx.lineTo(x+size/2-r,y-size/2);ctx.quadraticCurveTo(x+size/2,y-size/2,x+size/2,y-size/2+r);ctx.lineTo(x+size/2,y+size/2-r);ctx.quadraticCurveTo(x+size/2,y+size/2,x+size/2-r,y+size/2);ctx.lineTo(x-size/2+r,y+size/2);ctx.quadraticCurveTo(x-size/2,y+size/2,x-size/2,y+size/2-r);ctx.lineTo(x-size/2,y-size/2+r);ctx.quadraticCurveTo(x-size/2,y-size/2,x-size/2+r,y-size/2);ctx.closePath();ctx.clip();
-      if(bg){ctx.fillStyle=bg;ctx.fillRect(x-size/2,y-size/2,size,size);}
-      ctx.drawImage(img,x-size/2,y-size/2,size,size);
-      ctx.restore();
-    };img.src=src;
-  }
-  drawImg(toX(sx),toY(sy),`/agents/busts/${agent}.png`,'#00c8c8');
-  
-  // Draw wall line if wall_end coords exist
-  if(wallEndX != null && wallEndY != null) {
-    ctx.beginPath();
-    ctx.moveTo(toX(lx), toY(ly));
-    ctx.lineTo(toX(wallEndX), toY(wallEndY));
-    ctx.strokeStyle = '#A855F7';
-    ctx.lineWidth = size === 36 ? 3 : 2;
-    ctx.lineCap = 'round';
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.arc(toX(wallEndX), toY(wallEndY), size === 36 ? 5 : 3, 0, Math.PI * 2);
-    ctx.fillStyle = '#A855F7';
-    ctx.fill();
-  }
-  
-  if(slot) drawImg(toX(lx),toY(ly),`/abilities/${agent}/${slot}.png`,null);
-}
-
-function openLineup(index) {
-  currentLineup = allLineups[index];
-  const l = currentLineup;
-  document.getElementById('modal-title').textContent = l.title || `${l.agent.charAt(0).toUpperCase()+l.agent.slice(1)} — ${l.map.charAt(0).toUpperCase()+l.map.slice(1)}`;
-  document.getElementById('modal-meta').textContent = `${l.util_type} · ${l.side||'attack'}`;
-  document.getElementById('modal-description').textContent = l.description;
-  document.getElementById('modal-tags').innerHTML = (l.tags||[]).map(t=>`<span class="modal-tag">${t}</span>`).join('');
-  const minimapImg = document.getElementById('modal-minimap');
-  minimapImg.onload = () => {
-    const canvas = document.getElementById('modal-canvas');
-    drawMarkers(canvas, minimapImg, l.stand_x, l.stand_y, l.land_x, l.land_y, l.agent, l.ability_slot||'', 36, l.wall_end_x||null, l.wall_end_y||null);
-  };
-  minimapImg.src = `/maps/${l.map}-${l.side||'attack'}.png`;
-  document.getElementById('modal-video').src = `https://www.youtube.com/embed/${l.youtube_id}?autoplay=1`;
-  document.getElementById('lineup-modal').classList.add('open');
-}
-
-function closeModal(e) {
-  if (e && e.target !== document.getElementById('lineup-modal')) return;
-  document.getElementById('lineup-modal').classList.remove('open');
-  document.getElementById('modal-video').src = '';
-}
-
-function quickSearch(q) {
-  document.getElementById('search-input').value = q;
-  searchLineups();
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('search-input').addEventListener('keydown', e => { if(e.key==='Enter') searchLineups(); });
-  loadLineups();
-});
-</script>
