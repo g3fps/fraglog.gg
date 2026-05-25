@@ -331,9 +331,9 @@ function setUploadStatus(msg, color = 'var(--muted)') {
 
 async function init() {
   const sb = getSb();
-  const { data: { session } } = await sb.auth.getSession();
-  if (!session) { window.location.href = '/'; return; }
-  settingsUser = session.user;
+  const { data: { user } } = await sb.auth.getUser();
+  if (!user) { window.location.href = '/'; return; }
+  settingsUser = user;
 
   document.getElementById('profile-email').textContent = settingsUser.email;
 
