@@ -50,7 +50,7 @@ export const POST: APIRoute = async ({ request }) => {
     .select('coaching_count, followup_count')
     .eq('user_id', verifiedUserId)
     .eq('date', today)
-    .single();
+    .maybeSingle();
 
   const coachingCount = usage?.coaching_count ?? 0;
   const followupCount = usage?.followup_count ?? 0;
