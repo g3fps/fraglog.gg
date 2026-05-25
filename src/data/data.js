@@ -337,7 +337,6 @@ export const VODS = {
     reyna: [
       { id:"GkkolEIngtQ", title:"florescent Reyna Haven RADIANT RANKED", player:"florescent", date:"2026-05-01" },
       { id:"sgLH4Z8IRpA", title:"C9 OXY Reyna Haven INSANE AIM", player:"OXY", date:"2026-04-12" },
-      { id:"ADCeejaYgFM", title:"florescent Reyna Haven ONE TAP INSANITY", player:"florescent", date:"2026-05-02" },
       { id:"145LGyCfxtg", title:"Wo0t Reyna Haven FT AVEZ", player:"Wo0t", date:"2025-11-19" },
       { id:"jt7ieynRb8g", title:"geeza Reyna Haven RADIANT RANKED", player:"Geeza", date:"2026-05-14" },
       { id:"mohs7PYMPf8", title:"t3xture Haven Reyna RADIANT RANKED", player:"t3xture", date:"2026-05-14" },

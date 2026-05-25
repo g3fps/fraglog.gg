@@ -159,7 +159,10 @@ function homeSearch(query) {
   resultsEl.style.display = 'block';
 }
 
-document.addEventListener('keydown', e => {
+document.getElementById('home-search-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && e.target.value.trim()) {
+    window.location.href = '/search?q=' + encodeURIComponent(e.target.value.trim());
+  }
   if (e.key === 'Escape') {
     const r = document.getElementById('home-search-results');
     if (r) { r.innerHTML = ''; r.style.display = 'none'; }

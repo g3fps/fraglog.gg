@@ -314,7 +314,6 @@ const STORAGE_URL = `https://cvdtykmkajmhlxydhzzl.supabase.co/storage/v1/object/
 function getSb() { return initSupabase(); }
 
 let settingsUser = null;
-let currentProfile = null;
 
 function setStatus(id, msg, color = '#6BCF6B') {
   const el = document.getElementById(id);
@@ -340,8 +339,6 @@ async function init() {
 
   // Load profile — use maybeSingle to avoid 406 when no row exists yet
   const { data: profile } = await sb.from('profiles').select('*').eq('id', settingsUser.id).maybeSingle();
-  currentProfile = profile;
-
   const username = profile?.username || settingsUser.email.split('@')[0];
   const avatarUrl = profile?.avatar_url || null;
 
@@ -472,15 +469,10 @@ document.getElementById('avatar-input').addEventListener('change', async (e) => 
   setUploadStatus('✓ Photo updated', '#6BCF6B');
 });
 
-document.addEventListener('DOMContentLoaded', () => {
-  // Wait for Supabase CDN to be available
-  const tryInit = () => {
-    if (typeof supabase !== 'undefined') {
-      init();
-    } else {
-      setTimeout(tryInit, 50);
-    }
-  };
-  tryInit();
-});
+// Wait for BaseLayout's initAuth() to finish before initialising settings
+if (window.__authReady) {
+  init();
+} else {
+  window.__onAuthReady = init;
+}
 </script>

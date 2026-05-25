@@ -506,7 +506,7 @@ body::before {
   padding: 9px 12px; border-radius: 4px; outline: none; transition: border-color 0.15s;
 }
 .myvods-field input:focus, .myvods-field select:focus { border-color: rgba(255,70,85,0.5); }
-.mv-id-display { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--red); margin-top: 5px; min-height: 16px; }
+.mv-id-display { font-family: 'DM Mono', monospace; font-size: 11px; color: #6BCF6B; margin-top: 5px; min-height: 16px; }
 .mv-error { font-size: 12px; color: var(--red); margin-top: 8px; min-height: 16px; }
 .mv-delete-btn {
   font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 1px;
