@@ -794,6 +794,7 @@ footer { border-top: 1px solid var(--border); padding: 3rem 2.5rem; margin-top: 
   .breadcrumb { font-size: 10px; gap: 4px; max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .nav-right { gap: 6px; }
   .auth-btn { font-size: 10px; padding: 5px 8px; letter-spacing: 0.5px; }
+  .fav-heart { display: none; }
   .user-pill { display: none; }
   #back-btn { font-size: 10px; padding: 5px 10px; }
   .page-content { padding: 1.25rem 1rem; }

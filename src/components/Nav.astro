@@ -35,7 +35,7 @@ const { crumbs = [], user = null } = Astro.props as { crumbs: { label: string; h
       <a class="feature-tab" href="/pro" id="tab-pro">Pro</a>
     </div>
     <div class="nav-bottom-right">
-      <a class="feature-tab" href="/favorites" id="tab-favorites" style="display:none">♥ Favorites</a>
+      <a class="feature-tab" href="/favorites" id="tab-favorites" style="display:none"><span class="fav-heart">♥ </span>Favorites</a>
       <a class="feature-tab" href="/my-vods" id="tab-myvods" style="display:none">My VODs</a>
       {crumbs.length > 0 && (
         <div class="breadcrumb">
