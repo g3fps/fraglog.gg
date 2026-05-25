@@ -3,46 +3,27 @@ import type { APIRoute } from 'astro';
 import { createClient } from '@supabase/supabase-js';
 import { getAgentContext, getMapContext, getResources, getGeneralKnowledge } from '../../lib/valorant-knowledge.js';
 
-// ── In-memory rate limiter ────────────────────────────────
-// Allows 5 requests per IP per 60 seconds
-const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
-const RATE_LIMIT = 5;
-const RATE_WINDOW_MS = 60_000;
-
-function isRateLimited(ip: string): boolean {
-  const now = Date.now();
-  const entry = rateLimitMap.get(ip);
-  if (!entry || now > entry.resetAt) {
-    rateLimitMap.set(ip, { count: 1, resetAt: now + RATE_WINDOW_MS });
-    return false;
-  }
-  if (entry.count >= RATE_LIMIT) return true;
-  entry.count++;
-  return false;
-}
+// ── Daily limits ──────────────────────────────────────────
+const DAILY_COACHING_LIMIT = 3;
+const DAILY_FOLLOWUP_LIMIT = 5;
 
 // ── Input limits ──────────────────────────────────────────
 const MAX_NOTES = 5000;
 const MAX_FIELD = 200;
 
 export const POST: APIRoute = async ({ request }) => {
-  // Rate limit by IP
-  const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
-  if (isRateLimited(ip)) {
-    return new Response(JSON.stringify({ error: 'Too many requests. Please wait a moment.' }), { status: 429 });
-  }
-
   // Require auth — verify session server-side, don't trust client-supplied userId
   const authHeader = request.headers.get('authorization');
   const accessToken = authHeader?.replace('Bearer ', '').trim();
 
+  const sb = createClient(
+    'https://cvdtykmkajmhlxydhzzl.supabase.co',
+    import.meta.env.SUPABASE_SERVICE_KEY
+  );
+
   let verifiedUserId: string | null = null;
   if (accessToken) {
     try {
-      const sb = createClient(
-        'https://cvdtykmkajmhlxydhzzl.supabase.co',
-        import.meta.env.SUPABASE_SERVICE_KEY
-      );
       const { data: { user } } = await sb.auth.getUser(accessToken);
       verifiedUserId = user?.id || null;
     } catch {
@@ -56,6 +37,30 @@ export const POST: APIRoute = async ({ request }) => {
 
   const body = await request.json();
   const { notes, title, player, mode, agent, map, coaching, followup, shareCoaching } = body;
+
+  // ── Per-user daily rate limit ─────────────────────────────
+  const today = new Date().toISOString().slice(0, 10);
+  const isFollowup = mode === 'followup';
+
+  const coachingLimit = DAILY_COACHING_LIMIT;
+  const followupLimit = DAILY_FOLLOWUP_LIMIT;
+
+  const { data: usage } = await sb
+    .from('coaching_usage')
+    .select('coaching_count, followup_count')
+    .eq('user_id', verifiedUserId)
+    .eq('date', today)
+    .single();
+
+  const coachingCount = usage?.coaching_count ?? 0;
+  const followupCount = usage?.followup_count ?? 0;
+
+  if (isFollowup && followupCount >= followupLimit) {
+    return new Response(JSON.stringify({ error: `You've used all ${followupLimit} follow-up questions for today. Resets at midnight UTC.` }), { status: 429 });
+  }
+  if (!isFollowup && coachingCount >= coachingLimit) {
+    return new Response(JSON.stringify({ error: `You've used all ${coachingLimit} coaching sessions for today. Resets at midnight UTC.` }), { status: 429 });
+  }
 
   // Sanitize + cap all inputs
   const safeNotes    = typeof notes    === 'string' ? notes.slice(0, MAX_NOTES)   : '';
@@ -118,6 +123,12 @@ Follow-up question: ${safeFollowup}`;
 
     const data = await response.json();
     const text = data.content?.[0]?.text || 'No response generated.';
+
+    await sb.from('coaching_usage').upsert(
+      { user_id: verifiedUserId, date: today, coaching_count: coachingCount, followup_count: followupCount + 1 },
+      { onConflict: 'user_id,date' }
+    );
+
     return new Response(JSON.stringify({ text }), { headers: { 'Content-Type': 'application/json' } });
   }
 
@@ -180,13 +191,14 @@ OUTPUT FORMAT:
   const data = await response.json();
   const text = data.content?.[0]?.text || 'No summary generated.';
 
+  await sb.from('coaching_usage').upsert(
+    { user_id: verifiedUserId, date: today, coaching_count: coachingCount + 1, followup_count: followupCount },
+    { onConflict: 'user_id,date' }
+  );
+
   // Log training data if user opted in — use verified server-side userId only
-  if (shareCoaching === true && verifiedUserId && text) {
+  if (shareCoaching === true && text) {
     try {
-      const sb = createClient(
-        'https://cvdtykmkajmhlxydhzzl.supabase.co',
-        import.meta.env.SUPABASE_SERVICE_KEY
-      );
       await sb.from('coaching_training_data').insert({
         user_id: verifiedUserId,
         notes: safeNotes || null,

@@ -112,6 +112,7 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
               <button id="vm-toggle-own" onclick="setVmCoachMode('own')">Your Gameplay</button>
               <button id="vm-toggle-pro" onclick="setVmCoachMode('pro')">Pro</button>
             </div>
+            <span id="vm-coach-usage" style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted)"></span>
             <button class="vm-save-btn secondary" onclick="vmCoachMe()" id="vm-coach-btn">Coach me</button>
             <button class="vm-save-btn primary" onclick="vmSaveNote()">Save</button>
           </div>
@@ -146,6 +147,10 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
   let userWatched = [];
   let userTimestamps = {};
   let userShareCoaching = null; // null = never asked, true/false = preference set
+  let todayCoachingUsed = 0;
+  let todayFollowupUsed = 0;
+  const COACHING_LIMIT = 3;
+  const FOLLOWUP_LIMIT = 5;
 
   // ── YouTube IFrame API ────────────────────────────────────────
   let ytPlayer = null;
@@ -260,6 +265,13 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
     // Load share_coaching preference
     const { data: profile } = await sb.from('profiles').select('share_coaching').eq('id', currentUser.id).maybeSingle();
     userShareCoaching = profile?.share_coaching ?? null;
+
+    // Load today's coaching usage
+    const today = new Date().toISOString().slice(0, 10);
+    const { data: usage } = await sb.from('coaching_usage').select('coaching_count, followup_count').eq('user_id', currentUser.id).eq('date', today).maybeSingle();
+    todayCoachingUsed = usage?.coaching_count ?? 0;
+    todayFollowupUsed = usage?.followup_count ?? 0;
+    updateCoachUsageDisplay();
   }
 
   async function renderNav() {
@@ -516,7 +528,18 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
 
     // General notes always shown
     html += `<div style="flex:1;min-height:0;display:flex;flex-direction:column">
-      <div class="vm-notes-label">General Notes</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+        <div class="vm-notes-label" style="margin-bottom:0">General Notes</div>
+        <button onclick="toggleWhatToLookFor()" id="wtlf-btn" style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.5px;background:none;border:none;color:var(--muted);cursor:pointer;padding:0;text-decoration:underline">what to look for?</button>
+      </div>
+      <div id="wtlf-panel" style="display:none;background:var(--surface2);border-radius:6px;padding:8px 10px;margin-bottom:6px;font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);line-height:1.6">
+        <strong style="color:var(--text);display:block;margin-bottom:4px">Notes that get better coaching:</strong>
+        <span>· Crosshair placement — were you pre-aiming the right angles?</span><br>
+        <span>· Positioning — where did you stand, and was it right?</span><br>
+        <span>· Ability usage — good timings? wasted util?</span><br>
+        <span>· Decision points — what did you choose and why?</span><br>
+        <span>· Patterns — did the same mistake happen in multiple rounds?</span>
+      </div>
 <textarea class="vm-notes-textarea" id="vm-textarea" placeholder="Overall observations, patterns, things to study..." style="min-height:80px;flex:1">${savedGeneral}</textarea>    </div>`;
 
     // Round-by-round shown in all modes
@@ -670,9 +693,13 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
     aiText.scrollTop = aiText.scrollHeight;
 
     try {
+      const session = (await initSupabase().auth.getSession()).data.session;
       const response = await fetch('/api/analyze', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(session?.access_token ? { 'Authorization': `Bearer ${session.access_token}` } : {})
+        },
         body: JSON.stringify({
           notes: vmCurrentNotes || '',
           title: document.getElementById('vm-title').textContent,
@@ -684,7 +711,11 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
           followup: question
         })
       });
-      if (!response.ok) throw new Error('API error');
+      if (response.status === 401) { openAuth(); return; }
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.error || 'API error');
+      }
       const data = await response.json();
       const raw = data.text || '';
 
@@ -698,7 +729,7 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
       aiText.scrollTop = aiText.scrollHeight;
     } catch(e) {
       const loading = document.getElementById(loadingId);
-      if (loading) loading.textContent = 'Something went wrong. Try again.';
+      if (loading) loading.textContent = e.message || 'Something went wrong. Try again.';
     }
 
     btn.disabled = false;
@@ -709,6 +740,20 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
     renderNotesMode(vmVideoId, null);
     const toggle = document.getElementById('vm-coach-toggle');
     if (toggle) toggle.style.display = vmCoachMode === 'own' ? 'flex' : 'none';
+  }
+
+  function updateCoachUsageDisplay() {
+    const el = document.getElementById('vm-coach-usage');
+    if (!el || !currentUser) { if (el) el.textContent = ''; return; }
+    const remaining = COACHING_LIMIT - todayCoachingUsed;
+    el.textContent = `${remaining}/${COACHING_LIMIT} left`;
+    el.style.color = remaining === 0 ? 'var(--red)' : 'var(--muted)';
+  }
+
+  function toggleWhatToLookFor() {
+    const panel = document.getElementById('wtlf-panel');
+    if (!panel) return;
+    panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
   }
 
   function setVmCoachMode(mode) {
@@ -817,7 +862,10 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
         })
       });
       if (response.status === 401) { openAuth(); return; }
-      if (!response.ok) throw new Error('API error');
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.error || 'API error');
+      }
       const data = await response.json();
       const raw = data.text || '';
 
@@ -830,9 +878,11 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
         );
       }
 
+      todayCoachingUsed++;
+      updateCoachUsageDisplay();
       renderCoachMode(raw, null);
     } catch(e) {
-      body.innerHTML = `<div style="padding:1rem;color:var(--red);font-family:'DM Mono',monospace;font-size:12px">Something went wrong. Try again.</div>`;
+      body.innerHTML = `<div style="padding:1rem;color:var(--red);font-family:'DM Mono',monospace;font-size:12px">${e.message || 'Something went wrong. Try again.'}</div>`;
     }
 
     btn.textContent = 'Regenerate';
