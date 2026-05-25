@@ -1,0 +1,10 @@
+User-agent: *
+Disallow: /favorites
+Disallow: /my-vods
+Disallow: /settings
+Disallow: /submit
+Disallow: /contact
+Disallow: /search
+Disallow: /util
+
+Sitemap: https://fraglog.gg/sitemap.xml
