@@ -31,7 +31,6 @@ if (sbAccess && sbRefresh) {
         <p class="header-sub">Tournament and competitive match VODs.</p>
       </div>
 
-      <!-- Filters -->
       <div class="filters-wrap">
         <div class="filter-group">
           <div class="filter-label">Event</div>
@@ -43,7 +42,6 @@ if (sbAccess && sbRefresh) {
         </div>
       </div>
 
-      <!-- Results -->
       <div class="matches-grid" id="matches-grid">
         <div class="loading-state">
           <div class="loading-text">Loading matches...</div>
@@ -62,73 +60,11 @@ if (sbAccess && sbRefresh) {
   <Footer />
 </BaseLayout>
 
-<!-- Video modal -->
 <ProMatchModal />
-
-<style is:global>
-.pro-main { min-height: calc(100vh - 56px); position: relative; z-index: 2; }
-.pro-header { margin-bottom: 2rem; padding-bottom: 2rem; border-bottom: 1px solid var(--border); }
-.header-eyebrow { font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: var(--red); margin-bottom: 6px; }
-.header-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(36px, 6vw, 64px); letter-spacing: 2px; line-height: 1; margin-bottom: 8px; }
-.header-sub { font-size: 14px; color: var(--muted); font-weight: 300; }
-
-.filters-wrap { display: flex; gap: 2rem; margin-bottom: 2rem; flex-wrap: wrap; align-items: flex-start; }
-.filter-group { display: flex; flex-direction: column; gap: 8px; }
-.filter-label { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); }
-.filter-pills { display: flex; flex-wrap: wrap; gap: 6px; }
-.filter-pill { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; padding: 5px 12px; background: var(--surface); border: 1px solid var(--border); color: var(--muted); border-radius: 20px; cursor: pointer; transition: all 0.15s; }
-.filter-pill:hover { color: var(--text); }
-.filter-pill.active { background: rgba(255,70,85,0.15); border-color: var(--red); color: var(--red); }
-.team-input { background: var(--surface); border: 1px solid var(--border); color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 13px; padding: 7px 12px; border-radius: 8px; outline: none; transition: border-color 0.15s; width: 200px; }
-.team-input:focus { border-color: rgba(255,70,85,0.5); }
-.team-input::placeholder { color: var(--muted); }
-
-.matches-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
-
-.match-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; cursor: pointer; transition: all 0.15s; position: relative; }
-.match-card:hover { transform: scale(1.02); border-color: rgba(255,70,85,0.3); z-index: 2; }
-.match-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: var(--red); transform: scaleX(0); transition: transform 0.2s; z-index: 3; }
-.match-card:hover::before { transform: scaleX(1); }
-
-.match-thumb { position: relative; aspect-ratio: 16/9; background: var(--darker); overflow: hidden; }
-.match-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.3s; filter: brightness(0.7); }
-.match-card:hover .match-thumb img { transform: scale(1.05); filter: brightness(0.85); }
-.match-thumb-overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s; background: rgba(8,14,20,0.4); }
-.match-card:hover .match-thumb-overlay { opacity: 1; }
-.play-icon { width: 48px; height: 48px; border: 2px solid rgba(255,255,255,0.9); border-radius: 50%; display: flex; align-items: center; justify-content: center; }
-.play-tri { width: 0; height: 0; border-top: 9px solid transparent; border-bottom: 9px solid transparent; border-left: 16px solid rgba(255,255,255,0.9); margin-left: 3px; }
-.map-count-badge { position: absolute; bottom: 8px; right: 8px; font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; background: rgba(8,14,20,0.85); color: var(--muted); padding: 3px 8px; border-radius: 4px; border: 1px solid var(--border); }
-
-.match-info { padding: 14px 16px; }
-.match-teams { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 1px; margin-bottom: 4px; }
-.match-teams span { color: var(--red); margin: 0 6px; }
-.match-event { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
-.match-maps { display: flex; gap: 5px; flex-wrap: wrap; }
-.match-map-tag { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 1px; text-transform: uppercase; padding: 2px 8px; background: var(--surface2); border: 1px solid var(--border); color: var(--muted); border-radius: 4px; }
-
-.loading-state { grid-column: 1/-1; text-align: center; padding: 4rem; }
-.loading-text { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); letter-spacing: 1px; }
-
-.empty-state { text-align: center; padding: 5rem 2rem; }
-.empty-icon { font-size: 36px; margin-bottom: 1rem; opacity: 0.5; }
-.empty-title { font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 2px; color: var(--text); margin-bottom: 8px; }
-.empty-sub { font-size: 14px; color: var(--muted); max-width: 400px; margin: 0 auto; line-height: 1.6; }
-
-/* Modal */
-.video-modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.88); z-index: 600; align-items: center; justify-content: center; backdrop-filter: blur(8px); padding: 2rem; }
-.video-modal-backdrop.open { display: flex; animation: fadeIn 0.2s ease; }
-.video-modal { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; width: 100%; max-width: 860px; overflow: hidden; display: flex; flex-direction: column; animation: scaleIn 0.2s ease; }
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-@keyframes scaleIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
-.video-modal-header { display: flex; align-items: flex-start; justify-content: space-between; padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border); }
-.video-modal-title { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 1.5px; }
-@media (max-width: 768px) { .matches-grid { grid-template-columns: 1fr; } }
-</style>
 
 <script is:inline>
 let allMatches = [];
 let activeEvent = null;
-let currentMatch = null;
 
 async function loadMatches() {
   const sb = initSupabase();
@@ -141,10 +77,8 @@ async function loadMatches() {
     return;
   }
 
-  // Build event filter pills
   const events = [...new Set(allMatches.map(m => m.event))];
-  const pillsWrap = document.getElementById('event-pills');
-  pillsWrap.innerHTML = events.map(e => `
+  document.getElementById('event-pills').innerHTML = events.map(e => `
     <button class="filter-pill" data-event="${e}" onclick="filterByEvent('${e}')">${e}</button>
   `).join('');
 
@@ -180,7 +114,7 @@ function renderMatches(matches) {
     return;
   }
 
-  grid.innerHTML = matches.map((m, i) => {
+  grid.innerHTML = matches.map(m => {
     const maps = [m.map1, m.map2, m.map3].filter(Boolean);
     const mapCount = maps.length;
     const thumbId = m.map1_youtube_id;
@@ -191,9 +125,9 @@ function renderMatches(matches) {
         <div class="match-thumb">
           <img src="https://img.youtube.com/vi/${thumbId}/mqdefault.jpg" alt="${m.team1} vs ${m.team2}">
           <div class="match-thumb-overlay">
-            <div class="play-icon"><div class="play-tri"></div></div>
+            <div class="match-play-icon"><div class="match-play-tri"></div></div>
           </div>
-          <div class="map-count-badge">${mapCount} map${mapCount !== 1 ? 's' : ''}</div>
+          <div class="map-count-badge">${mapCount} MAP${mapCount !== 1 ? 'S' : ''}</div>
         </div>
         <div class="match-info">
           <div class="match-teams">${m.team1}<span>vs</span>${m.team2}</div>
@@ -215,7 +149,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   await loadMatches();
   document.getElementById('team-search').addEventListener('input', applyFilters);
 
-  // Auto-open match from URL param
   const params = new URLSearchParams(window.location.search);
   const matchId = params.get('match');
   if (matchId) {

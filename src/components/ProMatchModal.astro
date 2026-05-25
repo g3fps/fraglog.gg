@@ -1,51 +1,27 @@
 ---
 // ProMatchModal.astro
-// Shared component used by pro.astro and [map]/index.astro
-// Usage: <ProMatchModal /> then call window.openProMatch(matchId) from JS
+// Usage: <ProMatchModal /> then call window.openProMatch(match) from JS
 ---
 
-<div class="video-modal-backdrop" id="pro-match-modal" onclick="closeProModal(event)">
-  <div class="video-modal">
-    <div class="video-modal-header">
+<div class="pro-modal-backdrop" id="pro-match-modal" onclick="closeProModal(event)">
+  <div class="pro-modal">
+    <div class="pro-modal-header">
       <div>
-        <div class="video-modal-title" id="pro-modal-title"></div>
-        <div class="video-modal-meta" id="pro-modal-meta"></div>
+        <div class="pro-modal-title" id="pro-modal-title"></div>
+        <div class="pro-modal-meta" id="pro-modal-meta"></div>
       </div>
-      <button class="modal-close" onclick="closeProModal()">✕</button>
+      <button class="pro-modal-close" onclick="closeProModal()">✕</button>
     </div>
-    <div class="video-modal-body">
-      <div class="map-tabs" id="pro-map-tabs"></div>
-      <div class="video-wrap">
-        <iframe id="pro-modal-video" src="" frameborder="0" allowfullscreen class="modal-video"></iframe>
+    <div class="pro-modal-body">
+      <div class="pro-map-tabs" id="pro-map-tabs"></div>
+      <div class="pro-video-wrap">
+        <iframe id="pro-modal-video" src="" frameborder="0" allowfullscreen></iframe>
       </div>
     </div>
   </div>
 </div>
 
-<style is:global>
-.video-modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.88); z-index: 600; align-items: center; justify-content: center; backdrop-filter: blur(8px); padding: 2rem; }
-.video-modal-backdrop.open { display: flex; animation: fadeIn 0.2s ease; }
-.video-modal { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; width: 100%; max-width: 860px; overflow: hidden; display: flex; flex-direction: column; animation: scaleIn 0.2s ease; }
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-@keyframes scaleIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
-.video-modal-header { display: flex; align-items: flex-start; justify-content: space-between; padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border); }
-.video-modal-title { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 1.5px; }
-.video-modal-meta { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--red); text-transform: uppercase; letter-spacing: 1px; margin-top: 3px; }
-.modal-close { background: none; border: 1px solid var(--border); color: var(--muted); width: 30px; height: 30px; border-radius: 6px; cursor: pointer; font-size: 14px; transition: all 0.15s; }
-.modal-close:hover { color: var(--text); }
-.video-modal-body { padding: 1.25rem; display: flex; flex-direction: column; gap: 12px; }
-.map-tabs { display: flex; gap: 8px; }
-.map-tab { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; padding: 7px 16px; background: var(--darker); border: 1px solid var(--border); color: var(--muted); border-radius: 6px; cursor: pointer; transition: all 0.15s; }
-.map-tab:hover { color: var(--text); }
-.map-tab.active { background: rgba(255,70,85,0.15); border-color: var(--red); color: var(--red); }
-.video-wrap { aspect-ratio: 16/9; background: #000; border-radius: 8px; overflow: hidden; }
-.modal-video { width: 100%; height: 100%; display: block; }
-</style>
-
 <script is:inline>
-// Shared pro match modal logic — exposed as window functions
-// Call window.openProMatch(match) where match is a pro_matches row
-
 window.openProMatch = function(match) {
   const m = match;
   document.getElementById('pro-modal-title').textContent = `${m.team1} vs ${m.team2}`;
@@ -58,7 +34,7 @@ window.openProMatch = function(match) {
   ].filter(Boolean);
 
   document.getElementById('pro-map-tabs').innerHTML = maps.map((mp, i) => `
-    <button class="map-tab ${i === 0 ? 'active' : ''}" onclick="switchProMap(${i})" data-yt="${mp.ytId}" data-start="${mp.start}">
+    <button class="pro-map-tab ${i === 0 ? 'active' : ''}" onclick="switchProMap(${i})" data-yt="${mp.ytId}" data-start="${mp.start}">
       ${mp.map}
     </button>
   `).join('');
@@ -68,8 +44,8 @@ window.openProMatch = function(match) {
 };
 
 window.switchProMap = function(index) {
-  document.querySelectorAll('#pro-map-tabs .map-tab').forEach((t, i) => t.classList.toggle('active', i === index));
-  const tab = document.querySelectorAll('#pro-map-tabs .map-tab')[index];
+  document.querySelectorAll('#pro-map-tabs .pro-map-tab').forEach((t, i) => t.classList.toggle('active', i === index));
+  const tab = document.querySelectorAll('#pro-map-tabs .pro-map-tab')[index];
   document.getElementById('pro-modal-video').src = `https://www.youtube.com/embed/${tab.dataset.yt}?start=${tab.dataset.start || 0}&autoplay=1`;
 };
 
