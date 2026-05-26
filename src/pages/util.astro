@@ -21,14 +21,13 @@ const ALLOWED_EMAILS = [
   'g3holliday@proton.me',
 ];
 
-if (!user || !ALLOWED_EMAILS.includes(user.email)) {
-  return Astro.redirect('/');
-}
+const isAllowed = user && ALLOWED_EMAILS.includes(user.email ?? '');
 ---
 
 <BaseLayout title="Util — fraglog.gg" user={user}>
   <Nav crumbs={[{ label: "Util" }]} user={user} />
 
+  {isAllowed ? (
   <main class="coaching-main">
     <div class="page-content">
       <div class="coaching-header">
@@ -63,6 +62,17 @@ if (!user || !ALLOWED_EMAILS.includes(user.email)) {
       </div>
     </div>
   </main>
+  ) : (
+  <main class="coaching-main">
+    <div class="page-content">
+      <div class="util-coming-soon">
+        <div class="util-coming-soon-eyebrow">Coming Soon</div>
+        <h1 class="util-coming-soon-title">Util Library</h1>
+        <p class="util-coming-soon-sub">A searchable lineup library for every agent and map — smokes, walls, mollies, and more.</p>
+      </div>
+    </div>
+  </main>
+  )}
 
   <Footer />
 </BaseLayout>
