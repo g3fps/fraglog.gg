@@ -26,7 +26,7 @@ if (accessToken && refreshToken) {
       <div class="hero-title">Submit a VOD</div>
       <div class="hero-sub">Found a great Radiant or pro player VOD? Submit it for review.</div>
     </div>
-    <div style="max-width:600px">
+    <div class="submit-wrap">
       <div class="myvods-form">
         <div class="myvods-fields">
           <div class="myvods-field">
@@ -69,9 +69,9 @@ if (accessToken && refreshToken) {
             <label>Why should this be added? (optional)</label>
             <input type="text" id="sub-note" placeholder="e.g. insane performance, great util usage">
           </div>
-          <button class="auth-btn primary" onclick="submitVodRequest()" id="sub-btn" style="align-self:flex-start;padding:10px 20px">Submit for Review</button>
+          <button class="auth-btn primary sub-btn" onclick="submitVodRequest()" id="sub-btn">Submit for Review</button>
           <div class="mv-error" id="sub-error"></div>
-          <div id="sub-success" style="display:none;font-size:13px;color:#6BCF6B;margin-top:8px">✓ Submitted! We'll review it shortly.</div>
+          <div id="sub-success" class="sub-success">✓ Submitted! We'll review it shortly.</div>
         </div>
       </div>
     </div>

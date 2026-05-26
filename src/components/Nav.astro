@@ -9,9 +9,9 @@ const { crumbs = [], user = null } = Astro.props as { crumbs: { label: string; h
       <div class="nav-right" id="nav-right">
         {user ? (
           <>
-            <a class="user-pill" href="/settings" style="text-decoration:none">
+            <a class="user-pill" href="/settings">
               <div class="user-avatar" id="nav-avatar-wrap">
-                <img id="nav-avatar-img" src="" alt="" style="display:none;width:100%;height:100%;object-fit:cover;border-radius:50%">
+                <img id="nav-avatar-img" src="" alt="">
                 <span id="nav-avatar-initials">{user.email[0].toUpperCase()}</span>
               </div>
               <span id="nav-username">{user.email.split("@")[0]}</span>
@@ -37,19 +37,6 @@ const { crumbs = [], user = null } = Astro.props as { crumbs: { label: string; h
     <div class="nav-bottom-right">
       <a class="feature-tab" href="/favorites" id="tab-favorites" style="display:none"><span class="fav-heart">♥ </span>Favorites</a>
       <a class="feature-tab" href="/my-vods" id="tab-myvods" style="display:none">My VODs</a>
-      {crumbs.length > 0 && (
-        <div class="breadcrumb">
-          {crumbs.map((crumb, i) => (
-            <>
-              {i > 0 && <span class="sep">›</span>}
-              {crumb.href
-                ? <a class="crumb" href={crumb.href}>{crumb.label}</a>
-                : <span class="current">{crumb.label}</span>
-              }
-            </>
-          ))}
-        </div>
-      )}
     </div>
   </div>
 </header>

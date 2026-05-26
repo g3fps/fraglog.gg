@@ -40,7 +40,7 @@ const allVods = getAllVods();
     </div>
     <div class="search-meta" id="search-meta"></div>
   </div>
-  <div class="page-content" style="padding-top:1.5rem">
+  <div class="page-content" style="padding-top:1.5rem;">
     <div class="video-grid" id="search-grid"></div>
   </div>
   <Footer />
@@ -71,8 +71,8 @@ function renderVods(vods) {
           <a class="video-player" href="/player/${v.player.toLowerCase().replace(/\//g,'').replace(/ /g,'-')}" onclick="event.stopPropagation()">${v.player}</a>
           ${v.date ? `<span class="video-date">${new Date(v.date).toLocaleDateString('en-US',{month:'short',year:'numeric'})}</span>` : ''}
         </div>
-        <div class="notes-section" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);display:flex;gap:4px;align-items:center;flex-wrap:nowrap;overflow:hidden" data-vid="${v.id}" data-title="${v.title.replace(/"/g,'&quot;')}" data-player="${v.player}">
-          <span class="note-login-prompt"><span onclick="openAuth()" style="color:var(--red);cursor:pointer">Sign in</span> to save &amp; add notes</span>
+        <div class="notes-section" data-vid="${v.id}" data-title="${v.title.replace(/"/g,'&quot;')}" data-player="${v.player}">
+          <span class="note-login-prompt"><span class="note-auth-link" onclick="openAuth()">Sign in</span> to save &amp; add notes</span>
         </div>
       </div>
     </div>

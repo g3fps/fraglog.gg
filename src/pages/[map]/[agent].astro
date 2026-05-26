@@ -74,7 +74,17 @@ const description = `Watch ${vods.length} Radiant ${agentData.name} VODs on ${ma
                 {v.kd && <span class="video-kd">{v.kd}</span>}
                 {v.date && <span class="video-date">{formatDate(v.date)}</span>}
               </div>
-
+              <div class="notes-section"
+                data-vid={v.id}
+                data-title={v.title}
+                data-player={v.player}
+                data-note={v.note || ''}
+                data-agent={agentId}
+                data-map={mapId}
+                data-player-href={`/player/${v.player.toLowerCase().replace(/\//g,'').replace(/ /g,'-')}`}
+              >
+                <span class="note-login-prompt"><span class="note-auth-link" onclick="openAuth()">Sign in</span> to save &amp; add notes</span>
+              </div>
             </div>
           </div>
         ))}
@@ -100,8 +110,40 @@ document.addEventListener('click', function(e) {
   });
 });
 
-function onFavChange() {}
+function openVodNotes(el) {
+  const ns = el.closest('.notes-section');
+  const card = el.closest('.video-card');
+  openVideo(ns.dataset.vid, ns.dataset.title, ns.dataset.player, {
+    adminNote: ns.dataset.note || '',
+    playerHref: ns.dataset.playerHref || '',
+    agent: ns.dataset.agent || '',
+    map: ns.dataset.map || '',
+    kd: card?.dataset.kd || '',
+    date: card?.dataset.date || ''
+  });
+}
 
-window.__onAuthReady = function() {};
-if (window.__authReady) {}
+function updateActions() {
+  if (!currentUser) return;
+  document.querySelectorAll('#video-grid .notes-section').forEach(el => {
+    const vid = el.dataset.vid;
+    const title = (el.dataset.title || '').replace(/'/g, "\\'");
+    const player = el.dataset.player || '';
+    const noteText = getUserNote(vid) ? 'View notes' : 'Add notes';
+    const noteClass = getUserNote(vid) ? 'has-note' : '';
+    const favText = isFav(vid) ? '♥ Saved' : '♡ Save';
+    const favClass = isFav(vid) ? 'has-note' : '';
+    const watchText = isWatched(vid) ? '✓ Watched' : '✓ Mark watched';
+    const watchClass = isWatched(vid) ? 'watched' : '';
+    el.innerHTML = `
+      <button class="notes-btn ${noteClass}" onclick="openVodNotes(this)">📝 ${noteText}</button>
+      <button class="notes-btn ${favClass}" onclick="toggleFav('${vid}',this)">${favText}</button>
+      <button class="notes-btn ${watchClass}" onclick="toggleWatched('${vid}',this)">${watchText}</button>`;
+  });
+}
+
+function onFavChange() { updateActions(); }
+
+window.__onAuthReady = updateActions;
+if (window.__authReady) updateActions();
 </script>

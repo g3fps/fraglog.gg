@@ -31,7 +31,7 @@ const description = `Browse Radiant and pro player ${mapData.name} VODs by agent
   <div id="map-bg-layer" style={`background-image:url(${mapData.img});opacity:1`}></div>
   <div class="agents-bg-overlay"></div>
   <Nav crumbs={[{ label: 'ALL MAPS', href: '/' }, { label: mapData.name.toUpperCase() }]} user={user} />
-  <div class="page-content" style="position:relative;z-index:2">
+  <div class="page-content">
     <div class="agents-page-title">{mapData.name}</div>
     {ROLES_ORDER.map(role => {
       const roleAgents = AGENTS.filter(a => a.role === role);
@@ -71,7 +71,3 @@ const description = `Browse Radiant and pro player ${mapData.name} VODs by agent
   <Footer />
 </BaseLayout>
 
-<style>
-.agent-card { display: flex; text-decoration: none; }
-.agents-bg-overlay { position: fixed; inset: 0; background: rgba(8,14,20,0.72); z-index: 1; }
-</style>
