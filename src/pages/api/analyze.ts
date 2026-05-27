@@ -1,7 +1,7 @@
 /// <reference types="astro/client" />
 import type { APIRoute } from 'astro';
 import { createClient } from '@supabase/supabase-js';
-import { getAgentContext, getMapContext, getResources, getGeneralKnowledge } from '../../lib/valorant-knowledge.js';
+import { getAgentContext, getMapContext, getResources, getGeneralKnowledge, ECONOMY_KNOWLEDGE } from '../../lib/valorant-knowledge.js';
 
 // ── Daily limits ──────────────────────────────────────────
 const DAILY_COACHING_LIMIT = 3;
@@ -85,6 +85,7 @@ export const POST: APIRoute = async ({ request }) => {
   if (mapContext)      knowledgeBlock += `\n\nMAP KNOWLEDGE — ${safeMap.toUpperCase()}:\n${JSON.stringify(mapContext, null, 2)}`;
   knowledgeBlock += `\n\nGENERAL VALORANT KNOWLEDGE:\n${JSON.stringify(generalKnowledge, null, 2)}`;
   knowledgeBlock += `\n\nRESOURCE LIBRARY:\n${JSON.stringify(resources, null, 2)}`;
+  knowledgeBlock += `\n\nECONOMY KNOWLEDGE:\n${JSON.stringify(ECONOMY_KNOWLEDGE, null, 2)}`;
 
   // ── Follow-up mode ────────────────────────────────────────
   if (mode === 'followup') {
@@ -147,6 +148,9 @@ CRITICAL RULES:
 - Categorize mistakes correctly. Crosshair placement and preaim errors are NOT positioning errors — they are aim/mechanics errors. Positioning errors are about WHERE the player stands on the map. Do not confuse these.
 - If the same mistake appears across multiple rounds, that is the #1 priority — name the rounds explicitly.
 - Drills must be specific and actually effective for the issue. Do NOT recommend "10 minutes in range" for preaim — range is for warmup, not developing preaim mastery. For preaim: deathmatch with intentional angle study. For spray control: range. For movement: deathmatch only. For decision-making: VOD review.
+- Never suggest practicing anything that requires utility in deathmatch — utility is disabled in deathmatch.
+- Never state specific weapon damage values, armor values, or game mechanics as fact unless you are certain they are correct. If unsure, omit the stat.
+- How to apply suggestions must be mindset shifts or awareness cues — never rigid prescriptive rules like "do X in your next N games".
 - Never pad with generic Valorant tips. Every sentence must come directly from what the player wrote.
 - If notes are too vague to coach from, say so and tell them what to look for next VOD instead.
 - When you identify a key problem that has a matching resource in the RESOURCE LIBRARY, add a single line at the end of that section: "For a deeper guide on fixing this: [title] by [creator] — [url]". Only recommend a resource if it directly matches the problem. Never recommend resources for problems not in the library.
@@ -165,6 +169,10 @@ CRITICAL RULES:
 - Be specific about what makes each technique work — don't just name it, explain the logic behind it.
 - Distinguish between: mechanics to practice (aim, movement), positioning habits to copy, decision-making patterns to study, and utility usage to adopt. Don't lump everything together.
 - Drills must be practical and matched to the skill. For aim mechanics: deathmatch with specific intent. For positioning: custom games or conscious in-game focus. For utility lineups: practice tool or custom lobby. Never recommend vague drills.
+- Never suggest practicing anything that requires utility in deathmatch — utility is disabled in deathmatch.
+- Never state specific weapon damage values, armor values, or game mechanics as fact unless you are certain they are correct. If unsure, omit the stat.
+- How to apply suggestions must be mindset shifts or awareness cues — never rigid prescriptive rules like "do X in your next N games".
+- Study focus items must be observable at normal watching speed. Never suggest frame-by-frame analysis.
 - Prioritize the 2-3 most impactful things from the notes, not an exhaustive list.
 - If notes are too thin to extract real lessons, say so and tell them what to focus on next watch.
 
