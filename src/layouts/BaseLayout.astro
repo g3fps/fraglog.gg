@@ -417,6 +417,7 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
   let vmAgent = null;
   let vmMap = null;
   let vmCurrentNotes = '';
+  let vmAutosaveTimer = null;
 
   function openVideo(videoId, title, player, opts = {}) {
     vmVideoId = videoId;
@@ -544,29 +545,49 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
 <textarea class="vm-notes-textarea" id="vm-textarea" placeholder="Overall observations, patterns, things to study..." style="min-height:80px;flex:1">${savedGeneral}</textarea>    </div>`;
 
     // Round-by-round shown in all modes
-    const initialRounds = savedRounds.length > 0 ? savedRounds : Array.from({length: 24}, (_, i) => ({ round: i + 1, what: '', takeaway: '' }));
+    const ROUND_CATEGORIES = ['Positioning', 'Economy', 'Utility', 'Decision Making', 'Aim/Mechanics'];
+    // Normalize legacy formats to { round, categories: { Cat: notes } }
+    const normalizedRounds = savedRounds.map(r => {
+      if (r.categories) return r;
+      const cats = {};
+      if (r.entries) {
+        r.entries.forEach(e => { if (e.category && e.notes) cats[e.category] = e.notes; });
+      } else {
+        const notes = r.notes || (r.what ? r.what + (r.takeaway ? ' → ' + r.takeaway : '') : '');
+        if (r.category && notes) cats[r.category] = notes;
+        else if (notes) cats['Positioning'] = notes;
+      }
+      return { round: r.round, categories: cats };
+    });
+    const initialRounds = normalizedRounds.length > 0
+      ? normalizedRounds
+      : Array.from({length: 24}, (_, i) => ({ round: i + 1, categories: {} }));
+
+    const buildRoundBlock = (roundNum, cats) => {
+      const hasNotes = Object.values(cats).some(v => v.trim());
+      const numClass = hasNotes ? ' has-notes' : '';
+      const inputs = ROUND_CATEGORIES.map(c =>
+        `<input class="vm-round-input" data-round="${roundNum}" data-cat="${c}" placeholder="${c}..." value="${(cats[c]||'').replace(/"/g,'&quot;')}">`
+      ).join('');
+      return `<div class="vm-round-block" data-round="${roundNum}">
+        <div class="vm-round-num${numClass}">${roundNum}</div>
+        <select class="vm-round-select" data-round="${roundNum}" onchange="vmSwitchCat(this)">
+          <option value="">—</option>
+          ${ROUND_CATEGORIES.map(c => `<option value="${c}">${c}</option>`).join('')}
+        </select>
+        <div class="vm-round-inputs">${inputs}</div>
+      </div>`;
+    };
+
     html += `<div style="flex-shrink:0">
       <div class="vm-notes-label" style="margin-bottom:6px">Round by Round</div>
     </div>
     <div class="vm-rounds-scroll" id="vm-rounds-scroll">
-      <div class="vm-rounds-table" id="vm-rounds-table">
-        <div class="vm-rounds-header">
-          <div>#</div>
-          <div>What happened</div>
-          <div>How to apply it</div>
-        </div>
-        <div id="vm-rounds-body">`;
+      <div id="vm-rounds-body">`;
 
-    initialRounds.forEach((r) => {
-      html += `<div class="vm-round-row">
-        <div class="vm-round-num">${r.round}</div>
-        <input class="vm-round-input" data-round="${r.round}" data-field="what" placeholder="What happened..." value="${(r.what||'').replace(/"/g,'&quot;')}">
-        <input class="vm-round-input" data-round="${r.round}" data-field="takeaway" placeholder="How to apply it..." value="${(r.takeaway||'').replace(/"/g,'&quot;')}">
-      </div>`;
-    });
+    initialRounds.forEach(r => { html += buildRoundBlock(r.round, r.categories || {}); });
 
     html += `</div>
-      </div>
       <button class="vm-add-round-btn" onclick="vmAddRound()">+ Add Round</button>
     </div>`;
 
@@ -576,71 +597,87 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
 
     const ta = document.getElementById('vm-textarea');
     document.getElementById('vm-char-count').textContent = '';
-    ta.addEventListener('input', () => {
+
+    const vmTriggerAutosave = () => {
       document.getElementById('vm-saved-msg').style.display = 'none';
+      clearTimeout(vmAutosaveTimer);
+      vmAutosaveTimer = setTimeout(vmSaveNote, 1500);
+    };
+
+    ta.addEventListener('input', vmTriggerAutosave);
+    document.getElementById('vm-rounds-body').addEventListener('input', e => {
+      const inp = e.target.closest('.vm-round-input');
+      if (inp) {
+        const block = inp.closest('.vm-round-block');
+        const hasAny = [...block.querySelectorAll('.vm-round-input')].some(i => i.value.trim());
+        block.querySelector('.vm-round-num').classList.toggle('has-notes', hasAny);
+      }
+      vmTriggerAutosave();
     });
+  }
+
+  function vmSwitchCat(sel) {
+    const block = sel.closest('.vm-round-block');
+    const cat = sel.value;
+    sel.classList.toggle('has-value', cat !== '');
+    block.querySelectorAll('.vm-round-input').forEach(inp => {
+      inp.classList.toggle('active', inp.dataset.cat === cat);
+    });
+    if (cat) block.querySelector(`.vm-round-input[data-cat="${cat}"]`)?.focus();
   }
 
   function vmAddRound() {
     const tbody = document.getElementById('vm-rounds-body');
     if (!tbody) return;
-    const rows = tbody.querySelectorAll('.vm-round-row');
-    const nextNum = rows.length + 1;
-    const div = document.createElement('div');
-    div.className = 'vm-round-row';
-    div.innerHTML = `<div class="vm-round-num">${nextNum}</div>
-      <input class="vm-round-input" data-round="${nextNum}" data-field="what" placeholder="What happened...">
-      <input class="vm-round-input" data-round="${nextNum}" data-field="takeaway" placeholder="How to apply it...">`;
-    tbody.appendChild(div);
-    // Scroll to new row
-    div.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    const blocks = tbody.querySelectorAll('.vm-round-block');
+    const nextNum = blocks.length + 1;
+    const CATS = ['Positioning', 'Economy', 'Utility', 'Decision Making', 'Aim/Mechanics'];
+    const block = document.createElement('div');
+    block.className = 'vm-round-block';
+    block.dataset.round = nextNum;
+    block.innerHTML = `<div class="vm-round-num">${nextNum}</div>
+      <select class="vm-round-select" data-round="${nextNum}" onchange="vmSwitchCat(this)">
+        <option value="">—</option>
+        ${CATS.map(c => `<option value="${c}">${c}</option>`).join('')}
+      </select>
+      <div class="vm-round-inputs">${CATS.map(c =>
+        `<input class="vm-round-input" data-round="${nextNum}" data-cat="${c}" placeholder="${c}...">`
+      ).join('')}</div>`;
+    tbody.appendChild(block);
+    block.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  function vmCollectRounds() {
+    const rounds = [];
+    document.querySelectorAll('.vm-round-block').forEach(block => {
+      const roundNum = parseInt(block.dataset.round);
+      const categories = {};
+      block.querySelectorAll('.vm-round-input').forEach(inp => {
+        if (inp.value.trim()) categories[inp.dataset.cat] = inp.value;
+      });
+      if (Object.keys(categories).length) rounds.push({ round: roundNum, categories });
+    });
+    return rounds;
   }
 
   function vmCollectNotes() {
-    const ta = document.getElementById('vm-textarea');
-    const general = ta ? ta.value : '';
-
-    // Collect round data for both modes
-    const inputs = document.querySelectorAll('.vm-round-input');
-    const roundMap = {};
-    inputs.forEach(inp => {
-      const r = inp.dataset.round;
-      const f = inp.dataset.field;
-      if (!roundMap[r]) roundMap[r] = { round: parseInt(r), what: '', takeaway: '' };
-      roundMap[r][f] = inp.value;
-    });
-    const rounds = Object.values(roundMap).filter(r => r.what.trim() || r.takeaway.trim());
-
+    const general = document.getElementById('vm-textarea')?.value || '';
+    const rounds = vmCollectRounds();
     if (!rounds.length) return general;
-    return JSON.stringify({ general, rounds });
-
     return JSON.stringify({ general, rounds });
   }
 
   function vmBuildNotesString() {
-    // Build a human-readable string for the AI from collected notes
-    const ta = document.getElementById('vm-textarea');
-    const general = ta ? ta.value.trim() : '';
-
-    const inputs = document.querySelectorAll('.vm-round-input');
-    const roundMap = {};
-    inputs.forEach(inp => {
-      const r = inp.dataset.round;
-      const f = inp.dataset.field;
-      if (!roundMap[r]) roundMap[r] = { round: parseInt(r), what: '', takeaway: '' };
-      roundMap[r][f] = inp.value;
-    });
-    const rounds = Object.values(roundMap).filter(r => r.what.trim() || r.takeaway.trim());
-
+    const general = document.getElementById('vm-textarea')?.value.trim() || '';
+    const rounds = vmCollectRounds();
     let str = '';
     if (general) str += `General observations:\n${general}\n\n`;
-    if (rounds.length > 0) {
+    if (rounds.length) {
       str += `Round-by-round notes:\n`;
       rounds.forEach(r => {
-        str += `Round ${r.round}:`;
-        if (r.what) str += ` ${r.what}`;
-        if (r.takeaway) str += ` | How to apply: ${r.takeaway}`;
-        str += '\n';
+        Object.entries(r.categories).forEach(([cat, notes]) => {
+          if (notes.trim()) str += `Round ${r.round} [${cat}]: ${notes.trim()}\n`;
+        });
       });
     }
     return str.trim();
@@ -899,6 +936,7 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
     clearInterval(ytTimestampSaveInterval);
     document.getElementById('video-modal').classList.remove('open');
     document.body.style.overflow = '';
+    clearTimeout(vmAutosaveTimer);
     vmVideoId = null;
     vmAgent = null;
     vmMap = null;
