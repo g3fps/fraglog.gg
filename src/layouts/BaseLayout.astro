@@ -537,15 +537,25 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
     const ROUND_CATEGORIES = ['Positioning & Decision Making', 'Economy', 'Utility'];
     // Normalize legacy formats to { round, categories: { Cat: notes } }
     const normalizedRounds = savedRounds.map(r => {
-      if (r.categories) return r;
-      const cats = {};
-      if (r.entries) {
+      let cats = {};
+      if (r.categories) {
+        cats = { ...r.categories };
+      } else if (r.entries) {
         r.entries.forEach(e => { if (e.category && e.notes) cats[e.category] = e.notes; });
       } else {
         const notes = r.notes || (r.what ? r.what + (r.takeaway ? ' → ' + r.takeaway : '') : '');
         if (r.category && notes) cats[r.category] = notes;
         else if (notes) cats['Positioning'] = notes;
       }
+      // Migrate old split categories into combined key
+      const pos = cats['Positioning'] || '';
+      const dec = cats['Decision Making'] || '';
+      if (pos || dec) {
+        cats['Positioning & Decision Making'] = [pos, dec].filter(Boolean).join(' | ');
+        delete cats['Positioning'];
+        delete cats['Decision Making'];
+      }
+      delete cats['Aim/Mechanics'];
       return { round: r.round, categories: cats };
     });
     const initialRounds = normalizedRounds.length > 0
