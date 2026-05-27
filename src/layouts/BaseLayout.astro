@@ -530,18 +530,7 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
 
     // General notes always shown
     html += `<div style="flex:1;min-height:0;display:flex;flex-direction:column">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-        <div class="vm-notes-label" style="margin-bottom:0">General Notes</div>
-        <button onclick="toggleWhatToLookFor()" id="wtlf-btn" style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.5px;background:none;border:none;color:var(--muted);cursor:pointer;padding:0;text-decoration:underline">what to look for?</button>
-      </div>
-      <div id="wtlf-panel" style="display:none;background:var(--surface2);border-radius:6px;padding:8px 10px;margin-bottom:6px;font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);line-height:1.6">
-        <strong style="color:var(--text);display:block;margin-bottom:4px">Notes that get better coaching:</strong>
-        <span>· Crosshair placement — were you pre-aiming the right angles?</span><br>
-        <span>· Positioning — where did you stand, and was it right?</span><br>
-        <span>· Ability usage — good timings? wasted util?</span><br>
-        <span>· Decision points — what did you choose and why?</span><br>
-        <span>· Patterns — did the same mistake happen in multiple rounds?</span>
-      </div>
+      <div class="vm-notes-label" style="margin-bottom:4px">General Notes</div>
 <textarea class="vm-notes-textarea" id="vm-textarea" placeholder="Overall observations, patterns, things to study..." style="min-height:80px;flex:1">${savedGeneral}</textarea>    </div>`;
 
     // Round-by-round shown in all modes
@@ -709,6 +698,7 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
     footer.style.display = 'flex';
     document.getElementById('vm-coach-btn').textContent = 'Regenerate';
     document.getElementById('vm-char-count').textContent = '';
+    if (todayFollowupUsed >= FOLLOWUP_LIMIT) vmLockFollowUp();
   }
 
   async function vmSendFollowUp() {
@@ -750,12 +740,22 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
         })
       });
       if (response.status === 401) { openAuth(); return; }
+      if (response.status === 429) {
+        const err = await response.json().catch(() => ({}));
+        todayFollowupUsed = FOLLOWUP_LIMIT;
+        const loading = document.getElementById(loadingId);
+        if (loading) loading.textContent = err.error || 'Follow-up limit reached for today.';
+        vmLockFollowUp();
+        return;
+      }
       if (!response.ok) {
         const err = await response.json().catch(() => ({}));
         throw new Error(err.error || 'API error');
       }
       const data = await response.json();
       const raw = data.text || '';
+
+      todayFollowupUsed++;
 
       const loading = document.getElementById(loadingId);
       if (loading) loading.remove();
@@ -765,6 +765,8 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
         <div>${renderCoachHtml(raw)}</div>
       </div>`;
       aiText.scrollTop = aiText.scrollHeight;
+
+      if (todayFollowupUsed >= FOLLOWUP_LIMIT) vmLockFollowUp();
     } catch(e) {
       const loading = document.getElementById(loadingId);
       if (loading) loading.textContent = e.message || 'Something went wrong. Try again.';
@@ -772,6 +774,13 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
 
     btn.disabled = false;
     btn.textContent = '→';
+  }
+
+  function vmLockFollowUp() {
+    const input = document.getElementById('vm-followup-input');
+    const btn = document.getElementById('vm-followup-btn');
+    if (input) { input.disabled = true; input.placeholder = `Follow-up limit reached (${FOLLOWUP_LIMIT}/day)`; }
+    if (btn) { btn.disabled = true; }
   }
 
   function switchToNotesMode() {
@@ -788,11 +797,6 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
     el.style.color = remaining === 0 ? 'var(--red)' : 'var(--muted)';
   }
 
-  function toggleWhatToLookFor() {
-    const panel = document.getElementById('wtlf-panel');
-    if (!panel) return;
-    panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
-  }
 
   function setVmCoachMode(mode) {
     vmCoachMode = mode;
