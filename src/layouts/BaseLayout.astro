@@ -534,7 +534,7 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
 <textarea class="vm-notes-textarea" id="vm-textarea" placeholder="Overall observations, patterns, things to study..." style="min-height:80px;flex:1">${savedGeneral}</textarea>    </div>`;
 
     // Round-by-round shown in all modes
-    const ROUND_CATEGORIES = ['Positioning', 'Economy', 'Utility', 'Decision Making', 'Aim/Mechanics'];
+    const ROUND_CATEGORIES = ['Positioning & Decision Making', 'Economy', 'Utility'];
     // Normalize legacy formats to { round, categories: { Cat: notes } }
     const normalizedRounds = savedRounds.map(r => {
       if (r.categories) return r;
@@ -620,7 +620,7 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
     if (!tbody) return;
     const blocks = tbody.querySelectorAll('.vm-round-block');
     const nextNum = blocks.length + 1;
-    const CATS = ['Positioning', 'Economy', 'Utility', 'Decision Making', 'Aim/Mechanics'];
+    const CATS = ['Positioning & Decision Making', 'Economy', 'Utility'];
     const block = document.createElement('div');
     block.className = 'vm-round-block';
     block.dataset.round = nextNum;
