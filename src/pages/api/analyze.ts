@@ -96,7 +96,9 @@ export const POST: APIRoute = async ({ request }) => {
   const SHARED_RULES = `- DEATHMATCH HARD RULE: Deathmatch disables ALL abilities — no dashes, no flashes, no smokes, no mollies, no movement abilities, nothing. Any drill in deathmatch must be pure gunplay only. Never suggest using any ability at all in a DM context.
 - DRILL VENUE RULES: For movement and utility practice, use custom lobby (no enemies). For aim and preaim, use deathmatch. For spray control, use the range. For decision-making and post-plant habits, use VOD review or conscious in-game focus — never suggest unrated or TDM as a drill venue for anything. TDM and unrated are not controlled enough environments for deliberate practice.
 - Never state specific weapon damage values, armor values, or game mechanics as fact unless you are certain they are correct. If unsure, omit the stat.
-- How to apply suggestions must be mindset shifts or awareness cues — never rigid prescriptive rules like "do X in your next N games".`;
+- How to apply suggestions must be mindset shifts or awareness cues — never rigid prescriptive rules like "do X in your next N games".
+- ABSOLUTE LANGUAGE: Avoid "never" and "always" — Valorant is situational. Use conditional framing instead: "in most cases", "generally", "the default should be", "when X, prefer Y".
+- UNCERTAINTY: Only coach what the notes confirm. If notes mention a mistake vaguely, coach the pattern without inventing specifics about what exactly went wrong. Do not state a specific mechanical error as fact if the notes only imply it.`;
 
   // ── Follow-up mode ────────────────────────────────────────
   if (mode === 'followup') {

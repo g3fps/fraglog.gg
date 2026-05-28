@@ -349,17 +349,19 @@ export const AGENT_KNOWLEDGE = {
         key_insight: "Her flash stays up for two seconds unbroken. Use it like a smoke to cross open space — as long as it's up, anyone aiming that direction gets blinded."
       },
       devour: {
-        correct_usage: "Heals 50 HP, overheals to 150, lasts 10 seconds then decays. Breaks if you lose line of sight on the orb for 0.5 seconds — jiggle in and out of cover while healing to peek for info. Key technique: delay the orb grab — hold the angle to see if someone peeks to trade, then grab. If two orbs are available, heal first then dismiss.",
+        correct_usage: "Heals 50 HP, overheals to 150, lasts 10 seconds then decays. CRITICAL MECHANIC: Both Devour and Dismiss require unbroken line of sight to the soul orb to activate — you cannot use either ability while fully behind cover. Devour cancels if you lose LoS to the orb for 0.5 seconds. This means healing requires staying exposed or at most partially behind cover. Jiggle in and out of cover while healing to peek for info while staying in LoS. Key technique: delay the orb grab — hold the angle to see if someone peeks to trade, then grab. If two orbs are available, heal first then dismiss.",
         common_mistakes: [
           "Grabbing orb immediately every time — delay it to hold the angle and see if someone swings to trade",
+          "Trying to heal or dismiss from fully behind cover — both abilities require LoS to the soul orb",
           "Healing in the open standing still — jiggle while healing to stay active"
         ],
         key_insight: "Delayed orb grab is one of Reyna's most underused techniques. Hold the angle after a kill, see if the trader peeks, then grab the orb if it's safe."
       },
       dismiss: {
-        correct_usage: "Use dismiss like a human drone on 50/50 angles — deal damage to get an assist credit, dismiss through the angle to get info, escape safely. Combine heal then dismiss when two orbs are available. Jiggle peek between heals and dismisses for extra info instead of just standing there. B-hop while dismissed to make it harder for enemies to track and shoot you as you come out.",
+        correct_usage: "CRITICAL MECHANIC: Dismiss, like Devour, requires line of sight to the soul orb to activate — you cannot dismiss from fully behind cover. Use dismiss like a human drone on 50/50 angles — deal damage to get an assist credit, dismiss through the angle to get info, escape safely. Combine heal then dismiss when two orbs are available. Jiggle peek between heals and dismisses for extra info instead of just standing there.",
         common_mistakes: [
           "Dismissing too fast after every kill without gathering extra info first",
+          "Attempting to dismiss from behind cover — requires LoS to the orb",
           "Standing still after coming out of dismiss — b-hop to make yourself harder to hit"
         ],
         key_insight: "Dismiss is a bait and switch tool. Kill first guy, dismiss — second guy swings to trade you while your teammate kills them from a different angle."
