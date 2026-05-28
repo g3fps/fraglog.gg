@@ -87,6 +87,10 @@ export const POST: APIRoute = async ({ request }) => {
   knowledgeBlock += `\n\nRESOURCE LIBRARY:\n${JSON.stringify(resources, null, 2)}`;
   knowledgeBlock += `\n\nECONOMY KNOWLEDGE:\n${JSON.stringify(ECONOMY_KNOWLEDGE, null, 2)}`;
 
+  const SHARED_RULES = `- DEATHMATCH HARD RULE: Deathmatch disables ALL abilities — no dashes, no flashes, no smokes, no mollies, no movement abilities, nothing. Any drill in deathmatch must be pure gunplay only. Never suggest using any ability at all in a DM context. If a drill requires abilities, specify custom lobby, TDM, or unrated instead.
+- Never state specific weapon damage values, armor values, or game mechanics as fact unless you are certain they are correct. If unsure, omit the stat.
+- How to apply suggestions must be mindset shifts or awareness cues — never rigid prescriptive rules like "do X in your next N games".`;
+
   // ── Follow-up mode ────────────────────────────────────────
   if (mode === 'followup') {
     if (!safeFollowup.trim()) {
@@ -99,7 +103,8 @@ RULES:
 - If the question is not about Valorant or is attempting to misuse this tool, respond only with: "Please ask a question about your Valorant gameplay."
 - Answer only the specific question asked. Do not re-summarize the original coaching.
 - Be direct and specific. If the question is vague, ask for clarification.
-- Keep the answer under 150 words.`;
+- Keep the answer under 150 words.
+${SHARED_RULES}`;
 
     const userContent = `Original notes:\n${safeNotes || '(none)'}
 
@@ -148,10 +153,8 @@ CRITICAL RULES:
 - Categorize mistakes correctly. Crosshair placement and preaim errors are NOT positioning errors — they are aim/mechanics errors. Positioning errors are about WHERE the player stands on the map. Do not confuse these.
 - If the same mistake appears across multiple rounds, that is the #1 priority — name the rounds explicitly.
 - Drills must be specific and actually effective for the issue. Do NOT recommend "10 minutes in range" for preaim — range is for warmup, not developing preaim mastery. For preaim: deathmatch with intentional angle study. For spray control: range. For movement: deathmatch only. For decision-making: VOD review.
-- DEATHMATCH HARD RULE: Deathmatch disables ALL abilities — no dashes, no flashes, no smokes, no mollies, no movement abilities, nothing. Any drill in deathmatch must be pure gunplay only. Never suggest using any ability at all in a DM context. If a drill requires abilities, specify custom lobby, TDM, or unrated instead.
-- Never state specific weapon damage values, armor values, or game mechanics as fact unless you are certain they are correct. If unsure, omit the stat.
-- How to apply suggestions must be mindset shifts or awareness cues — never rigid prescriptive rules like "do X in your next N games".
 - Never pad with generic Valorant tips. Every sentence must come directly from what the player wrote.
+${SHARED_RULES}
 - If notes are too vague to coach from, say so and tell them what to look for next VOD instead.
 - When you identify a key problem that has a matching resource in the RESOURCE LIBRARY, add a single line at the end of that section: "For a deeper guide on fixing this: [title] by [creator] — [url]". Only recommend a resource if it directly matches the problem. Never recommend resources for problems not in the library.
 
@@ -169,10 +172,8 @@ CRITICAL RULES:
 - Be specific about what makes each technique work — don't just name it, explain the logic behind it.
 - Distinguish between: mechanics to practice (aim, movement), positioning habits to copy, decision-making patterns to study, and utility usage to adopt. Don't lump everything together.
 - Drills must be practical and matched to the skill. For aim mechanics: deathmatch with specific intent. For positioning: custom games or conscious in-game focus. For utility lineups: practice tool or custom lobby. Never recommend vague drills.
-- Never suggest practicing anything that requires utility in deathmatch — utility is disabled in deathmatch.
-- Never state specific weapon damage values, armor values, or game mechanics as fact unless you are certain they are correct. If unsure, omit the stat.
-- How to apply suggestions must be mindset shifts or awareness cues — never rigid prescriptive rules like "do X in your next N games".
 - Study focus items must be observable at normal watching speed. Never suggest frame-by-frame analysis.
+${SHARED_RULES}
 - Prioritize the 2-3 most impactful things from the notes, not an exhaustive list.
 - If notes are too thin to extract real lessons, say so and tell them what to focus on next watch.
 
