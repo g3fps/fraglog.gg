@@ -867,7 +867,8 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
 
   async function vmCoachMe() {
     if (!currentUser) { openAuth(); return; }
-    const notes = vmBuildNotesString();
+    const ta = document.getElementById('vm-textarea');
+    const notes = ta ? vmBuildNotesString() : vmCurrentNotes;
     if (!notes) { alert('Write some notes first.'); return; }
     vmCurrentNotes = notes;
 

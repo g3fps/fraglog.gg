@@ -191,8 +191,13 @@ async function renderMyVods() {
 }
 
 async function deleteMyVod(id) {
-  if (!confirm("Remove this VOD from your collection?")) return;
+  if (!confirm("Remove this VOD from your collection? Your notes will also be deleted.")) return;
   const sb = initSupabase();
+  const { data: vod } = await sb.from("user_vods").select("video_id").eq("id", id).eq("user_id", currentUser.id).single();
+  if (vod?.video_id) {
+    await sb.from("notes").delete().eq("user_id", currentUser.id).eq("video_id", vod.video_id);
+    await sb.from("watched").delete().eq("user_id", currentUser.id).eq("video_id", vod.video_id);
+  }
   await sb.from("user_vods").delete().eq("id", id).eq("user_id", currentUser.id);
   renderMyVods();
 }
