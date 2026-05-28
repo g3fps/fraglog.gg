@@ -724,17 +724,35 @@ export const AGENT_KNOWLEDGE = {
     core_philosophy: "Frontline controller who uses his wall and smoke together to cover multiple sightlines simultaneously. Wall covers one side, smoke covers the other, ult blinds the site as you enter. Built for pushing with your team.",
     watch: [],
     abilities: {
-      storm_surge: {
-        correct_usage: "Grenade that slows and nearsights enemies in the area. Good for taking space and pushing enemies out of positions. Can bounce off walls."
+      cascade: {
+        correct_usage: "Wave that travels forward, briefly blocks vision, and slows enemies it passes through. NOT a lineup ability — you fire it and can adjust its direction slightly, but the goal is reading where enemies are and sending it through them, not hitting a memorized spot. Good for taking space, interrupting a push, or covering a crossing. The execution error to fix is timing and direction, not a specific placement to memorize.",
+        common_mistakes: [
+          "Treating cascade like a Viper wall lineup — there is no fixed spot to drill, it's a read-and-react ability",
+          "Activating it reactively after enemies are already committed — cascade needs to be sent proactively before the push, not in response to it"
+        ]
       },
       high_tide: {
-        correct_usage: "Wave wall that blocks vision and slows enemies who cross it. Can be guided by holding left click and steered, or thrown straight. Cancel early with right click if you don't need the full length. Covers mid and one side of the map — pair with smoke to cover the other side."
+        correct_usage: "Long steerable wall that blocks vision and slows enemies who cross it. Guided by holding left click, or thrown straight. Cancel early with right click. NOT a lineup ability — it's an adaptive wall you steer to cover the angles your team needs. The goal is understanding which sightlines to block for a given execute, not hitting a fixed spot. Pair with Cove to cover both sides of a site. Activate before contact pressure, not in response to it.",
+        common_mistakes: [
+          "Treating High Tide like a Viper wall lineup — you steer it based on the situation, there is no fixed placement to memorize in a custom lobby",
+          "Activating reactively after enemies are already pushing — a wall deployed too late provides no value regardless of where it lands"
+        ],
+        key_insight: "The mistake on a late High Tide is timing, not placement. Practice deploying it at the start of an execute in live games, not drilling a fixed spot."
       },
       cove: {
-        correct_usage: "Smoke that can be reinforced by clicking again — reinforced smoke blocks bullets. 40 second cooldown. Good range, covers most of the map except very large maps like Pearl or Breeze. Use unreinforced to cross, reinforce when you need bullet protection."
+        correct_usage: "Functions like Omen's smoke — you aim and throw it where you need coverage. No lineup required. Reinforcing it with a second click blocks bullets, making it useful for crossing or planting. 40 second cooldown. Good range, covers most of the map except very large maps like Pearl or Breeze. Use unreinforced to cross, reinforce when you need bullet protection.",
+        common_mistakes: [
+          "Treating Cove like a Viper orb that needs a specific lineup spot — it is a targeted throw like Omen's smoke, just aim at where you want it",
+          "Standing too close to cove — when it breaks you have no reaction time, treat its edge as a temporary boundary and give yourself retreat distance"
+        ]
       },
       reckoning: {
-        correct_usage: "Large AoE that nearsights and slows — same effect as Storm Surge but much bigger range. 7 orbs. Throw it onto site and follow the wave in — enemies are blinded as you arrive. Be careful at close range — nearsight doesn't fully blind at very close distances."
+        correct_usage: "Large AoE that nearsights and stuns — throw it onto site and follow the wave in, enemies are blinded as you arrive. 7 orbs. Wait for enemies to be fully committed to site before throwing — hitting the center of the cluster gets more value than clipping the edge. Timing is as important as targeting: too early and enemies back out, too late and you miss the entry window.",
+        common_mistakes: [
+          "Using Reckoning before enemies are fully committed to site — you get fewer targets and wasted charges",
+          "Clipping the edge of the enemy cluster instead of centering it — aim for the densest group, not just the first enemy you see"
+        ],
+        key_insight: "Reckoning timing and targeting are separate skills. Timing: wait for enemies to commit. Targeting: aim for the center of the group. Review rounds where it underperformed to identify which error it was."
       }
     }
   },
@@ -1181,6 +1199,14 @@ export const RESOURCES = {
       url: "https://www.youtube.com/watch?v=8lgwinmOFMI",
       creator: "korey",
       description: "In depth breakdown of movement with drills - best for higher ranks but good for all players to understand"
+    }
+  ],
+  cypher_utility: [
+    {
+      title: "The COMPLETE Cypher Guide",
+      url: "https://www.youtube.com/watch?v=YjsZlMQDraM",
+      creator: "ItsFlameBTW",
+      description: "Comprehensive Cypher guide covering camera placement, cage lineups, and trap wire setups across all maps"
     }
   ]
 };

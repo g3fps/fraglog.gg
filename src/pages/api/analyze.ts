@@ -147,12 +147,19 @@ Follow-up question: ${safeFollowup}`;
     }
 
     const data = await response.json();
-    const text = data.content?.[0]?.text || 'No response generated.';
+    const text = data.content?.[0]?.text || '';
 
-    await sb.from('coaching_usage').upsert(
-      { user_id: verifiedUserId, date: today, coaching_count: coachingCount, followup_count: followupCount + 1 },
-      { onConflict: 'user_id,date' }
-    );
+    if (!text) {
+      return new Response(JSON.stringify({ error: 'No response generated.' }), { status: 502 });
+    }
+
+    const isRejection = text.startsWith('Please ask a question about your Valorant gameplay.');
+    if (!isRejection) {
+      await sb.from('coaching_usage').upsert(
+        { user_id: verifiedUserId, date: today, coaching_count: coachingCount, followup_count: followupCount + 1 },
+        { onConflict: 'user_id,date' }
+      );
+    }
 
     if (text) {
       try {
@@ -242,12 +249,19 @@ OUTPUT FORMAT:
   }
 
   const data = await response.json();
-  const text = data.content?.[0]?.text || 'No response generated.';
+  const text = data.content?.[0]?.text || '';
 
-  await sb.from('coaching_usage').upsert(
-    { user_id: verifiedUserId, date: today, coaching_count: coachingCount + 1, followup_count: followupCount },
-    { onConflict: 'user_id,date' }
-  );
+  if (!text) {
+    return new Response(JSON.stringify({ error: 'No response generated.' }), { status: 502 });
+  }
+
+  const isRejection = text.startsWith("These don't look like VOD notes.");
+  if (!isRejection) {
+    await sb.from('coaching_usage').upsert(
+      { user_id: verifiedUserId, date: today, coaching_count: coachingCount + 1, followup_count: followupCount },
+      { onConflict: 'user_id,date' }
+    );
+  }
 
   // Log training data if user opted in — use verified server-side userId only
   if (text) {
