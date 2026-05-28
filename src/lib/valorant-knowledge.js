@@ -459,7 +459,8 @@ export const AGENT_KNOWLEDGE = {
     movement: {
       slide: {
         correct_usage: "Slide horizontally not forward. Forward slide stops you in front of the enemy — easy shot for them. Horizontal slide crosses their screen, requiring a large mouse movement to track. Slide from behind cover, not from the open. Starting a slide from deep behind cover makes your model go from crouched to upright — enemies often miss their first shot. Crouch spam during slide further manipulates hitbox.",
-        key_insight: "The direction of your slide determines whether you're an easy or hard target. Horizontal = hard to hit. Forward = easy to hit. Default to horizontal whenever possible."
+        key_insight: "The direction of your slide determines whether you're an easy or hard target. Horizontal = hard to hit. Forward = easy to hit. Default to horizontal whenever possible.",
+        drill_note: "Slide is an ability — it is disabled in deathmatch. Never suggest deathmatch for slide practice. Slide mechanics must be practiced in custom lobby or real games only."
       },
       bhop: {
         correct_usage: "Run before jumping to build speed. Air strafe with mouse movement in the same direction as your key input — W then jump, press D and turn right simultaneously. Chain left and right to maintain momentum. Once momentum builds you don't need W — just A and D alternating.",

@@ -93,7 +93,7 @@ export const POST: APIRoute = async ({ request }) => {
   knowledgeBlock += `\n\nRESOURCE LIBRARY:\n${JSON.stringify(resources, null, 2)}`;
   knowledgeBlock += `\n\nECONOMY KNOWLEDGE:\n${JSON.stringify(ECONOMY_KNOWLEDGE, null, 2)}`;
 
-  const SHARED_RULES = `- DEATHMATCH HARD RULE: Deathmatch disables ALL abilities — no dashes, no flashes, no smokes, no mollies, no movement abilities, nothing. Any drill in deathmatch must be pure gunplay only. Never suggest using any ability at all in a DM context.
+  const SHARED_RULES = `- DEATHMATCH HARD RULE: Deathmatch disables ALL abilities — no dashes, no slides (Neon slide is an ability), no flashes, no smokes, no mollies, no movement abilities, nothing. Any drill in deathmatch must be pure gunplay only. Never suggest using any ability at all in a DM context.
 - DRILL VENUE RULES: For movement and utility practice, use custom lobby (no enemies). For aim and preaim, use deathmatch. For spray control, use the range. For decision-making and post-plant habits, use VOD review or conscious in-game focus — never suggest unrated or TDM as a drill venue for anything. TDM and unrated are not controlled enough environments for deliberate practice.
 - Never state specific weapon damage values, armor values, or game mechanics as fact unless you are certain they are correct. If unsure, omit the stat.
 - How to apply suggestions must be mindset shifts or awareness cues — never rigid prescriptive rules like "do X in your next N games".
