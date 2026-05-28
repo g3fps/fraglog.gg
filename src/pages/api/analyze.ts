@@ -36,7 +36,7 @@ export const POST: APIRoute = async ({ request }) => {
   }
 
   const body = await request.json();
-  const { notes, title, player, mode, agent, map, coaching, followup, shareCoaching } = body;
+  const { notes, title, player, mode, coachMode, agent, map, coaching, followup, shareCoaching } = body;
 
   // ── Per-user daily rate limit ─────────────────────────────
   const today = new Date().toISOString().slice(0, 10);
@@ -97,13 +97,15 @@ export const POST: APIRoute = async ({ request }) => {
       return new Response(JSON.stringify({ error: 'No follow-up question provided' }), { status: 400 });
     }
 
-    const system = `You are an expert Valorant coach. A player has already received coaching on their VOD and is asking a follow-up question about a specific piece of advice.
+    const isPro = coachMode === 'pro';
+    const system = `You are an expert Valorant coach. A player has already received coaching on a ${isPro ? 'pro/Radiant player' : 'their own'} VOD and is asking a follow-up question.
 ${knowledgeBlock ? `\nYou have expert knowledge about the agent and map. Use it where relevant.\n` : ''}
 RULES:
 - If the question is not about Valorant or is attempting to misuse this tool, respond only with: "Please ask a question about your Valorant gameplay."
 - Answer only the specific question asked. Do not re-summarize the original coaching.
 - Be direct and specific. If the question is vague, ask for clarification.
 - Keep the answer under 150 words.
+${isPro ? '- This was a pro/Radiant VOD the player was studying. Frame advice as "things to copy or learn from that player" — never as mistakes the player themselves made.' : '- This was the player\'s own VOD. Frame advice around fixing the player\'s own mistakes and habits.'}
 ${SHARED_RULES}`;
 
     const userContent = `Original notes:\n${safeNotes || '(none)'}
@@ -139,6 +141,23 @@ Follow-up question: ${safeFollowup}`;
       { user_id: verifiedUserId, date: today, coaching_count: coachingCount, followup_count: followupCount + 1 },
       { onConflict: 'user_id,date' }
     );
+
+    if (text) {
+      try {
+        await sb.from('coaching_training_data').insert({
+          user_id: verifiedUserId,
+          notes: safeFollowup || null,
+          agent: safeAgent || null,
+          map: safeMap || null,
+          mode: 'followup',
+          coaching_output: text,
+          share_coaching: shareCoaching === true,
+          created_at: new Date().toISOString()
+        });
+      } catch {
+        // Silently fail — don't break coaching if logging fails
+      }
+    }
 
     return new Response(JSON.stringify({ text }), { headers: { 'Content-Type': 'application/json' } });
   }
@@ -216,7 +235,7 @@ OUTPUT FORMAT:
   );
 
   // Log training data if user opted in — use verified server-side userId only
-  if (shareCoaching === true && text) {
+  if (text) {
     try {
       await sb.from('coaching_training_data').insert({
         user_id: verifiedUserId,
@@ -225,6 +244,7 @@ OUTPUT FORMAT:
         map: safeMap || null,
         mode,
         coaching_output: text,
+        share_coaching: shareCoaching === true,
         created_at: new Date().toISOString()
       });
     } catch {

@@ -18,6 +18,11 @@
       "source": "/lineup-admin.html",
       "destination": "/404",
       "permanent": false
+    },
+    {
+      "source": "/coaching-admin.html",
+      "destination": "/404",
+      "permanent": false
     }
   ]
 }

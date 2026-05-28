@@ -743,10 +743,12 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
           title: document.getElementById('vm-title').textContent,
           player: document.getElementById('vm-player').textContent,
           mode: 'followup',
+          coachMode: vmCoachMode,
           agent: vmAgent,
           map: vmMap,
           coaching: currentCoaching,
-          followup: question
+          followup: question,
+          shareCoaching: userShareCoaching === true
         })
       });
       if (response.status === 401) { openAuth(); return; }
