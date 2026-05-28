@@ -479,7 +479,6 @@ export const AGENT_KNOWLEDGE = {
       snake_bite: {
         correct_usage: "Stalls enemies at key positions. Use to hold plant location, flush enemies out of corners, or stall the retake. With only one snake bite, it's often better to use it to stall the retake than save it for post-plant diffuse stall — 6.5 seconds of stall on the retake is often more valuable than waiting for the diffuse.",
         common_mistakes: [
-          "Saving snake bite for post-plant when using it to stall the retake would have been more valuable",
           "Not using it to flush enemies out of corners — it forces a swing or a death, either works for you"
         ],
         key_insight: "Snake bite forces enemies into bad choices — swing into the open or take the damage. Neither is good for them."
@@ -821,7 +820,8 @@ export const AGENT_KNOWLEDGE = {
     abilities: {
       haunt: {
         correct_usage: "Use to scan enemies before executing — throw at a high angle that covers the bomb site. On defense, throw into smokes to scan enemies executing through them, then spray through the smoke or penetrable walls. On retake, call out to teammates before throwing so everyone pushes together off the scan. Save it until it's regenerated before initiating an execute.",
-        key_insight: "Haunt controls when your team executes — you're the one who initiates the countdown. Don't throw it randomly, throw it right before your team is ready to go."
+        key_insight: "Haunt controls when your team executes — you're the one who initiates the countdown. Don't throw it randomly, throw it right before your team is ready to go.",
+        lineup_note: "Haunt has lineup spots (specific throw positions to reliably land on key areas of a site), but the arc of the throw is irrelevant — only the landing position matters. When coaching Haunt placement mistakes, the drill is practicing landing spots, never arc practice."
       },
       seize: {
         correct_usage: "Use to clear specific corners — it tells you if someone is there by latching onto them or disappearing. Save for post-plant to stop enemies from pushing you off the spike. Don't waste it during default — save it for executes or post-plant. On defense use it early at common push spots to catch enemies committing.",
