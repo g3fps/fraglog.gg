@@ -655,6 +655,11 @@ footer { border-top: 1px solid var(--border); padding: 3rem 2.5rem; margin-top: 
 .vm-save-btn.primary:hover { background: #e03040; }
 .vm-save-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
+/* ── NOTES TAB BAR (mobile only, hidden on desktop) ──────── */
+.vm-notes-tab-bar { display: none; }
+.vm-notes-panel { display: flex; flex: 1; min-height: 0; flex-direction: column; }
+.vm-collapse-btn { display: none; }
+
 /* ── ROUND TABLE ─────────────────────────────────────────── */
 .vm-rounds-scroll { flex: 1; min-height: 0; overflow-y: auto; border: 1px solid var(--border); border-radius: 4px; background: var(--darker); display: flex; flex-direction: column; }
 .vm-round-block { display: grid; grid-template-columns: 32px 130px 1fr; border-bottom: 1px solid rgba(255,255,255,0.04); }
@@ -838,9 +843,18 @@ footer { border-top: 1px solid var(--border); padding: 3rem 2.5rem; margin-top: 
     overflow-y: auto;
   }
   .video-modal-right-body { overflow-y: auto; }
-  .vm-rounds-scroll { max-height: 200px; }
+  .vm-rounds-scroll { max-height: none; flex: 1; }
   .video-modal-right-footer { flex-wrap: wrap; }
   .vm-footer-right { flex-wrap: wrap; }
+  .vm-collapse-btn { display: flex; align-items: center; justify-content: center; background: none; border: 1px solid var(--border); color: var(--muted); width: 26px; height: 26px; border-radius: 4px; cursor: pointer; font-size: 12px; flex-shrink: 0; }
+  .video-modal-left { transition: max-height 0.25s ease, opacity 0.25s ease; overflow: hidden; max-height: 600px; }
+  .video-modal-left.vm-video-collapsed { max-height: 0; opacity: 0; border: none; }
+  .vm-notes-tab-bar { display: flex; }
+  .vm-notes-tab-bar button { flex: 1; padding: 8px; background: var(--surface2); border: none; border-bottom: 2px solid var(--border); color: var(--muted); font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; transition: all 0.15s; }
+  .vm-notes-tab-bar button.active { background: var(--darker); border-bottom-color: var(--red); color: var(--text); }
+  .vm-notes-panel { display: none; flex: 1; min-height: 0; flex-direction: column; }
+  .vm-notes-panel.active { display: flex; }
+  .vm-notes-label { display: none; }
 }
 @media (max-width: 480px) {
   .agent-grid { grid-template-columns: repeat(2, 1fr); }
