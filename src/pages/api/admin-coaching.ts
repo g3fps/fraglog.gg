@@ -2,6 +2,38 @@
 import type { APIRoute } from 'astro';
 import { createClient } from '@supabase/supabase-js';
 
+export const DELETE: APIRoute = async ({ request }) => {
+  const authHeader = request.headers.get('authorization');
+  const accessToken = authHeader?.replace('Bearer ', '').trim();
+
+  const sb = createClient(
+    'https://cvdtykmkajmhlxydhzzl.supabase.co',
+    import.meta.env.SUPABASE_SERVICE_KEY
+  );
+
+  if (!accessToken) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
+  }
+
+  const { data: { user } } = await sb.auth.getUser(accessToken);
+  if (!user) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
+  }
+
+  const url = new URL(request.url);
+  const id = url.searchParams.get('id');
+  if (!id) {
+    return new Response(JSON.stringify({ error: 'Missing id' }), { status: 400 });
+  }
+
+  const { error } = await sb.from('coaching_training_data').delete().eq('id', id);
+  if (error) {
+    return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+  }
+
+  return new Response(JSON.stringify({ ok: true }), { headers: { 'Content-Type': 'application/json' } });
+};
+
 export const GET: APIRoute = async ({ request }) => {
   const authHeader = request.headers.get('authorization');
   const accessToken = authHeader?.replace('Bearer ', '').trim();

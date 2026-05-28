@@ -93,6 +93,22 @@ header { display: flex; align-items: center; gap: 12px; margin-bottom: 2rem; bor
 }
 .expand-btn:hover { opacity: 0.7; }
 
+.delete-btn {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 1px;
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  padding: 2px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+.delete-btn:hover { border-color: var(--red); color: var(--red); }
+
 .empty { text-align: center; padding: 3rem; color: var(--muted); font-family: 'DM Mono', monospace; font-size: 12px; }
 
 .load-more {
@@ -305,6 +321,7 @@ function render() {
         ${e.map ? `<span class="tag tag-map">${e.map}</span>` : ''}
         ${e.share_coaching ? '<span class="tag tag-shared">shared</span>' : '<span class="tag tag-private">private</span>'}
         <span class="entry-date">${fmt(e.created_at)}</span>
+        <button class="delete-btn" onclick="deleteEntry('${e.id}', this)" title="Delete">✕</button>
       </div>
       ${e.notes ? `
       <div class="entry-section">
@@ -325,6 +342,27 @@ function render() {
 function expand(id, btn) {
   document.getElementById(id).classList.remove('collapsed');
   btn.remove();
+}
+
+async function deleteEntry(id, btn) {
+  if (!confirm('Delete this entry? This cannot be undone.')) return;
+  btn.disabled = true;
+  btn.textContent = '...';
+  const token = await getToken();
+  const res = await fetch(`/api/admin-coaching?id=${id}`, {
+    method: 'DELETE',
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  if (res.ok) {
+    allEntries = allEntries.filter(e => e.id !== id);
+    totalCount--;
+    document.getElementById('stat').textContent = `${totalCount} entries`;
+    render();
+  } else {
+    btn.disabled = false;
+    btn.textContent = '✕';
+    alert('Delete failed.');
+  }
 }
 
 function esc(str) {
