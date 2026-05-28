@@ -850,6 +850,7 @@ footer { border-top: 1px solid var(--border); padding: 3rem 2.5rem; margin-top: 
   .video-modal-left { transition: max-height 0.25s ease, opacity 0.25s ease; overflow: hidden; max-height: 600px; }
   .video-modal-left.vm-video-collapsed { max-height: 0; opacity: 0; border: none; }
   .video-modal-left.vm-video-collapsed ~ .video-modal-right .vm-notes-textarea { min-height: calc(92vh - 220px); }
+  .vm-notes-textarea, .vm-round-input { font-size: 16px; }
   .vm-notes-tab-bar { display: flex; }
   .vm-notes-tab-bar button { flex: 1; padding: 8px; background: var(--surface2); border: none; border-bottom: 2px solid var(--border); color: var(--muted); font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; transition: all 0.15s; }
   .vm-notes-tab-bar button.active { background: var(--darker); border-bottom-color: var(--red); color: var(--text); }
