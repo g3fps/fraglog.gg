@@ -36,11 +36,13 @@ Examples:
 "Tarik Jett Ascent RADIANT ENTRY"
 
 Format: [TEAM] Player Agent Map RANK DESCRIPTOR
-- TEAM prefix (org abbreviation like ENVY, C9, NRG, PRX, TL) only if mentioned in YouTube title — omit if unknown
+- TEAM prefix (org abbreviation like ENVY, C9, NRG, PRX, TL) only if confirmed in YouTube title — omit if unknown
 - Player name as-is (preserve casing like TenZ, s0m, OXY)
 - Agent and Map in Title Case
-- Trailing ALL CAPS tag(s) drawn from the YouTube title — can be rank + descriptor (RADIANT RANKED, IMMORTAL MVP) or just a descriptor (OPERATOR GOAT, ENTRY GOD, 35 KILLS, PRO SCRIMS, CITY SCRIMS, VS ASPAS)
-- Pick whatever ALL CAPS ending best captures what makes the VOD interesting
+- Trailing ALL CAPS tag(s): rank (RADIANT, IMMORTAL) + a short punchy descriptor
+- Good descriptors: RANKED, MVP, ENTRY, DOMINATION, CLUTCH, HIGHLIGHTS, FULL GAME, 1v5, or a kill count like 35 KILLS
+- Only use PRO SCRIMS if the YouTube title explicitly confirms it's scrims or customs
+- Default to RANKED when nothing notable stands out; only borrow from the YouTube title when it adds something genuinely interesting (high kill count, special game mode, notable matchup)
 - Max 65 chars, no quotes
 
 VOD info:
