@@ -25,12 +25,30 @@ export async function POST({ request }: { request: Request }) {
     if (res.ok) ytTitle = (await res.json()).title || '';
   } catch {}
 
-  const prompt = `Generate a concise title for a Valorant VOD. Details:
+  const prompt = `Generate a Valorant VOD title matching this exact style:
+
+Examples:
+"ENVY demon1 Jett Ascent RADIANT RANKED"
+"C9 OXY Jett Ascent RADIANT ENTRY"
+"NRG s0m Omen Ascent RADIANT MVP"
+"aspas Jett Ascent RADIANT DOMINATION"
+"NAVI hiro Phoenix Ascent RADIANT RANKED"
+"Tarik Jett Ascent RADIANT ENTRY"
+
+Format: [TEAM] Player Agent Map RANK DESCRIPTOR
+- TEAM prefix (org abbreviation like ENVY, C9, NRG, PRX, TL) only if mentioned in YouTube title — omit if unknown
+- Player name as-is (preserve casing like TenZ, s0m, OXY)
+- Agent and Map in Title Case
+- Trailing ALL CAPS tag(s) drawn from the YouTube title — can be rank + descriptor (RADIANT RANKED, IMMORTAL MVP) or just a descriptor (OPERATOR GOAT, ENTRY GOD, 35 KILLS, PRO SCRIMS, CITY SCRIMS, VS ASPAS)
+- Pick whatever ALL CAPS ending best captures what makes the VOD interesting
+- Max 65 chars, no quotes
+
+VOD info:
 Player: ${player}
 Map: ${map}
 Agent: ${agent}${kd ? `\nK/D: ${kd}` : ''}${ytTitle ? `\nYouTube title: "${ytTitle}"` : ''}
 
-Rules: format like "Player Agent Map VOD" or natural variation, include rank if in YouTube title, max 60 chars, no quotes. Reply with only the title.`;
+Reply with only the title.`;
 
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
