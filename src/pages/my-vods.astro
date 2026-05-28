@@ -197,6 +197,8 @@ async function deleteMyVod(id) {
   if (vod?.video_id) {
     await sb.from("notes").delete().eq("user_id", currentUser.id).eq("video_id", vod.video_id);
     await sb.from("watched").delete().eq("user_id", currentUser.id).eq("video_id", vod.video_id);
+    delete userNotes[vod.video_id];
+    delete userCoach[vod.video_id];
   }
   await sb.from("user_vods").delete().eq("id", id).eq("user_id", currentUser.id);
   renderMyVods();

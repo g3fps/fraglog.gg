@@ -300,10 +300,11 @@ export const AGENT_KNOWLEDGE = {
     watch: [],
     abilities: {
       recon_bolt: {
-        correct_usage: "One of the best info tools in the game. Even if enemies shoot it, that's info — someone is holding that area. Use unexpected lineups so enemies have less time to react, letting your team flood while crosshairs are displaced. On defense, a well-timed dart against a rush lets your team safely spam through walls and smokes while enemies are distracted. Don't use the same lineup every round — enemies will counter it.",
+        correct_usage: "One of the best info tools in the game. Even if enemies shoot it, that's info — someone is holding that area. Use unexpected lineups so enemies have less time to react, letting your team flood while crosshairs are displaced. On defense, a well-timed dart against a rush lets your team safely spam through walls and smokes while enemies are distracted. Don't use the same lineup every round — enemies will counter it. CRITICAL MECHANIC: Where the bolt lands is determined entirely by the lineup (aim angle + charge level + bounces) — you cannot 'adjust your arc' on the fly. If coverage is wrong, the fix is learning a better lineup, not thinking about trajectory while firing.",
         common_mistakes: [
           "Repeating the same dart lineup every round — enemies will pre-aim and destroy it",
-          "Not following up the dart with pressure — info is wasted if your team doesn't act on it"
+          "Not following up the dart with pressure — info is wasted if your team doesn't act on it",
+          "Firing without a learned lineup and hoping for good coverage — bolt placement is precise and must be practiced"
         ],
         key_insight: "If enemies shoot the dart, that's still info. Someone had to stop and aim at it — that tells you where they are and what they're doing."
       },

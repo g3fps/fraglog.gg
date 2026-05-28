@@ -832,7 +832,8 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
 
     const withHeaders = escaped
       .replace(/\*\*(.+?)\*\*/g, (_, t) => `<strong>${t}</strong>`)
-      .replace(/^#{1,3}\s+(.+)$/gm, (_, t) => `<div class="vm-coach-section-header">${t}</div>`);
+      .replace(/^#{1,3}\s+(.+)$/gm, (_, t) => `<div class="vm-coach-section-header">${t}</div>`)
+      .replace(/(https?:\/\/[^\s<]+)/g, (url) => `<a href="${url}" target="_blank" rel="noopener" style="color:var(--red);text-decoration:underline;word-break:break-all">${url}</a>`);
 
     const withBreaks = withHeaders
       .replace(/\n\n+/g, '</p><p>')
