@@ -41,7 +41,7 @@ export const AGENT_KNOWLEDGE = {
       key_insight: "The more space you take early on defense, the more your team can stack. One Jett controlling A main can free up four players to stack B."
     },
     weapons: {
-      post_pistol_win_defense: "Outlaw. Scoped weapons are Jett's friend because she has a dash escape. Outlaw flows into bonus round and can abuse players without full armor."
+      post_pistol_win_defense: "Outlaw. Scoped weapons are Jett's friend because she has a dash escape. Outlaw does 140 body damage per shot — one-shots players with light shields (125 HP total) but requires two body shots to kill players with heavy shields (150 HP total). Flows into bonus rounds well since most enemies won't have heavy shields."
     }
   },
   phoenix: {
