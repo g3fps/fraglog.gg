@@ -72,6 +72,11 @@ select option { background: var(--surface); }
 .btn-copy { background: var(--surface2); color: var(--text); border: 1px solid var(--border); width: 100%; margin-top: 10px; padding: 12px; font-size: 12px; }
 .btn-copy:hover { border-color: var(--red); color: var(--red); }
 .btn-copy.copied { background: rgba(107,207,107,0.15); border-color: #6BCF6B; color: #6BCF6B; }
+.btn-ai { background: rgba(255,70,85,0.12); color: var(--red); border: 1px solid rgba(255,70,85,0.3); padding: 10px 14px; }
+.btn-ai:hover { background: rgba(255,70,85,0.2); }
+.btn-ai:disabled { opacity: 0.5; cursor: not-allowed; }
+.title-row { display: flex; gap: 8px; align-items: flex-end; }
+.title-row input { flex: 1; }
 
 .thumb-preview { display: none; margin-top: 12px; }
 .thumb-preview img { width: 100%; border-radius: 8px; border: 1px solid var(--border); }
@@ -257,7 +262,10 @@ select option { background: var(--surface); }
     <div class="row">
       <div class="field">
         <label>Title</label>
-        <input type="text" id="inp-title" placeholder="Tarik Jett Ascent Radiant VOD">
+        <div class="title-row">
+          <input type="text" id="inp-title" placeholder="Auto-generated — or type your own">
+          <button class="btn btn-ai" id="gen-title-btn" onclick="generateTitle()" title="Generate title with AI">AI</button>
+        </div>
       </div>
       <div class="field">
         <label>Date</label>
@@ -266,30 +274,23 @@ select option { background: var(--surface); }
     </div>
   </div>
 
-  <!-- STEP 3: Generate -->
-  <div class="section-title">Step 3 — Generate & add to session</div>
+  <!-- STEP 3: Save -->
+  <div class="section-title">Step 3 — Save to data.js</div>
   <div class="card">
-    <button class="btn btn-primary" style="width:100%;padding:14px" onclick="addEntry()">+ Add VOD to Session</button>
-    <p class="tip" style="margin-top:12px">Add multiple VODs then copy the full batch at the end. Press <strong>Cmd+Enter</strong> (or <strong>Ctrl+Enter</strong>) to add quickly.</p>
+    <button class="btn btn-primary" style="width:100%;padding:14px" onclick="saveVod()">+ Save VOD to data.js</button>
+    <div id="save-status" style="font-family:'DM Mono',monospace;font-size:11px;text-align:center;margin-top:10px;min-height:16px"></div>
+    <p class="tip" style="margin-top:12px">Saves directly to <strong>src/data/data.js</strong>. Duplicate IDs are rejected automatically. Press <strong>Ctrl+Enter</strong> to save quickly.</p>
   </div>
 
-  <!-- Session entries -->
+  <!-- Session log -->
   <div class="section-title" style="display:flex;justify-content:space-between;align-items:center">
-    <span>Session VODs (<span id="entry-count">0</span>)</span>
-    <button class="btn btn-secondary" style="font-size:10px;padding:5px 12px" onclick="clearSession()">Clear session</button>
+    <span>Saved this session (<span id="entry-count">0</span>)</span>
+    <button class="btn btn-secondary" style="font-size:10px;padding:5px 12px" onclick="clearSession()">Clear log</button>
   </div>
   <div class="card">
     <div class="entries-list" id="entries-list">
-      <div class="empty-state">No VODs added yet — fill in the form above and hit Add.</div>
+      <div class="empty-state">No VODs saved yet — fill in the form above and hit Save.</div>
     </div>
-  </div>
-
-  <!-- Full output -->
-  <div class="section-title">Generated code — paste into index.html</div>
-  <div class="card">
-    <p class="tip" style="margin-bottom:12px">Find the right map and agent in your <strong>VODS</strong> object and paste these lines inside the <strong>[ ]</strong></p>
-    <div class="full-output" id="full-output">// Your generated VOD lines will appear here</div>
-    <button class="btn btn-copy" id="copy-btn" onclick="copyAll()">Copy all to clipboard</button>
   </div>
 
   <hr style="border:none;border-top:1px solid var(--border);margin:2.5rem 0">
@@ -353,7 +354,7 @@ select option { background: var(--surface); }
 </div>
 
 <script>
-let entries = JSON.parse(localStorage.getItem('fraglog-admin-entries') || '[]');
+let sessionLog = JSON.parse(localStorage.getItem('fraglog-admin-log') || '[]');
 let currentVideoId = "";
 
 function extractVideoId() {
@@ -363,13 +364,12 @@ function extractVideoId() {
   const preview = document.getElementById("thumb-preview");
   const img = document.getElementById("thumb-img");
 
-  if(match) {
+  if (match) {
     currentVideoId = match[1];
     display.textContent = "Video ID: " + currentVideoId;
     img.src = `https://img.youtube.com/vi/${currentVideoId}/mqdefault.jpg`;
     preview.classList.add("visible");
-    // Auto-set today's date if empty
-    if(!document.getElementById("inp-date").value) {
+    if (!document.getElementById("inp-date").value) {
       document.getElementById("inp-date").valueAsDate = new Date();
     }
   } else {
@@ -386,7 +386,53 @@ function clearUrl() {
   currentVideoId = "";
 }
 
-function addEntry() {
+async function getAccessToken() {
+  const { data: { session } } = await sb.auth.getSession();
+  return session?.access_token || null;
+}
+
+async function generateTitle() {
+  if (!currentVideoId) { setSaveStatus("Paste a YouTube URL first.", "#FF4655"); return; }
+  const map = document.getElementById("sel-map").value;
+  const agent = document.getElementById("sel-agent").value;
+  const player = document.getElementById("inp-player").value.trim();
+  const kd = document.getElementById("inp-kd").value.trim();
+
+  const btn = document.getElementById("gen-title-btn");
+  btn.disabled = true;
+  btn.textContent = "...";
+
+  const token = await getAccessToken();
+  if (!token) { setSaveStatus("Sign in first.", "#FF4655"); btn.disabled = false; btn.textContent = "AI"; return; }
+
+  try {
+    const res = await fetch("/api/generate-title", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ videoId: currentVideoId, map, agent, player, kd, accessToken: token }),
+    });
+    const data = await res.json();
+    if (data.title) {
+      document.getElementById("inp-title").value = data.title;
+    } else {
+      setSaveStatus("Title generation failed.", "#FF4655");
+    }
+  } catch {
+    setSaveStatus("Title generation error.", "#FF4655");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "AI";
+  }
+}
+
+function setSaveStatus(msg, color = "#6BCF6B") {
+  const el = document.getElementById("save-status");
+  el.textContent = msg;
+  el.style.color = color;
+  if (color === "#6BCF6B") setTimeout(() => { if (el.textContent === msg) el.textContent = ""; }, 3000);
+}
+
+async function saveVod() {
   const map = document.getElementById("sel-map").value;
   const agent = document.getElementById("sel-agent").value;
   const player = document.getElementById("inp-player").value.trim();
@@ -394,16 +440,35 @@ function addEntry() {
   const title = document.getElementById("inp-title").value.trim();
   const date = document.getElementById("inp-date").value;
 
-  if(!currentVideoId) { alert("Paste a valid YouTube URL first."); return; }
-  if(!map) { alert("Select a map."); return; }
-  if(!agent) { alert("Select an agent."); return; }
-  if(!player) { alert("Enter the player name."); return; }
-  if(!title) { alert("Enter a title."); return; }
+  if (!currentVideoId) { setSaveStatus("Paste a valid YouTube URL first.", "#FF4655"); return; }
+  if (!map) { setSaveStatus("Select a map.", "#FF4655"); return; }
+  if (!agent) { setSaveStatus("Select an agent.", "#FF4655"); return; }
+  if (!player) { setSaveStatus("Enter the player name.", "#FF4655"); return; }
+  if (!title) { setSaveStatus("Generate or type a title first.", "#FF4655"); return; }
 
-  const entry = { map, agent, id: currentVideoId, title, player, kd, date };
-  entries.push(entry);
-  renderEntries();
-  clearForm();
+  const token = await getAccessToken();
+  if (!token) { setSaveStatus("Sign in first.", "#FF4655"); return; }
+
+  setSaveStatus("Saving...", "var(--muted)");
+
+  try {
+    const res = await fetch("/api/admin-vod", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+      body: JSON.stringify({ map, agent, id: currentVideoId, title, player, kd, date }),
+    });
+    const data = await res.json();
+    if (res.status === 409) { setSaveStatus("Duplicate — ID already in data.js", "#FF4655"); return; }
+    if (!res.ok) { setSaveStatus("Error: " + (data.error || res.status), "#FF4655"); return; }
+
+    setSaveStatus(`✓ Saved — ${map} › ${agent} › ${player}`);
+    sessionLog.unshift({ map, agent, id: currentVideoId, title, player, date });
+    localStorage.setItem('fraglog-admin-log', JSON.stringify(sessionLog.slice(0, 50)));
+    renderLog();
+    clearForm();
+  } catch (err) {
+    setSaveStatus("Network error.", "#FF4655");
+  }
 }
 
 function clearForm() {
@@ -414,92 +479,34 @@ function clearForm() {
   document.getElementById("inp-date").value = "";
 }
 
-function removeEntry(idx) {
-  entries.splice(idx, 1);
-  renderEntries();
-}
-
-function renderEntries() {
+function renderLog() {
   const list = document.getElementById("entries-list");
-  const count = document.getElementById("entry-count");
-  const output = document.getElementById("full-output");
-  const copyBtn = document.getElementById("copy-btn");
-
-  count.textContent = entries.length;
-  localStorage.setItem('fraglog-admin-entries', JSON.stringify(entries));
-
-  if(!entries.length) {
-    list.innerHTML = '<div class="empty-state">No VODs added yet — fill in the form above and hit Add.</div>';
-    output.textContent = "// Your generated VOD lines will appear here";
+  document.getElementById("entry-count").textContent = sessionLog.length;
+  if (!sessionLog.length) {
+    list.innerHTML = '<div class="empty-state">No VODs saved yet — fill in the form above and hit Save.</div>';
     return;
   }
-
-  list.innerHTML = entries.map((e, i) => `
+  list.innerHTML = sessionLog.map(e => `
     <div class="entry-item">
       <div class="entry-text">${e.map} › ${e.agent} › ${e.player} · ${e.id}</div>
-      <span class="entry-remove" onclick="removeEntry(${i})">✕</span>
     </div>
   `).join("");
-
-  // Generate code grouped by map and agent
-  const grouped = {};
-  entries.forEach(e => {
-    if(!grouped[e.map]) grouped[e.map] = {};
-    if(!grouped[e.map][e.agent]) grouped[e.map][e.agent] = [];
-    grouped[e.map][e.agent].push(e);
-  });
-
-  let code = "";
-  for(const map in grouped) {
-    for(const agent in grouped[map]) {
-      code += `// ${map} › ${agent}\n`;
-      grouped[map][agent].forEach(e => {
-        code += `{ id:"${e.id}", title:"${e.title}", player:"${e.player}"`;
-        if(e.kd) code += `, kd:"${e.kd}"`;
-        if(e.date) code += `, date:"${e.date}"`;
-        code += ` },\n`;
-      });
-      code += "\n";
-    }
-  }
-
-  output.textContent = code.trim();
-  copyBtn.classList.remove("copied");
-  copyBtn.textContent = "Copy all to clipboard";
 }
 
 function clearSession() {
-  if(!entries.length || confirm("Clear all VODs from this session?")) {
-    entries = [];
-    localStorage.removeItem('fraglog-admin-entries');
-    renderEntries();
+  if (!sessionLog.length || confirm("Clear session log?")) {
+    sessionLog = [];
+    localStorage.removeItem('fraglog-admin-log');
+    renderLog();
   }
-}
-
-function copyAll() {
-  const text = document.getElementById("full-output").textContent;
-  if(text.startsWith("//") && text.includes("Your generated")) return;
-  navigator.clipboard.writeText(text).then(() => {
-    const btn = document.getElementById("copy-btn");
-    btn.textContent = "✓ Copied!";
-    btn.classList.add("copied");
-    setTimeout(() => {
-      btn.textContent = "Copy all to clipboard";
-      btn.classList.remove("copied");
-    }, 2000);
-  });
 }
 
 // Set today's date as default
 document.getElementById("inp-date").valueAsDate = new Date();
+if (sessionLog.length) renderLog();
 
-// Restore session if any
-if(entries.length) renderEntries();
-
-// Enter key to add entry
 document.addEventListener("keydown", e => {
-  if(e.key === "Enter" && !e.shiftKey && !["INPUT","TEXTAREA","SELECT"].includes(e.target.tagName) === false) return;
-  if(e.key === "Enter" && (e.metaKey || e.ctrlKey)) addEntry();
+  if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) saveVod();
 });
 </script>
 
