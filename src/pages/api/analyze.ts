@@ -6,6 +6,7 @@ import { getAgentContext, getMapContext, getResources, getGeneralKnowledge, ECON
 // ── Daily limits ──────────────────────────────────────────
 const DAILY_COACHING_LIMIT = 3;
 const DAILY_FOLLOWUP_LIMIT = 5;
+const ADMIN_EMAILS = ['g3holliday@proton.me', 'kettlejalapenochips@gmail.com'];
 
 // ── Input limits ──────────────────────────────────────────
 const MAX_NOTES = 5000;
@@ -22,10 +23,12 @@ export const POST: APIRoute = async ({ request }) => {
   );
 
   let verifiedUserId: string | null = null;
+  let verifiedUserEmail: string | null = null;
   if (accessToken) {
     try {
       const { data: { user } } = await sb.auth.getUser(accessToken);
       verifiedUserId = user?.id || null;
+      verifiedUserEmail = user?.email || null;
     } catch {
       // Token invalid or expired
     }
@@ -42,6 +45,7 @@ export const POST: APIRoute = async ({ request }) => {
   const today = new Date().toISOString().slice(0, 10);
   const isFollowup = mode === 'followup';
 
+  const isAdmin = verifiedUserEmail && ADMIN_EMAILS.includes(verifiedUserEmail);
   const coachingLimit = DAILY_COACHING_LIMIT;
   const followupLimit = DAILY_FOLLOWUP_LIMIT;
 
@@ -55,11 +59,13 @@ export const POST: APIRoute = async ({ request }) => {
   const coachingCount = usage?.coaching_count ?? 0;
   const followupCount = usage?.followup_count ?? 0;
 
-  if (isFollowup && followupCount >= followupLimit) {
-    return new Response(JSON.stringify({ error: `You've used all ${followupLimit} follow-up questions for today. Resets at midnight UTC.` }), { status: 429 });
-  }
-  if (!isFollowup && coachingCount >= coachingLimit) {
-    return new Response(JSON.stringify({ error: `You've used all ${coachingLimit} coaching sessions for today. Resets at midnight UTC.` }), { status: 429 });
+  if (!isAdmin) {
+    if (isFollowup && followupCount >= followupLimit) {
+      return new Response(JSON.stringify({ error: `You've used all ${followupLimit} follow-up questions for today. Resets at midnight UTC.` }), { status: 429 });
+    }
+    if (!isFollowup && coachingCount >= coachingLimit) {
+      return new Response(JSON.stringify({ error: `You've used all ${coachingLimit} coaching sessions for today. Resets at midnight UTC.` }), { status: 429 });
+    }
   }
 
   // Sanitize + cap all inputs
