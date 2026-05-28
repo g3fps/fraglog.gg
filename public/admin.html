@@ -263,7 +263,7 @@ select option { background: var(--surface); }
       <div class="field">
         <label>Title</label>
         <div class="title-row">
-          <input type="text" id="inp-title" placeholder="Auto-generated — or type your own">
+          <input type="text" id="inp-title" placeholder="Auto-generated — or type your own" oninput="checkDuplicates()">
           <button class="btn btn-ai" id="gen-title-btn" onclick="generateTitle()" title="Generate title with AI">AI</button>
         </div>
       </div>
@@ -356,6 +356,38 @@ select option { background: var(--surface); }
 <script>
 let sessionLog = JSON.parse(localStorage.getItem('fraglog-admin-log') || '[]');
 let currentVideoId = "";
+let existingIds = [];
+let existingTitles = [];
+
+async function loadExisting() {
+  const token = await getAccessToken();
+  if (!token) return;
+  try {
+    const res = await fetch("/api/admin-vod", { headers: { "Authorization": `Bearer ${token}` } });
+    if (res.ok) {
+      const data = await res.json();
+      existingIds = data.ids || [];
+      existingTitles = data.titles || [];
+    }
+  } catch {}
+}
+
+function checkDuplicates() {
+  const idDup = currentVideoId && existingIds.includes(currentVideoId);
+  const title = document.getElementById("inp-title").value.trim().toLowerCase();
+  const titleDup = title && existingTitles.includes(title);
+  const display = document.getElementById("video-id-display");
+  if (idDup) {
+    display.textContent = "⚠ Duplicate — this video ID is already in data.js";
+    display.style.color = "#FF4655";
+  } else if (titleDup) {
+    display.textContent = "⚠ Duplicate — this title already exists in data.js";
+    display.style.color = "#FF4655";
+  } else if (currentVideoId) {
+    display.textContent = "Video ID: " + currentVideoId;
+    display.style.color = "var(--red)";
+  }
+}
 
 function extractVideoId() {
   const url = document.getElementById("yt-url").value.trim();
@@ -367,14 +399,17 @@ function extractVideoId() {
   if (match) {
     currentVideoId = match[1];
     display.textContent = "Video ID: " + currentVideoId;
+    display.style.color = "var(--red)";
     img.src = `https://img.youtube.com/vi/${currentVideoId}/mqdefault.jpg`;
     preview.classList.add("visible");
     if (!document.getElementById("inp-date").value) {
       document.getElementById("inp-date").valueAsDate = new Date();
     }
+    checkDuplicates();
   } else {
     currentVideoId = "";
     display.textContent = url.length > 5 ? "No video ID found — paste a full YouTube URL" : "";
+    display.style.color = "var(--red)";
     preview.classList.remove("visible");
   }
 }
@@ -414,6 +449,7 @@ async function generateTitle() {
     const data = await res.json();
     if (data.title) {
       document.getElementById("inp-title").value = data.title;
+      checkDuplicates();
     } else {
       setSaveStatus("Title generation failed.", "#FF4655");
     }
@@ -465,6 +501,7 @@ async function saveVod() {
     sessionLog.unshift({ map, agent, id: currentVideoId, title, player, date });
     localStorage.setItem('fraglog-admin-log', JSON.stringify(sessionLog.slice(0, 50)));
     renderLog();
+    loadExisting();
     clearForm();
   } catch (err) {
     setSaveStatus("Network error.", "#FF4655");
@@ -508,6 +545,9 @@ if (sessionLog.length) renderLog();
 document.addEventListener("keydown", e => {
   if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) saveVod();
 });
+
+// Load existing IDs/titles once Supabase auth is ready (called from auth init below)
+window._loadExistingWhenReady = loadExisting;
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -523,6 +563,7 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
   if (session) {
     status.textContent = `✓ ${session.user.email}`;
     status.style.color = '#6BCF6B';
+    window._loadExistingWhenReady?.();
   } else {
     status.textContent = 'Not signed in';
     status.style.color = '#FF4655';

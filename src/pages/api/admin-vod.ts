@@ -34,9 +34,9 @@ export async function GET({ request }: { request: Request }) {
   }
 
   const content = readDataFile();
-  // Extract all video IDs from the file
   const ids = [...content.matchAll(/id:"([a-zA-Z0-9_-]{11})"/g)].map(m => m[1]);
-  return new Response(JSON.stringify({ ids }), { headers: { 'Content-Type': 'application/json' } });
+  const titles = [...content.matchAll(/title:"([^"]+)"/g)].map(m => m[1].toLowerCase());
+  return new Response(JSON.stringify({ ids, titles }), { headers: { 'Content-Type': 'application/json' } });
 }
 
 export async function POST({ request }: { request: Request }) {
@@ -55,6 +55,9 @@ export async function POST({ request }: { request: Request }) {
   // Duplicate check
   if (content.includes(`id:"${id}"`)) {
     return new Response(JSON.stringify({ error: 'Duplicate: video ID already exists in data.js' }), { status: 409 });
+  }
+  if (content.includes(`title:"${title}"`)) {
+    return new Response(JSON.stringify({ error: 'Duplicate: title already exists in data.js' }), { status: 409 });
   }
 
   // Find the agent array within the correct map section.
