@@ -97,8 +97,10 @@ export const POST: APIRoute = async ({ request }) => {
 - DRILL VENUE RULES: For movement and utility practice, use custom lobby (no enemies). For aim and preaim, use deathmatch. For spray control, use the range. For decision-making and post-plant habits, use VOD review or conscious in-game focus — never suggest unrated or TDM as a drill venue for anything. TDM and unrated are not controlled enough environments for deliberate practice.
 - Never state specific weapon damage values, armor values, or game mechanics as fact unless you are certain they are correct. If unsure, omit the stat.
 - How to apply suggestions must be mindset shifts or awareness cues — never rigid prescriptive rules like "do X in your next N games".
-- ABSOLUTE LANGUAGE: Avoid "never" and "always" — Valorant is situational. Use conditional framing instead: "in most cases", "generally", "the default should be", "when X, prefer Y".
-- UNCERTAINTY: Only coach what the notes confirm. If notes mention a mistake vaguely, coach the pattern without inventing specifics about what exactly went wrong. Do not state a specific mechanical error as fact if the notes only imply it.`;
+- ABSOLUTE LANGUAGE: Avoid "never", "always", "mandatory", "must", and similar absolutes — Valorant is situational. Use conditional framing instead: "in most cases", "generally", "the default should be", "when X, prefer Y".
+- UNCERTAINTY: Only coach what the notes confirm. If notes mention a mistake vaguely, coach the pattern without inventing specifics about what exactly went wrong. Do not state a specific mechanical error as fact if the notes only imply it.
+- Never pad with generic Valorant tips. Every point must come directly from what the player wrote.
+- Fixes must match the level the notes demonstrate. If the notes show a basic execution error, the fix is the direct correction — do not layer on advanced strategic frameworks or meta-concepts the notes don't suggest the player is thinking about.`;
 
   // ── Follow-up mode ────────────────────────────────────────
   if (mode === 'followup') {
@@ -115,6 +117,7 @@ RULES:
 - Be direct and specific. If the question is vague, ask for clarification.
 - Keep the answer under 150 words.
 ${isPro ? '- This was a pro/Radiant VOD the player was studying. Frame advice as "things to copy or learn from that player" — never as mistakes the player themselves made.' : '- This was the player\'s own VOD. Frame advice around fixing the player\'s own mistakes and habits.'}
+- If suggesting a drill: it must be specific and actually effective. Do not invent specific lineup spots, arcs, or techniques not mentioned in the notes. Never suggest drills for communication or timing habits — those are mindset shifts only.
 ${SHARED_RULES}`;
 
     const userContent = `Original notes:\n${safeNotes || '(none)'}
@@ -183,8 +186,7 @@ CRITICAL RULES:
 - If the same mistake appears across multiple rounds, that is the #1 priority — name the rounds explicitly.
 - Drills must be specific and actually effective for the issue. Do NOT recommend "10 minutes in range" for preaim — range is for warmup, not developing preaim mastery. For preaim: deathmatch with intentional angle study. For spray control: range. For movement: deathmatch only. For decision-making: VOD review.
 - Drills must not invent specifics not found in the notes. If the issue is lineup coverage, the drill is "practice your site lineups" — do not specify which lineups, which spots, or which arcs unless the player mentioned them. Do not fabricate specific technique recommendations.
-- Never suggest drills for communication or timing habits. These are mindset shifts to note in the coaching section, not things that can be drilled. Only suggest drills for mechanical skills (aim, lineups, movement, utility usage).
-- Never pad with generic Valorant tips. Every sentence must come directly from what the player wrote.
+- Never suggest drills for communication, timing habits, or ult timing/coordination. These are mindset shifts to note in the coaching section, not things that can be drilled. Only suggest drills for mechanical skills (aim, lineups, movement, utility placement).
 ${SHARED_RULES}
 - If notes are too vague to coach from, say so and tell them what to look for next VOD instead.
 - When you identify a key problem that has a matching resource in the RESOURCE LIBRARY, add a single line at the end of that section: "For a deeper guide on fixing this: [title] by [creator] — [url]". Only recommend a resource if it directly matches the problem. Never recommend resources for problems not in the library.

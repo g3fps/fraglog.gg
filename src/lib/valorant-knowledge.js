@@ -182,8 +182,8 @@ export const AGENT_KNOWLEDGE = {
         key_insight: "The alarm bot makes enemies vulnerable and take more damage. Its placement is as important as the mollies themselves — put it deep so enemies must push through mollies to reach it."
       },
       alarmbot: {
-        correct_usage: "Place deep in setups so enemies must push through mollies to reach it. The vulnerability debuff it applies dramatically increases molly damage — without it the setup is far weaker.",
-        key_insight: "Alarm bot + molly together is the combo. Alarm bot alone or molly alone is much weaker."
+        correct_usage: "KJ has only ONE alarmbot per round. Place it deep in setups so enemies must push through mollies to reach it. The vulnerability debuff it applies increases incoming damage — pairing it with a molly is strong, but the alarmbot does not always need a nanoswarm next to it. It can be used independently for info, to slow a push, or to punish enemies who overcommit.",
+        key_insight: "Alarmbot placement matters more than always pairing it with a molly. A well-placed alarmbot that forces a reaction is value on its own."
       },
       turret: {
         correct_usage: "Use for flank watch on attack — place it covering the flank route while you take site with your team. On defense use it for information and to distract enemies while you hold from a different angle.",
@@ -386,10 +386,11 @@ export const AGENT_KNOWLEDGE = {
     watch: [],
     abilities: {
       paranoia: {
-        correct_usage: "Large AoE, lasts a long time, deafens enemies and they can't turn away from it. Now slower than before — wait for it to actually reach enemies before peeking. You can see the nearsight indicator above boxes to detect hidden enemies.",
+        correct_usage: "Large AoE, lasts a long time, deafens enemies and they can't turn away from it. Now slower than before — wait for it to actually reach enemies before peeking. You can see the nearsight indicator above boxes to detect hidden enemies. For aim placement: target the center of grouped enemies — Paranoia is a wide projectile so central targeting maximizes hits. Aim errors on Paranoia cannot be practiced in deathmatch (abilities disabled) — use custom lobby with bots or conscious focus in actual games.",
         common_mistakes: [
           "Peeking before the blind has actually reached and blinded the enemy — it's slower now, be patient",
-          "Not reading the nearsight indicator above boxes to gather info"
+          "Not reading the nearsight indicator above boxes to gather info",
+          "Not calling the throw to teammates so they can push off the blind"
         ],
         key_insight: "The blind deafens enemies too — combine with aggressive plays while they can't hear your movement."
       },
@@ -402,7 +403,7 @@ export const AGENT_KNOWLEDGE = {
         key_insight: "TP is most dangerous when it creates a new lane enemies weren't expecting to hold. Use it to multiply the angles defenders have to cover."
       },
       dark_cover: {
-        correct_usage: "Smoke timing must match when teammates are at the choke point — too early or too late kills their confidence to push. Smoke the angle that's hardest for teammates to hold first. Learn oneways — they refresh fast enough to use frequently. Can place smokes slightly faster while running in the direction of the smoke.",
+        correct_usage: "CRITICAL: Omen smokes are placed interactively using a map overview — there are NO lineups for Omen smokes. Practicing Omen smokes means learning positions on the map overview, not angles or trajectories. Smoke timing must match when teammates are at the choke point — too early or too late kills their confidence to push. Smoke the angle that's hardest for teammates to hold first. Learn oneways — they refresh fast enough to use frequently. Can place smokes slightly faster while running in the direction of the smoke. NOTE: Smokes already have a built-in visual indicator when they are about to expire — never suggest timing smokes by counting or any manual method.",
         common_mistakes: [
           "Smoking too early — smokes fade before the team hits site",
           "Smoking too late — team hesitates and loses momentum",
@@ -537,12 +538,12 @@ export const AGENT_KNOWLEDGE = {
         key_insight: "The smoke pop flash is one of the most undetectable flashes in the game. The smoke hides the entire travel so enemies have almost no time to react."
       },
       gatecrash: {
-        correct_usage: "You exit the TP facing the direction you were looking when you activated it — use this to control your exit angle and pre-aim where enemies will be. Dry TP: throw TP without activating it, then activate as enemies are droning or using info-gathering util — they find you right as you arrive for a free kill.",
+        correct_usage: "Gatecrash sends a tether (a small moving portal) to a destination — Yoru can then teleport to wherever the tether is. The tether can be destroyed by enemies before use, so place it in low-visibility spots. You exit the TP facing the direction you were looking when you activated it — use this to control your exit angle and pre-aim where enemies will be. TERMINOLOGY: The ability is Gatecrash and the deployed object is a tether — there is no 'anchor' in Yoru's kit. For Gatecrash mistakes, recommend watching eggsterr VODs.",
         common_mistakes: [
           "Not controlling exit angle — look where you want to aim before activating",
-          "Activating TP in obvious spots enemies are already watching"
+          "Sending the tether to obvious spots enemies are already watching — it will be destroyed before use"
         ],
-        key_insight: "The dry TP baits info-gathering utility. Enemies who drone and see you have no time to react when you TP directly to them."
+        key_insight: "Tether placement is about finding spots enemies won't casually check. A tether that gets destroyed before use is wasted utility."
       },
       dimensional_drift: {
         correct_usage: "Fast flank: activate immediately at round start, take fastest path past enemy flank utility, come up behind to pinch the enemy team. Post-plant stall: flash enemies off spike repeatedly, throw clone to create noise — every noise cue makes them paranoid and hop off. Spawn TP: most effective post-plant on large spawn maps — enemies are retaking site while you TP behind them.",
@@ -1053,6 +1054,7 @@ export const GENERAL_KNOWLEDGE = {
       hero_rifling: "Buy vandal/phantom on team eco round — don't take first contact. Let enemies shoot your teammates, be there to trade and make their deaths count. Damages enemy economy while your team barely spends."
     },
     utility: {
+      flash_hoarding: "Unused utility at round end is wasted utility. Never advise saving flashes for hypothetical future scenarios — a flash that creates value now is better than a flash held for a clutch that may never come. 'Save your flash in case' is harmful advice that teaches bad habits.",
       key_insight: "Agent utility is best learned by watching a pro play that specific agent and consciously understanding why they do everything. No amount of theory replaces watching TenZ for Jett or mw1 for Viper. Look up the pro who plays your agent best and study their decisions."
     },
     agent_comp_reads: {
