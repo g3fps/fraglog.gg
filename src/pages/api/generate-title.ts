@@ -11,7 +11,7 @@ export async function POST({ request }: { request: Request }) {
 
   const sb = createClient(
     'https://cvdtykmkajmhlxydhzzl.supabase.co',
-    import.meta.env.SUPABASE_SERVICE_KEY
+    'sb_publishable_I16eAnYgsA9fd8ZMlmFQtA_RxepSaXi'
   );
   const { data: { user } } = await sb.auth.getUser(accessToken);
   if (!user) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });

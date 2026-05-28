@@ -21,7 +21,7 @@ function buildEntryLine(vod: { id: string; title: string; player: string; kd?: s
 async function verifyAdmin(accessToken: string) {
   const sb = createClient(
     'https://cvdtykmkajmhlxydhzzl.supabase.co',
-    import.meta.env.SUPABASE_SERVICE_KEY
+    'sb_publishable_I16eAnYgsA9fd8ZMlmFQtA_RxepSaXi'
   );
   const { data: { user } } = await sb.auth.getUser(accessToken);
   return user;
