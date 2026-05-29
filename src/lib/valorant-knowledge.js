@@ -870,7 +870,8 @@ export const AGENT_KNOWLEDGE = {
     watch: [],
     abilities: {
       trademark: {
-        correct_usage: "Flank watch on attack — place it behind your team. Can be bypassed by many abilities — Jett dash, Sage wall, Viper smoke, Yoru TP, and more."
+        correct_usage: "Flank watch on attack — place it behind your team to cover an angle you are NOT watching. This is the entire point: Trademark frees you to focus forward by covering your back. It does not need to cover an angle you're already holding — that wastes the ability. On defense, use it to watch a flank or second entry point so you can fully commit to your primary angle without splitting attention. Can be bypassed by many abilities — Jett dash, Sage wall, Viper smoke, Yoru TP, and more.",
+        key_insight: "Trademark placement should always answer: what angle can I not afford to also watch right now? That's where it goes. Placing it to cover an angle you're already holding is redundant."
       },
       headhunter: {
         correct_usage: "Pocket Guardian at 100 credits per bullet. Pulls out extremely fast — if you miss an OP shot, immediately switch to Headhunter and aim for head height. Most enemies wide swing after hearing an OP miss so be ready for it. Crosshair placement over flicking — let enemies run into your crosshair rather than going for insane flicks.",
