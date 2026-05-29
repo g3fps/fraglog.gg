@@ -770,7 +770,7 @@ export const AGENT_KNOWLEDGE = {
         key_insight: "The stun is most valuable when enemies are already in motion. Let them commit to a push or dash, then stun — they have no way out."
       },
       flashpoint: {
-        correct_usage: "Goes through walls — find spots where you flash the enemy but not your teammate. Flash farther away from yourself when peeking so you have time to get your gun out by the time it lands. Flash close to yourself to disrupt crosshair placement when not peeking yourself. Combo with Aftershock — hide the flash inside the Aftershock animation so enemies can't see it to turn away.",
+        correct_usage: "Aimed at a surface, not thrown — you point at a wall or floor and it flashes through to the other side. There is no arc, no throw trajectory, no toss — it fires where you aim. Goes through walls — find spots where you flash the enemy but not your teammate. Flash farther away from yourself when peeking so you have time to get your gun out by the time it lands. Flash close to yourself to disrupt crosshair placement when not peeking yourself. Combo with Aftershock — hide the flash inside the Aftershock animation so enemies can't see it to turn away.",
         common_mistakes: [
           "Flashing too close to yourself when intending to peek — long equip time means no gun out before enemy recovers",
           "Not using geometry to flash enemies without blinding teammates"

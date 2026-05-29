@@ -27,7 +27,7 @@ if (!mapData) return Astro.redirect('/');
 const title = `${mapData.name} VODs — FragLog.gg`;
 const description = `Browse Radiant and pro player ${mapData.name} VODs by agent on FragLog.gg`;
 ---
-<BaseLayout title={title} description={description} ogImage={mapData.img} canonical={`https://fraglog.gg/${mapId}`} user={user}>
+<BaseLayout title={title} description={description} ogImage={mapData.img} canonical={`https://fraglog.gg/${mapId}/`} user={user}>
   <div id="map-bg-layer" style={`background-image:url(${mapData.img});opacity:1`}></div>
   <div class="agents-bg-overlay"></div>
   <Nav crumbs={[{ label: 'ALL MAPS', href: '/' }, { label: mapData.name.toUpperCase() }]} user={user} />

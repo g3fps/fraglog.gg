@@ -29,7 +29,7 @@ const vods = agentVods(mapId, agentId);
 const title = `${agentData.name} ${mapData.name} VODs — fraglog.gg`;
 const description = `Watch ${vods.length} Radiant ${agentData.name} VODs on ${mapData.name}. Pro player POV gameplay on FragLog.gg`;
 ---
-<BaseLayout title={title} description={description} ogImage={mapData.img} canonical={`https://fraglog.gg/${mapId}/${agentId}`} user={user}>
+<BaseLayout title={title} description={description} ogImage={mapData.img} canonical={`https://fraglog.gg/${mapId}/${agentId}/`} user={user}>
   <Nav crumbs={[{ label: 'ALL MAPS', href: '/' }, { label: mapData.name.toUpperCase(), href: `/${mapId}` }, { label: agentData.name.toUpperCase() }]} user={user} />
   <div class="page-content">
     <div class="videos-header">
