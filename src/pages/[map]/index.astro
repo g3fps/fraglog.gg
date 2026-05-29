@@ -47,7 +47,7 @@ const description = `Browse Radiant and pro player ${mapData.name} VODs by agent
               const hasVods = vods.length > 0;
               return (
                <a   class={`agent-card ${hasVods ? 'has-vods' : 'no-vods'}`}
-                  href={hasVods ? `/${mapId}/${agent.id}` : undefined}
+                  href={hasVods ? `/${mapId}/${agent.id}/` : undefined}
                   style={`--agent-color:${agent.color}`}
                 >
                   <div class="agent-portrait-wrap">

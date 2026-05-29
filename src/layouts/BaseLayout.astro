@@ -1,7 +1,7 @@
 ---
 import '../styles/global.css';
 
-const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radiant and pro player Valorant gameplay VODs filtered by map and agent. Study the best players in the world on fraglog.gg', ogImage = 'https://media.valorant-api.com/maps/7eaecc1b-4337-bbf6-6ab9-04b8f06b3319/splash.png', canonical = 'https://fraglog.gg', user = null } = Astro.props;
+const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radiant and pro player Valorant gameplay VODs filtered by map and agent. Study the best players in the world on fraglog.gg', ogImage = 'https://media.valorant-api.com/maps/7eaecc1b-4337-bbf6-6ab9-04b8f06b3319/splash.png', canonical = 'https://fraglog.gg', user = null, noindex = false } = Astro.props;
 ---
 <!DOCTYPE html>
 <html lang="en">
@@ -15,7 +15,7 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
   <meta name="description" content={description}>
   <meta name="keywords" content="Valorant VODs, Radiant gameplay, pro player POV, Valorant tips, agent guide, map guide">
   <meta name="author" content="fraglog.gg">
-  <meta name="robots" content="index, follow">
+  <meta name="robots" content={noindex ? 'noindex, follow' : 'index, follow'}>
   <meta property="og:type" content="website">
   <meta property="og:url" content={canonical}>
   <meta property="og:title" content={title}>
