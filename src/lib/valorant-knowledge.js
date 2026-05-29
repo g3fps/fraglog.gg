@@ -478,7 +478,7 @@ export const AGENT_KNOWLEDGE = {
     watch: [],
     abilities: {
       snake_bite: {
-        correct_usage: "Stalls enemies at key positions. Use to hold plant location, flush enemies out of corners, or stall the retake. With only one snake bite, it's often better to use it to stall the retake than save it for post-plant diffuse stall — 6.5 seconds of stall on the retake is often more valuable than waiting for the diffuse.",
+        correct_usage: "Thrown grenade — cannot be pre-placed. It is thrown during the round, not deployed in buy phase. Stalls enemies at key positions. Use to hold plant location, flush enemies out of corners, or stall the retake. With only one snake bite, it's often better to use it to stall the retake than save it for post-plant diffuse stall — 6.5 seconds of stall on the retake is often more valuable than waiting for the diffuse.",
         common_mistakes: [
           "Not using it to flush enemies out of corners — it forces a swing or a death, either works for you"
         ],
