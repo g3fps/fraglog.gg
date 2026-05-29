@@ -4,7 +4,7 @@ import sitemap from '@astrojs/sitemap';
 
 const MAPS = ['ascent', 'bind', 'haven', 'split', 'fracture', 'pearl', 'icebox', 'breeze', 'lotus', 'sunset', 'abyss', 'corrode'];
 const AGENTS = ['jett', 'reyna', 'raze', 'neon', 'phoenix', 'yoru', 'iso', 'waylay', 'omen', 'viper', 'brimstone', 'astra', 'harbor', 'clove', 'miks', 'sage', 'cypher', 'killjoy', 'chamber', 'deadlock', 'vyse', 'veto', 'sova', 'breach', 'skye', 'kayo', 'fade', 'gekko', 'tejo'];
-const EXCLUDED = ['/favorites', '/my-vods', '/settings', '/submit', '/search', '/util', '/contact'];
+const EXCLUDED = ['/favorites', '/my-vods', '/settings', '/search'];
 
 const customPages = [
   ...MAPS.map(m => `https://fraglog.gg/${m}/`),

@@ -32,7 +32,7 @@ const description = `Browse Radiant and pro player ${mapData.name} VODs by agent
   <div class="agents-bg-overlay"></div>
   <Nav crumbs={[{ label: 'ALL MAPS', href: '/' }, { label: mapData.name.toUpperCase() }]} user={user} />
   <div class="page-content">
-    <div class="agents-page-title">{mapData.name}</div>
+    <h1 class="agents-page-title">{mapData.name}</h1>
     {ROLES_ORDER.map(role => {
       const roleAgents = AGENTS.filter(a => a.role === role);
       return (
