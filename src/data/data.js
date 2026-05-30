@@ -668,6 +668,7 @@ export const VODS = {
       { id:"tISU_rYQeZk", title:"Demon1 Jett Fracture RADIANT DUELIST", player:"Demon1", date:"2026-05-16" },
       { id:"Ivsbz2bnJpw", title:"Demon1 Jett Fracture RADIANT RANKED", player:"Demon1", date:"2026-05-17" },
       { id:"6N3x8JBF00w", title:"DFM Meiy Jett Fracture RADIANT MVP", player:"Meiy", date:"2026-05-28" },
+      { id:"T7fztphWUYE", title:"MIBR aspas Jett Fracture RADIANT MVP", player:"aspas", date:"2026-05-26" },
     ],
     reyna: [
       { id:"C30cgHfSKNE", title:"florescent Reyna Fracture RADIANT AIMER", player:"florescent", date:"2026-04-17" },
@@ -1120,6 +1121,7 @@ export const VODS = {
     phoenix: [
       { id:"gTduYtZGucQ", title:"ENVY Eggsterr Phoenix Breeze RADIANT RANKED", player:"Eggsterr", date:"2026-05-07" },
       { id:"QA_WMgFAKao", title:"Jinggg Phoenix Breeze RADIANT FLASHES", player:"Jinggg", date:"2026-05-21" },
+      { id:"wu6KpZmS-x0", title:"PRX f0rsakeN Phoenix Breeze RADIANT MVP", player:"f0rsakeN", date:"2026-05-27" },
     ],
     yoru: [
       { id:"mxmOTIpW-dQ", title:"Eggsterr Yoru Breeze RADIANT YORU", player:"Eggsterr", date:"2026-04-03" },

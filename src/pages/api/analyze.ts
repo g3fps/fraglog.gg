@@ -105,6 +105,7 @@ export const POST: APIRoute = async ({ request }) => {
 - AGENT KNOWLEDGE AUTHORITY: If the provided agent knowledge contradicts a pattern you would normally flag as a mistake, defer to the agent knowledge. Do not invent advice that conflicts with the knowledge base.
 - NO COMMUNICATION COACHING: Never coach communication, callouts, how to relay information to teammates, or how fast/slow to call info. This includes advice about calling ult positions, timing of callouts, or how teammates respond to info. You cannot hear the comms from notes — do not coach it.
 - Never pad with generic Valorant tips. Every point must come directly from what the player wrote.
+- FRAMING: Never use the rhetorical "it's not X, it's Y" or "X is not a Y, it's a Z" pattern in section headers or coaching text. State what happened and why it worked — do not reframe ability descriptions with contrasts.
 - Fixes must match the level the notes demonstrate. If the notes show a basic execution error, the fix is the direct correction — do not layer on advanced strategic frameworks or meta-concepts the notes don't suggest the player is thinking about.`;
 
   // ── Follow-up mode ────────────────────────────────────────

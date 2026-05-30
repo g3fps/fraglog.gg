@@ -581,7 +581,7 @@ export const AGENT_KNOWLEDGE = {
         key_insight: "Your team essentially never goes without smokes as Clove. Even after you die, dropping a smoke on the spike or a key angle can win the round."
       },
       not_dead_yet: {
-        correct_usage: "Respawn with a window to get a kill or damaging assist — fail and you die again. Coordinate with teammates — don't ult alone or you'll just get run down. Use the invulnerability period during rez to reposition toward teammates. When ult is up, you're the frontline — peek the OP, tank the Raze rocket, entry for your team.",
+        correct_usage: "Respawn with a window to get a kill or damaging assist — fail and you die again. HP is restored instantly to full on respawn — there is no ticking or regen period. Coordinate with teammates — don't ult alone or you'll just get run down. Use the invulnerability period during rez to reposition toward teammates. When ult is up, you're the frontline — peek the OP, tank the Raze rocket, entry for your team.",
         common_mistakes: [
           "Ulting alone far from teammates — you'll just get chased down and die again",
           "Baiting with ult available — if ult is up you should be the one taking the risk, not your teammates"
