@@ -346,6 +346,7 @@ export const VODS = {
       { id:"dKDzt_fy05w", title:"ENVY Demon1 Jett Haven RADIANT RANKED", player:"Demon1", date:"2026-05-18" },
       { id:"gTAE_gj-qwQ", title:"Jinggg Jett Haven RADIANT 25 KILLS MVP", player:"Jinggg", date:"2026-05-22" },
       { id:"qCX3r_WvGTE", title:"s0m Jett Haven RADIANT VOD", player:"s0m", date:"2026-05-28" },
+      { id:"CTdYRxECTk4", title:"PRX Jinggg Jett Haven RADIANT MVP", player:"Jinggg", date:"2026-05-30" },
     ],
     reyna: [
       { id:"GkkolEIngtQ", title:"florescent Reyna Haven RADIANT RANKED", player:"florescent", date:"2026-05-01" },
