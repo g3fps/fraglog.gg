@@ -10,9 +10,8 @@ function readDataFile() {
   return readFileSync(DATA_PATH, 'utf-8');
 }
 
-function buildEntryLine(vod: { id: string; title: string; player: string; kd?: string; date?: string }) {
+function buildEntryLine(vod: { id: string; title: string; player: string; date?: string }) {
   let line = `      { id:"${vod.id}", title:"${vod.title}", player:"${vod.player}"`;
-  if (vod.kd) line += `, kd:"${vod.kd}"`;
   if (vod.date) line += `, date:"${vod.date}"`;
   line += ` },`;
   return line;
@@ -45,7 +44,7 @@ export async function POST({ request }: { request: Request }) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
   }
 
-  const { map, agent, id, title, player, kd, date } = await request.json();
+  const { map, agent, id, title, player, date } = await request.json();
   if (!map || !agent || !id || !title || !player) {
     return new Response(JSON.stringify({ error: 'Missing required fields' }), { status: 400 });
   }
@@ -94,7 +93,7 @@ export async function POST({ request }: { request: Request }) {
   }
 
   const insertPos = arrayOpenPos + closingMatch.index;
-  const newLine = '\n' + buildEntryLine({ id, title, player, kd, date });
+  const newLine = '\n' + buildEntryLine({ id, title, player, date });
   content = content.slice(0, insertPos) + newLine + content.slice(insertPos);
 
   writeFileSync(DATA_PATH, content, 'utf-8');

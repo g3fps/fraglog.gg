@@ -4,7 +4,7 @@ export const prerender = false;
 
 export async function POST({ request }: { request: Request }) {
   const body = await request.json();
-  const { videoId, map, agent, player, kd, accessToken } = body;
+  const { videoId, map, agent, player, accessToken, existingTitles = [] } = body;
 
   if (!accessToken) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
 
@@ -48,7 +48,7 @@ Format: [TEAM] Player Agent Map RANK DESCRIPTOR
 VOD info:
 Player: ${player}
 Map: ${map}
-Agent: ${agent}${kd ? `\nK/D: ${kd}` : ''}${ytTitle ? `\nYouTube title: "${ytTitle}"` : ''}
+Agent: ${agent}${ytTitle ? `\nYouTube title: "${ytTitle}"` : ''}${existingTitles.length > 0 ? `\n\nAlready used titles (do not duplicate any of these):\n${existingTitles.slice(0, 100).join('\n')}` : ''}
 
 Reply with only the title.`;
 

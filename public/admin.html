@@ -254,10 +254,6 @@ select option { background: var(--surface); }
         <label>Player / Channel name</label>
         <input type="text" id="inp-player" placeholder="tarik">
       </div>
-      <div class="field">
-        <label>K/D (optional)</label>
-        <input type="text" id="inp-kd" placeholder="24/8">
-      </div>
     </div>
     <div class="row">
       <div class="field">
@@ -431,8 +427,6 @@ async function generateTitle() {
   const map = document.getElementById("sel-map").value;
   const agent = document.getElementById("sel-agent").value;
   const player = document.getElementById("inp-player").value.trim();
-  const kd = document.getElementById("inp-kd").value.trim();
-
   const btn = document.getElementById("gen-title-btn");
   btn.disabled = true;
   btn.textContent = "...";
@@ -444,7 +438,7 @@ async function generateTitle() {
     const res = await fetch("/api/generate-title", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ videoId: currentVideoId, map, agent, player, kd, accessToken: token }),
+      body: JSON.stringify({ videoId: currentVideoId, map, agent, player, accessToken: token, existingTitles }),
     });
     const data = await res.json();
     if (data.title) {
@@ -472,7 +466,6 @@ async function saveVod() {
   const map = document.getElementById("sel-map").value;
   const agent = document.getElementById("sel-agent").value;
   const player = document.getElementById("inp-player").value.trim();
-  const kd = document.getElementById("inp-kd").value.trim();
   const title = document.getElementById("inp-title").value.trim();
   const date = document.getElementById("inp-date").value;
 
@@ -491,7 +484,7 @@ async function saveVod() {
     const res = await fetch("/api/admin-vod", {
       method: "POST",
       headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-      body: JSON.stringify({ map, agent, id: currentVideoId, title, player, kd, date }),
+      body: JSON.stringify({ map, agent, id: currentVideoId, title, player, date }),
     });
     const data = await res.json();
     if (res.status === 409) { setSaveStatus("Duplicate — ID already in data.js", "#FF4655"); return; }
@@ -511,7 +504,6 @@ async function saveVod() {
 function clearForm() {
   clearUrl();
   document.getElementById("inp-player").value = "";
-  document.getElementById("inp-kd").value = "";
   document.getElementById("inp-title").value = "";
   document.getElementById("inp-date").value = "";
 }
