@@ -25,7 +25,11 @@ const ALLOWED_EMAILS = [
 const isAllowed = user && ALLOWED_EMAILS.includes(user.email ?? '');
 ---
 
-<BaseLayout title="Util — fraglog.gg" user={user}>
+<BaseLayout
+  title="Valorant Lineup Library — fraglog.gg"
+  description="Browse Valorant lineups by map and agent on fraglog.gg. Smokes, mollies, and utility setups from Radiant players."
+  canonical="https://fraglog.gg/util"
+  user={user}>
   <Nav crumbs={[{ label: "Util" }]} user={user} />
 
   {isAllowed ? (

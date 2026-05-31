@@ -2,7 +2,7 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Nav from '../components/Nav.astro';
 import Footer from '../components/Footer.astro';
-import { getAllVods } from '../data/data.js';
+import { getAllVods, AGENTS, MAPS } from '../data/data.js';
 import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
@@ -20,6 +20,7 @@ if (accessToken && refreshToken) {
 }
 
 const allVods = getAllVods();
+const agentRoles = Object.fromEntries(AGENTS.map((a: any) => [a.id, a.role]));
 ---
 <BaseLayout title="Search — fraglog.gg" description="Search Valorant VODs by player, map, or agent on FragLog.gg" user={user}>
   <Nav crumbs={[{ label: 'ALL MAPS', href: '/' }, { label: 'SEARCH' }]} user={user} />
@@ -41,13 +42,41 @@ const allVods = getAllVods();
     <div class="search-meta" id="search-meta"></div>
   </div>
   <div class="page-content" style="padding-top:1.5rem;">
+    <div class="vod-controls">
+      <div class="vod-field">
+        <span class="vod-field-label">Role</span>
+        <select class="vod-select" id="f-role" aria-label="Filter by role">
+          <option value="">All roles</option>
+          <option value="Duelist">Duelist</option>
+          <option value="Controller">Controller</option>
+          <option value="Sentinel">Sentinel</option>
+          <option value="Initiator">Initiator</option>
+        </select>
+      </div>
+      <div class="vod-field">
+        <span class="vod-field-label">Map</span>
+        <select class="vod-select" id="f-map" aria-label="Filter by map">
+          <option value="">All maps</option>
+          {MAPS.map((m: any) => <option value={m.id}>{m.name}</option>)}
+        </select>
+      </div>
+      <div class="vod-field">
+        <span class="vod-field-label">Sort</span>
+        <select class="vod-select" id="f-sort" aria-label="Sort results">
+          <option value="newest">Newest</option>
+          <option value="oldest">Oldest</option>
+          <option value="player">Player A–Z</option>
+        </select>
+      </div>
+    </div>
     <div class="video-grid" id="search-grid"></div>
   </div>
   <Footer />
 </BaseLayout>
 
-<script define:vars={{ allVods }}>
+<script define:vars={{ allVods, agentRoles }}>
 const ALL_VODS = allVods;
+const AGENT_ROLES = agentRoles;
 
 function renderVods(vods) {
   const grid = document.getElementById("search-grid");
@@ -58,7 +87,7 @@ function renderVods(vods) {
   grid.innerHTML = vods.map(v => `
     <div class="video-card">
       <div class="video-thumb" data-vid="${v.id}" style="cursor:pointer">
-        <img src="https://img.youtube.com/vi/${v.id}/mqdefault.jpg" alt="${v.title}" loading="lazy">
+        <img src="https://img.youtube.com/vi/${v.id}/mqdefault.jpg" alt="${v.title}" loading="lazy" decoding="async">
         <div class="play-overlay"><div class="play-icon"><div class="play-tri"></div></div></div>
       </div>
       <div class="video-info">
@@ -87,28 +116,47 @@ function renderVods(vods) {
   };
 
   updateSearchActions();
+  if (window.applyWatchProgress) window.applyWatchProgress();
 }
 
-function handleSearch(query) {
-  const q = query.toLowerCase().trim();
-  const meta = document.getElementById("search-meta");
+function applyFilters() {
+  const q = (document.getElementById("search-input").value || "").toLowerCase().trim();
+  const role = document.getElementById("f-role").value;
+  const map = document.getElementById("f-map").value;
+  const sort = document.getElementById("f-sort").value;
 
-  if (!q) {
-    meta.textContent = `${ALL_VODS.length} VODs`;
-    renderVods(ALL_VODS);
-    return;
-  }
-
-  const results = ALL_VODS.filter(v => {
-    const s = [v.title, v.player, v.mapName, v.agentName].join(" ").toLowerCase();
-    return s.includes(q);
+  let results = ALL_VODS.filter(v => {
+    if (role && AGENT_ROLES[v.agentId] !== role) return false;
+    if (map && v.mapId !== map) return false;
+    if (q) {
+      const s = [v.title, v.player, v.mapName, v.agentName].join(" ").toLowerCase();
+      if (!s.includes(q)) return false;
+    }
+    return true;
   });
 
-  meta.textContent = `${results.length} result${results.length !== 1 ? 's' : ''} for "${query}"`;
+  results.sort((a, b) => {
+    if (sort === "player") return (a.player || "").localeCompare(b.player || "");
+    const da = a.date || "", db = b.date || "";
+    if (!da) return 1;
+    if (!db) return -1;
+    return sort === "oldest" ? da.localeCompare(db) : db.localeCompare(da);
+  });
+
+  const meta = document.getElementById("search-meta");
+  const filtered = q || role || map;
+  meta.textContent = filtered
+    ? `${results.length} result${results.length !== 1 ? "s" : ""}`
+    : `${ALL_VODS.length} VODs`;
   renderVods(results);
 
-  const url = q ? '/search?q=' + encodeURIComponent(q) : '/search';
-  history.replaceState({}, '', url);
+  const params = new URLSearchParams();
+  if (q) params.set("q", q);
+  if (role) params.set("role", role);
+  if (map) params.set("map", map);
+  if (sort && sort !== "newest") params.set("sort", sort);
+  const qs = params.toString();
+  history.replaceState({}, "", qs ? "/search?" + qs : "/search");
 }
 
 function updateSearchActions() {
@@ -121,26 +169,29 @@ function updateSearchActions() {
     const noteClass = getUserNote(vid) ? "has-note" : "";
     const favText = isFav(vid) ? "♥ Saved" : "♡ Save";
     const favClass = isFav(vid) ? "has-note" : "";
-    const watchText = isWatched(vid) ? "✓ Watched" : "✓ Mark watched";
-    const watchClass = isWatched(vid) ? "watched" : "";
     el.innerHTML = `
       <button class="notes-btn ${noteClass}" onclick="openNotes('${vid}','${title.replace(/'/g,"\\'")}','${player}')">📝 ${noteText}</button>
-      <button class="notes-btn ${favClass}" onclick="toggleFav('${vid}',this)">${favText}</button>
-      <button class="notes-btn ${watchClass}" onclick="toggleWatched('${vid}',this)">${watchText}</button>`;
+      <button class="notes-btn ${favClass}" onclick="toggleFav('${vid}',this)">${favText}</button>`;
   });
 }
 
 function onAuthChange() { updateSearchActions(); }
 
-// Init — read query from URL or show all
+// Init — hydrate all controls from the URL, then wire them
 const params = new URLSearchParams(window.location.search);
-const q = params.get("q") || "";
 const input = document.getElementById("search-input");
-if (input) {
-  input.value = q;
-  input.addEventListener("input", e => handleSearch(e.target.value));
-}
-handleSearch(q);
+if (input) input.value = params.get("q") || "";
+const roleSel = document.getElementById("f-role");
+const mapSel = document.getElementById("f-map");
+const sortSel = document.getElementById("f-sort");
+const setIfValid = (sel, val) => { if (val && [...sel.options].some(o => o.value === val)) sel.value = val; };
+setIfValid(roleSel, params.get("role"));
+setIfValid(mapSel, params.get("map"));
+setIfValid(sortSel, params.get("sort"));
+
+if (input) input.addEventListener("input", applyFilters);
+[roleSel, mapSel, sortSel].forEach(sel => sel.addEventListener("change", applyFilters));
+applyFilters();
 
 window.__onAuthReady = updateSearchActions;
 if (window.__authReady) updateSearchActions();

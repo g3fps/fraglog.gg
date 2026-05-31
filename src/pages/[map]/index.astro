@@ -24,19 +24,34 @@ const mapData = MAPS.find(m => m.id === mapId);
 
 if (!mapData) return Astro.redirect('/');
 
-const title = `${mapData.name} VODs — FragLog.gg`;
-const description = `Browse Radiant and pro player ${mapData.name} VODs by agent on FragLog.gg`;
+const title = `${mapData.name} Valorant VODs — fraglog.gg`;
+const description = `Watch Radiant and pro player Valorant VODs on ${mapData.name}, filtered by agent. Study ${mapData.name} gameplay from the best players in the world on fraglog.gg.`;
+
+const jsonLd = JSON.stringify({
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "fraglog.gg", "item": "https://fraglog.gg" },
+    { "@type": "ListItem", "position": 2, "name": `${mapData.name} VODs`, "item": `https://fraglog.gg/${mapId}/` }
+  ]
+});
 ---
-<BaseLayout title={title} description={description} ogImage={mapData.img} canonical={`https://fraglog.gg/${mapId}/`} user={user}>
+<BaseLayout title={title} description={description} ogImage={mapData.img} canonical={`https://fraglog.gg/${mapId}/`} jsonLd={jsonLd} user={user}>
   <div id="map-bg-layer" style={`background-image:url(${mapData.img});opacity:1`}></div>
   <div class="agents-bg-overlay"></div>
   <Nav crumbs={[{ label: 'ALL MAPS', href: '/' }, { label: mapData.name.toUpperCase() }]} user={user} />
   <div class="page-content">
     <h1 class="agents-page-title">{mapData.name}</h1>
+    <div class="agent-filter-bar">
+      <div class="agent-role-pills">
+        <button class="role-pill active" type="button" data-role="">All</button>
+        {ROLES_ORDER.map((r: string) => <button class="role-pill" type="button" data-role={r}>{r}s</button>)}
+      </div>
+    </div>
     {ROLES_ORDER.map(role => {
       const roleAgents = AGENTS.filter(a => a.role === role);
       return (
-        <div class="agent-section">
+        <div class="agent-section" data-role={role}>
           <div class="role-header">
             <div class="role-dot" style={`background:${(ROLE_DOTS as Record<string, string>)[role]}`}></div>
             {role}s
@@ -70,4 +85,21 @@ const description = `Browse Radiant and pro player ${mapData.name} VODs by agent
   </div>
   <Footer />
 </BaseLayout>
+
+<script is:inline>
+(function initAgentFilters() {
+  const pills = document.querySelectorAll('.role-pill');
+  const sections = document.querySelectorAll('.agent-section');
+  if (!sections.length) return;
+
+  pills.forEach(p => p.addEventListener('click', () => {
+    pills.forEach(x => x.classList.remove('active'));
+    p.classList.add('active');
+    const role = p.dataset.role;
+    sections.forEach(sec => {
+      sec.style.display = (!role || role === sec.dataset.role) ? '' : 'none';
+    });
+  }));
+})();
+</script>
 

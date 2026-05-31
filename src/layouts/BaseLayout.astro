@@ -1,7 +1,8 @@
 ---
 import '../styles/global.css';
 
-const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radiant and pro player Valorant gameplay VODs filtered by map and agent. Study the best players in the world on fraglog.gg', ogImage = 'https://media.valorant-api.com/maps/7eaecc1b-4337-bbf6-6ab9-04b8f06b3319/splash.png', canonical = 'https://fraglog.gg', user = null, noindex = false } = Astro.props;
+const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radiant and pro player Valorant gameplay VODs filtered by map and agent. Study the best players in the world on fraglog.gg', ogImage = 'https://media.valorant-api.com/maps/7eaecc1b-4337-bbf6-6ab9-04b8f06b3319/splash.png', canonical = 'https://fraglog.gg', user = null, noindex = false, jsonLd = null, preloadImage = null } = Astro.props;
+const resolvedOgImage = ogImage?.startsWith('/') ? `https://fraglog.gg${ogImage}` : ogImage;
 ---
 <!DOCTYPE html>
 <html lang="en">
@@ -10,7 +11,11 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+  <link rel="preconnect" href="https://img.youtube.com">
+  <link rel="preconnect" href="https://i.ytimg.com">
+  <link rel="dns-prefetch" href="https://media.valorant-api.com">
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800&family=Barlow:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  {preloadImage && <link rel="preload" as="image" href={preloadImage} fetchpriority="high" />}
   <title>{title}</title>
   <meta name="description" content={description}>
   <meta name="keywords" content="Valorant VODs, Radiant gameplay, pro player POV, Valorant tips, agent guide, map guide">
@@ -20,14 +25,16 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
   <meta property="og:url" content={canonical}>
   <meta property="og:title" content={title}>
   <meta property="og:description" content={description}>
-  <meta property="og:image" content={ogImage}>
+  <meta property="og:image" content={resolvedOgImage}>
   <meta property="og:site_name" content="fraglog.gg">
+  <meta property="og:locale" content="en_US">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content={title}>
   <meta name="twitter:description" content={description}>
-  <meta name="twitter:image" content={ogImage}>
+  <meta name="twitter:image" content={resolvedOgImage}>
   <link rel="canonical" href={canonical}>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  {jsonLd && <script type="application/ld+json" set:html={jsonLd} />}
   <script defer src="https://cdn.vercel-insights.com/v1/script.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" is:inline></script>
 </head>
@@ -91,7 +98,6 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
           <div class="video-modal-title" id="vm-title"></div>
           <div class="video-modal-meta">
             <a class="video-modal-player" id="vm-player" href=""></a>
-            <span class="video-modal-stat" id="vm-kd" style="display:none"></span>
             <span class="video-modal-stat" id="vm-date" style="display:none"></span>
           </div>
           <div class="video-modal-actions" id="vm-actions"></div>
@@ -150,6 +156,7 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
   let userCoach = {};
   let userWatched = [];
   let userTimestamps = {};
+  let userDurations = {};
   let userShareCoaching = null; // null = never asked, true/false = preference set
   let todayCoachingUsed = 0;
   let todayFollowupUsed = 0;
@@ -221,16 +228,65 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
   async function saveTimestamp(videoId, seconds) {
     if (!currentUser || !videoId || !seconds) return;
     userTimestamps[videoId] = seconds;
+
+    // Capture total duration so we can show a progress bar on cards
+    let dur = 0;
+    if (ytPlayer && typeof ytPlayer.getDuration === 'function') {
+      dur = Math.floor(ytPlayer.getDuration()) || 0;
+    }
+    if (dur > 0) userDurations[videoId] = dur;
+    applyWatchProgress();
+
     const sb = initSupabase();
-    await sb.from('watched').upsert(
-      { user_id: currentUser.id, video_id: videoId, resume_at: seconds, updated_at: new Date().toISOString() },
-      { onConflict: 'user_id,video_id' }
-    );
+    const payload = { user_id: currentUser.id, video_id: videoId, resume_at: seconds, updated_at: new Date().toISOString() };
+    if (dur > 0) payload.duration = dur;
+    const { error } = await sb.from('watched').upsert(payload, { onConflict: 'user_id,video_id' });
+    // Resilience: if the `duration` column doesn't exist yet, retry without it
+    if (error && payload.duration !== undefined) {
+      delete payload.duration;
+      await sb.from('watched').upsert(payload, { onConflict: 'user_id,video_id' });
+    }
   }
 
   function getTimestamp(videoId) {
     return userTimestamps[videoId] || 0;
   }
+
+  // ── Watch progress ────────────────────────────────────────
+  function getProgressFraction(videoId) {
+    const t = userTimestamps[videoId], d = userDurations[videoId];
+    if (!t || !d || d <= 0) return 0;
+    return Math.max(0, Math.min(1, t / d));
+  }
+
+  // Inject/update a progress bar on every visible thumbnail tied to a video id.
+  // Works across all card layouts: .video-thumb inside [data-vid], and home .hrc cards.
+  function applyWatchProgress(root) {
+    root = root || document;
+    root.querySelectorAll('[data-vid]').forEach(el => {
+      const vid = el.dataset.vid;
+      if (!vid) return;
+      const thumb = el.matches('.video-thumb, .hrc__thumb')
+        ? el
+        : el.querySelector('.video-thumb, .hrc__thumb');
+      if (!thumb) return;
+
+      const frac = getProgressFraction(vid);
+      let bar = thumb.querySelector('.video-progress');
+      if (frac <= 0) { if (bar) bar.remove(); return; }
+
+      if (!bar) {
+        bar = document.createElement('div');
+        bar.className = 'video-progress';
+        bar.innerHTML = '<span></span>';
+        thumb.appendChild(bar);
+      }
+      const finished = frac >= 0.9;
+      bar.classList.toggle('is-finished', finished);
+      bar.firstChild.style.width = (finished ? 100 : Math.round(frac * 100)) + '%';
+    });
+  }
+  window.applyWatchProgress = applyWatchProgress;
 
   async function initAuth() {
     try {
@@ -250,6 +306,7 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
     } finally {
       window.__authReady = true;
       if (typeof window.__onAuthReady === 'function') window.__onAuthReady();
+      applyWatchProgress();
     }
   }
 
@@ -265,11 +322,13 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
       userNotes[n.video_id] = n.content;
       if (n.coach_text) userCoach[n.video_id] = { text: n.coach_text, mode: n.coach_mode || 'pro' };
     });
-    const { data: watched } = await sb.from("watched").select("video_id, resume_at").eq("user_id", currentUser.id);
+    const { data: watched } = await sb.from("watched").select("*").eq("user_id", currentUser.id);
     userWatched = (watched||[]).map(w => w.video_id);
     userTimestamps = {};
+    userDurations = {};
     (watched||[]).forEach(w => {
       if (w.resume_at) userTimestamps[w.video_id] = w.resume_at;
+      if (w.duration) userDurations[w.video_id] = w.duration;
     });
 
     // Load share_coaching preference
@@ -444,10 +503,6 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
     playerEl.textContent = player;
     playerEl.href = opts.playerHref || '';
 
-    const kdEl = document.getElementById('vm-kd');
-    if (opts.kd) { kdEl.textContent = opts.kd; kdEl.style.display = ''; }
-    else { kdEl.style.display = 'none'; }
-
     const dateEl = document.getElementById('vm-date');
     if (opts.date) { dateEl.textContent = opts.date; dateEl.style.display = ''; }
     else { dateEl.style.display = 'none'; }
@@ -465,11 +520,8 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
     if (currentUser) {
       const favText = isFav(videoId) ? "♥ Saved" : "♡ Save";
       const favClass = isFav(videoId) ? "active" : "";
-      const watchText = isWatched(videoId) ? "✓ Watched" : "✓ Mark watched";
-      const watchClass = isWatched(videoId) ? "watched" : "";
       actions.innerHTML = `
         <button class="vm-action-btn ${favClass}" id="vm-fav-btn" onclick="toggleFav('${videoId}', this)">${favText}</button>
-        <button class="vm-action-btn ${watchClass}" id="vm-watched-btn" onclick="toggleWatched('${videoId}', this)">${watchText}</button>
         <a class="vm-yt-link" href="${ytHref}" target="_blank" rel="noopener">↗ YouTube</a>
       `;
     } else {
@@ -799,6 +851,19 @@ const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radi
       const raw = data.text || '';
 
       todayFollowupUsed++;
+
+      // Persist the follow-up so it survives a reload (it was previously DOM-only)
+      if (currentUser && vmVideoId && raw) {
+        const prev = (userCoach[vmVideoId] && userCoach[vmVideoId].text) || currentCoaching || '';
+        const appended = `${prev}\n\n### Follow-up: ${question}\n\n${raw}`;
+        userCoach[vmVideoId] = { text: appended, mode: vmCoachMode };
+        try {
+          await initSupabase().from('notes').upsert(
+            { user_id: currentUser.id, video_id: vmVideoId, coach_text: appended, coach_mode: vmCoachMode, updated_at: new Date().toISOString() },
+            { onConflict: 'user_id,video_id' }
+          );
+        } catch (e) { /* keep the DOM copy even if the save fails */ }
+      }
 
       const loading = document.getElementById(loadingId);
       if (loading) loading.remove();

@@ -25,11 +25,52 @@ const agentData = AGENTS.find(a => a.id === agentId);
 
 if (!mapData || !agentData) return Astro.redirect('/');
 
-const vods = agentVods(mapId, agentId);
-const title = `${agentData.name} ${mapData.name} VODs — fraglog.gg`;
-const description = `Watch ${vods.length} Radiant ${agentData.name} VODs on ${mapData.name}. Pro player POV gameplay on FragLog.gg`;
+const vods = agentVods(mapId, agentId)
+  .slice()
+  .sort((a: any, b: any) => (b.date || '').localeCompare(a.date || ''));
+const playerCounts = vods.reduce((m: Map<string, number>, v: any) => m.set(v.player, (m.get(v.player) || 0) + 1), new Map<string, number>());
+const players = Array.from(playerCounts, ([name, count]) => ({ name, count }))
+  .sort((a, b) => a.name.localeCompare(b.name));
+const title = `${agentData.name} ${mapData.name} Valorant VODs — fraglog.gg`;
+const description = vods.length > 0
+  ? `Watch ${vods.length} Radiant & pro player ${agentData.name} Valorant VODs on ${mapData.name}. Full POV gameplay footage from the best players — study ${agentData.name} on ${mapData.name} on fraglog.gg.`
+  : `${agentData.name} ${mapData.name} Valorant VODs on fraglog.gg.`;
+
+const jsonLd = vods.length > 0 ? JSON.stringify({
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "fraglog.gg", "item": "https://fraglog.gg" },
+        { "@type": "ListItem", "position": 2, "name": `${mapData.name} VODs`, "item": `https://fraglog.gg/${mapId}/` },
+        { "@type": "ListItem", "position": 3, "name": `${agentData.name} ${mapData.name} VODs`, "item": `https://fraglog.gg/${mapId}/${agentId}/` }
+      ]
+    },
+    {
+      "@type": "ItemList",
+      "name": `${agentData.name} ${mapData.name} Valorant VODs`,
+      "description": description,
+      "numberOfItems": vods.length,
+      "itemListElement": vods.map((v: any, i: number) => ({
+        "@type": "ListItem",
+        "position": i + 1,
+        "item": {
+          "@type": "VideoObject",
+          "name": v.title,
+          "description": `Radiant ${agentData.name} Valorant gameplay on ${mapData.name} by ${v.player}`,
+          "thumbnailUrl": `https://img.youtube.com/vi/${v.id}/maxresdefault.jpg`,
+          ...(v.date ? { "uploadDate": v.date } : {}),
+          "embedUrl": `https://www.youtube.com/embed/${v.id}`,
+          "url": `https://www.youtube.com/watch?v=${v.id}`,
+          "inLanguage": "en"
+        }
+      }))
+    }
+  ]
+}) : null;
 ---
-<BaseLayout title={title} description={description} ogImage={mapData.img} canonical={`https://fraglog.gg/${mapId}/${agentId}/`} user={user} noindex={vods.length === 0}>
+<BaseLayout title={title} description={description} ogImage={mapData.img} canonical={`https://fraglog.gg/${mapId}/${agentId}/`} jsonLd={jsonLd} user={user} noindex={vods.length === 0}>
   <Nav crumbs={[{ label: 'ALL MAPS', href: '/' }, { label: mapData.name.toUpperCase(), href: `/${mapId}` }, { label: agentData.name.toUpperCase() }]} user={user} />
   <div class="page-content">
     <div class="videos-header">
@@ -47,22 +88,46 @@ const description = `Watch ${vods.length} Radiant ${agentData.name} VODs on ${ma
         </div>
       </div>
     ) : (
+      <>
+      <div class="vod-controls">
+        <div class="vod-field">
+          <span class="vod-field-label">Sort</span>
+          <select class="vod-select" id="vod-sort" aria-label="Sort VODs">
+            <option value="newest">Newest first</option>
+            <option value="oldest">Oldest first</option>
+            <option value="player">Player A–Z</option>
+          </select>
+        </div>
+        {players.length > 1 && (
+          <div class="vod-field">
+            <span class="vod-field-label">Player</span>
+            <select class="vod-select" id="vod-player" aria-label="Filter by player">
+              <option value="">All players ({vods.length})</option>
+              {players.map(p => <option value={p.name}>{p.name} ({p.count})</option>)}
+            </select>
+          </div>
+        )}
+        <span class="vod-count" id="vod-count"><strong>{vods.length}</strong> {vods.length === 1 ? 'VOD' : 'VODs'}</span>
+      </div>
       <div class="video-grid" id="video-grid">
-        {vods.map(v => (
+        {vods.map((v: any) => (
           <div class="video-card"
             data-vid={v.id}
             data-title={v.title}
             data-player={v.player}
-            data-kd={v.kd || ''}
             data-date={v.date ? formatDate(v.date) : ''}
+            data-sort-date={v.date || ''}
             data-note={v.note || ''}
             data-agent={agentId}
             data-map={mapId}
             data-player-href={`/player/${v.player.toLowerCase().replace(/\//g,'').replace(/ /g,'-')}`}
+            tabindex="0"
+            role="button"
+            aria-label={`Play ${v.title}`}
             style="cursor:pointer"
           >
             <div class="video-thumb">
-              <img src={`https://img.youtube.com/vi/${v.id}/mqdefault.jpg`} alt={v.title} loading="lazy" />
+              <img src={`https://img.youtube.com/vi/${v.id}/mqdefault.jpg`} alt={v.title} loading="lazy" decoding="async" />
               <div class="play-overlay">
                 <div class="play-icon"><div class="play-tri"></div></div>
               </div>
@@ -71,7 +136,6 @@ const description = `Watch ${vods.length} Radiant ${agentData.name} VODs on ${ma
               <div class="video-title">{v.title}</div>
               <div class="video-meta-row">
                 <span class="video-player">{v.player}</span>
-                {v.kd && <span class="video-kd">{v.kd}</span>}
                 {v.date && <span class="video-date">{formatDate(v.date)}</span>}
               </div>
               <div class="notes-section"
@@ -89,26 +153,90 @@ const description = `Watch ${vods.length} Radiant ${agentData.name} VODs on ${ma
           </div>
         ))}
       </div>
+      <div class="vod-no-results" id="vod-no-results" style="display:none">No VODs match this filter.</div>
+      </>
     )}
   </div>
   <Footer />
 </BaseLayout>
 
 <script is:inline>
-document.addEventListener('click', function(e) {
-  const card = e.target.closest('.video-card[data-vid]');
-  if (!card) return;
-  if (e.target.closest('button') || e.target.closest('a')) return;
-
+function playCard(card) {
   openVideo(card.dataset.vid, card.dataset.title, card.dataset.player, {
-    kd: card.dataset.kd || '',
     date: card.dataset.date || '',
     adminNote: card.dataset.note || '',
     playerHref: card.dataset.playerHref || '',
     agent: card.dataset.agent || '',
     map: card.dataset.map || ''
   });
+}
+
+document.addEventListener('click', function(e) {
+  const card = e.target.closest('.video-card[data-vid]');
+  if (!card) return;
+  if (e.target.closest('button') || e.target.closest('a')) return;
+  playCard(card);
 });
+
+// Keyboard: open the focused card with Enter or Space
+document.addEventListener('keydown', function(e) {
+  if (e.key !== 'Enter' && e.key !== ' ') return;
+  const card = e.target.closest && e.target.closest('.video-card[data-vid]');
+  if (!card || e.target !== card) return;
+  e.preventDefault();
+  playCard(card);
+});
+
+// ── Sort + player filter ──────────────────────────────────
+(function initVodControls() {
+  const grid = document.getElementById('video-grid');
+  const sortSel = document.getElementById('vod-sort');
+  if (!grid || !sortSel) return;
+  const playerSel = document.getElementById('vod-player');
+  const countEl = document.getElementById('vod-count');
+  const noResults = document.getElementById('vod-no-results');
+  const cards = Array.from(grid.querySelectorAll('.video-card'));
+
+  function apply() {
+    const sort = sortSel.value;
+    const player = playerSel ? playerSel.value : '';
+
+    const sorted = cards.slice().sort((a, b) => {
+      if (sort === 'player') return (a.dataset.player || '').localeCompare(b.dataset.player || '');
+      const da = a.dataset.sortDate || '', db = b.dataset.sortDate || '';
+      if (!da) return 1;
+      if (!db) return -1;
+      return sort === 'oldest' ? da.localeCompare(db) : db.localeCompare(da);
+    });
+    sorted.forEach(c => grid.appendChild(c));
+
+    let visible = 0;
+    cards.forEach(c => {
+      const show = !player || c.dataset.player === player;
+      c.classList.toggle('is-hidden', !show);
+      if (show) visible++;
+    });
+
+    if (countEl) countEl.innerHTML = '<strong>' + visible + '</strong> ' + (visible === 1 ? 'VOD' : 'VODs');
+    if (noResults) noResults.style.display = visible === 0 ? '' : 'none';
+
+    const params = new URLSearchParams(window.location.search);
+    if (sort === 'newest') params.delete('sort'); else params.set('sort', sort);
+    if (player) params.set('player', player); else params.delete('player');
+    const qs = params.toString();
+    history.replaceState(null, '', qs ? '?' + qs : window.location.pathname);
+  }
+
+  const params = new URLSearchParams(window.location.search);
+  const initSort = params.get('sort');
+  if (initSort && [...sortSel.options].some(o => o.value === initSort)) sortSel.value = initSort;
+  const initPlayer = params.get('player');
+  if (playerSel && initPlayer && [...playerSel.options].some(o => o.value === initPlayer)) playerSel.value = initPlayer;
+
+  sortSel.addEventListener('change', apply);
+  if (playerSel) playerSel.addEventListener('change', apply);
+  apply();
+})();
 
 function openVodNotes(el) {
   const ns = el.closest('.notes-section');
@@ -118,7 +246,6 @@ function openVodNotes(el) {
     playerHref: ns.dataset.playerHref || '',
     agent: ns.dataset.agent || '',
     map: ns.dataset.map || '',
-    kd: card?.dataset.kd || '',
     date: card?.dataset.date || ''
   });
 }
@@ -133,12 +260,9 @@ function updateActions() {
     const noteClass = getUserNote(vid) ? 'has-note' : '';
     const favText = isFav(vid) ? '♥ Saved' : '♡ Save';
     const favClass = isFav(vid) ? 'has-note' : '';
-    const watchText = isWatched(vid) ? '✓ Watched' : '✓ Mark watched';
-    const watchClass = isWatched(vid) ? 'watched' : '';
     el.innerHTML = `
       <button class="notes-btn ${noteClass}" onclick="openVodNotes(this)">📝 ${noteText}</button>
-      <button class="notes-btn ${favClass}" onclick="toggleFav('${vid}',this)">${favText}</button>
-      <button class="notes-btn ${watchClass}" onclick="toggleWatched('${vid}',this)">${watchText}</button>`;
+      <button class="notes-btn ${favClass}" onclick="toggleFav('${vid}',this)">${favText}</button>`;
   });
 }
 

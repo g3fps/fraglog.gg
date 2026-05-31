@@ -68,8 +68,8 @@ const faqs = [
         a: 'You can favorite any VOD to save it for later. Access your favorites from the Favorites tab in the nav.'
       },
       {
-        q: 'What is the watched indicator?',
-        a: 'When you open a VOD, you can mark it as watched. Watched VODs show a green indicator so you can track what you\'ve already studied.'
+        q: 'Does fraglog track what I\'ve watched?',
+        a: 'Yes — automatically. FragLog remembers how far you got in every VOD, shows a progress bar on the thumbnail, and resumes playback right where you left off. When you finish a VOD the bar turns green so you can see what you\'ve already studied at a glance.'
       },
       {
         q: 'What is My VODs?',
@@ -114,7 +114,20 @@ const faqs = [
 ];
 ---
 
-<BaseLayout title="FAQ — fraglog.gg" user={user}>
+<BaseLayout
+  title="FAQ — fraglog.gg"
+  description="Answers to common questions about fraglog.gg — Valorant VOD library, notes, AI coaching, pro matches, and account features."
+  canonical="https://fraglog.gg/faq"
+  jsonLd={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": faqs.flatMap(section => section.items.map(item => ({
+      "@type": "Question",
+      "name": item.q,
+      "acceptedAnswer": { "@type": "Answer", "text": item.a }
+    })))
+  })}
+  user={user}>
   <Nav crumbs={[{ label: 'FAQ' }]} user={user} />
 
   <main class="faq-main">

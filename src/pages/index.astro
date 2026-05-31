@@ -23,17 +23,54 @@ const totalVods = MAPS.reduce((sum, map) => sum + vodCount(map.id), 0);
 
 // Recently added — last 8 VODs by date
 const recentVods = getAllVods()
-  .sort((a, b) => new Date(b.date) - new Date(a.date))
+  .sort((a: any, b: any) => +new Date(b.date) - +new Date(a.date))
   .slice(0, 8);
+
+const jsonLd = JSON.stringify({
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebSite",
+      "@id": "https://fraglog.gg/#website",
+      "url": "https://fraglog.gg",
+      "name": "fraglog.gg",
+      "description": "Valorant VOD library with Radiant and pro player gameplay filtered by map and agent.",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": {
+          "@type": "EntryPoint",
+          "urlTemplate": "https://fraglog.gg/search?q={search_term_string}"
+        },
+        "query-input": "required name=search_term_string"
+      }
+    },
+    {
+      "@type": "Organization",
+      "@id": "https://fraglog.gg/#organization",
+      "name": "fraglog.gg",
+      "url": "https://fraglog.gg",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://fraglog.gg/favicon.svg"
+      }
+    }
+  ]
+});
 ---
-<BaseLayout user={user}>
+<BaseLayout
+  title="fraglog.gg — Valorant VOD Library"
+  description={`Browse ${totalVods}+ Radiant and pro player Valorant VODs filtered by map and agent. Study the best players in the world with full POV gameplay footage on fraglog.gg.`}
+  canonical="https://fraglog.gg"
+  jsonLd={jsonLd}
+  preloadImage="/hero-banner.jpg"
+  user={user}>
   <Nav crumbs={[]} user={user} />
 
   <!-- Hero: search centered -->
   <div class="home-hero" style="background-image: url('/hero-banner.jpg')">
     <div class="home-hero-inner">
       <div class="home-hero-eyebrow">Valorant VOD Library</div>
-      <h1 class="home-hero-title">Study the Best. <span>Beat the Rest.</span></h1>
+      <h1 class="home-hero-title"><span class="ht-part">Study the Best.</span> <span class="ht-part ht-accent">Beat the Rest.</span></h1>
       <p class="home-hero-sub">{totalVods.toLocaleString()}+ Radiant &amp; pro player VODs — filtered by map and agent.</p>
       <div class="home-search-wrap">
         <div class="home-search-icon">
@@ -68,10 +105,11 @@ const recentVods = getAllVods()
         return (
           <div
             class="hrc"
+            data-vid={vod.id}
             onclick={`openVideo('${vod.id}','${vod.title.replace(/'/g,"\\'")}','${vod.player}',{agent:'${vod.agentId}',map:'${vod.mapId}',date:'${vod.date}'})`}
           >
             <div class="hrc__thumb">
-              <img src={`https://img.youtube.com/vi/${vod.id}/mqdefault.jpg`} alt={vod.title} loading="lazy" />
+              <img src={`https://img.youtube.com/vi/${vod.id}/mqdefault.jpg`} alt={vod.title} loading="lazy" decoding="async" />
               <div class="hrc__thumb-overlay"></div>
               <div class="hrc__play">▶</div>
               {agent?.portrait && <img class="hrc__agent" src={agent.portrait} alt={agent.name} />}

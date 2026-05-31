@@ -45,7 +45,6 @@ const description = `Watch all ${playerVods.length} ${displayName} VODs on FragL
           data-vid={v.id}
           data-title={v.title}
           data-player={v.player}
-          data-kd={v.kd || ''}
           data-date={v.date ? formatDate(v.date) : ''}
           data-note={v.note || ''}
           style="cursor:pointer"
@@ -63,7 +62,6 @@ const description = `Watch all ${playerVods.length} ${displayName} VODs on FragL
             </div>
             <div class="video-title">{v.title}</div>
             <div class="video-meta-row">
-              {v.kd && <span class="video-kd">{v.kd}</span>}
               {v.date && <span class="video-date">{formatDate(v.date)}</span>}
             </div>
           </div>
@@ -80,7 +78,6 @@ document.addEventListener('click', function(e) {
   if (!card) return;
   if (e.target.closest('button') || e.target.closest('a')) return;
   openVideo(card.dataset.vid, card.dataset.title, card.dataset.player, {
-    kd: card.dataset.kd || '',
     date: card.dataset.date || '',
     adminNote: card.dataset.note || ''
   });

@@ -48,7 +48,7 @@ function renderFavorites() {
   const container = document.getElementById("fav-container");
 
   if (!currentUser) {
-    container.innerHTML = '<div class="video-grid"><div class="empty"><strong>Not signed in</strong>Sign in to see your saved VODs</div></div>';
+    container.innerHTML = '<div class="video-grid"><div class="empty"><strong>Not signed in</strong>Sign in to see your saved VODs<button class="auth-btn primary empty-cta" onclick="openAuth()">Sign In</button></div></div>';
     return;
   }
 
@@ -97,6 +97,7 @@ function renderFavorites() {
       adminNote: card.dataset.note || ''
     });
   };
+  if (window.applyWatchProgress) window.applyWatchProgress();
 }
 
 window.__onAuthReady = renderFavorites;

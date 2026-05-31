@@ -130,7 +130,7 @@ async function submitMyVod() {
 async function renderMyVods() {
   const grid = document.getElementById("mv-grid");
   if (!currentUser) {
-    grid.innerHTML = '<div class="empty"><strong>Not signed in</strong>Sign in to use My VODs</div>';
+    grid.innerHTML = '<div class="empty"><strong>Not signed in</strong>Sign in to build your private VOD collection<button class="auth-btn primary empty-cta" onclick="openAuth()">Sign In</button></div>';
     return;
   }
 
@@ -188,6 +188,7 @@ async function renderMyVods() {
     if (!card || e.target.closest('button')) return;
     openVideo(card.dataset.vid, card.dataset.title, 'Me', { mode: 'own' });
   };
+  if (window.applyWatchProgress) window.applyWatchProgress();
 }
 
 async function deleteMyVod(id) {
