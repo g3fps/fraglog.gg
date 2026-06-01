@@ -482,6 +482,7 @@ const resolvedOgImage = ogImage?.startsWith('/') ? `https://fraglog.gg${ogImage}
   // ── Video Modal ──────────────────────────────────────────────
   let vmVideoId = null;
   let vmCoachMode = 'pro';
+  let vmOriginalMode = 'pro';
   let vmAgent = null;
   let vmMap = null;
   let vmCurrentNotes = '';
@@ -490,6 +491,7 @@ const resolvedOgImage = ogImage?.startsWith('/') ? `https://fraglog.gg${ogImage}
   function openVideo(videoId, title, player, opts = {}) {
     vmVideoId = videoId;
     vmCoachMode = opts.mode || 'pro';
+    vmOriginalMode = opts.mode || 'pro';
     vmAgent = opts.agent || null;
     vmMap = opts.map || null;
     vmCurrentNotes = getUserNote(videoId) || '';
@@ -550,7 +552,7 @@ const resolvedOgImage = ogImage?.startsWith('/') ? `https://fraglog.gg${ogImage}
     }
 
     const toggle = document.getElementById('vm-coach-toggle');
-    if (toggle) toggle.style.display = mode === 'own' ? 'flex' : 'none';
+    if (toggle) toggle.style.display = vmOriginalMode === 'own' ? 'flex' : 'none';
     setVmCoachMode(vmCoachMode);
   }
 
@@ -895,7 +897,7 @@ const resolvedOgImage = ogImage?.startsWith('/') ? `https://fraglog.gg${ogImage}
   function switchToNotesMode() {
     renderNotesMode(vmVideoId, null);
     const toggle = document.getElementById('vm-coach-toggle');
-    if (toggle) toggle.style.display = vmCoachMode === 'own' ? 'flex' : 'none';
+    if (toggle) toggle.style.display = vmOriginalMode === 'own' ? 'flex' : 'none';
   }
 
   function updateCoachUsageDisplay() {
