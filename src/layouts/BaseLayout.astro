@@ -540,7 +540,8 @@ const resolvedOgImage = ogImage?.startsWith('/') ? `https://fraglog.gg${ogImage}
     }
 
     const saved = userCoach[videoId];
-    const hasCoach = saved && saved.mode === mode;
+    const hasCoach = !!saved;
+    if (hasCoach) vmCoachMode = saved.mode;
 
     if (hasCoach) {
       renderCoachMode(saved.text, adminNote);
@@ -550,7 +551,7 @@ const resolvedOgImage = ogImage?.startsWith('/') ? `https://fraglog.gg${ogImage}
 
     const toggle = document.getElementById('vm-coach-toggle');
     if (toggle) toggle.style.display = mode === 'own' ? 'flex' : 'none';
-    setVmCoachMode(mode);
+    setVmCoachMode(vmCoachMode);
   }
 
   function renderNotesMode(videoId, adminNote) {
