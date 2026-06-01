@@ -69,6 +69,7 @@ if (accessToken && refreshToken) {
             <label>Why should this be added? (optional)</label>
             <input type="text" id="sub-note" placeholder="e.g. insane performance, great util usage">
           </div>
+          <input type="text" id="sub-hp" autocomplete="off" tabindex="-1" style="position:absolute;left:-9999px;opacity:0;pointer-events:none;" aria-hidden="true">
           <button class="auth-btn primary sub-btn" onclick="submitVodRequest()" id="sub-btn">Submit for Review</button>
           <div class="mv-error" id="sub-error"></div>
           <div id="sub-success" class="sub-success">✓ Submitted! We'll review it shortly.</div>
@@ -101,6 +102,7 @@ async function submitVodRequest() {
   errEl.textContent = "";
   document.getElementById("sub-success").style.display = "none";
 
+  if (document.getElementById("sub-hp").value) return;
   if (!subVideoId) { errEl.textContent = "Paste a valid YouTube URL."; return; }
   if (!mapId) { errEl.textContent = "Select a map."; return; }
   if (!agentId) { errEl.textContent = "Select an agent."; return; }
