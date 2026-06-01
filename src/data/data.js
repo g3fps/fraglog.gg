@@ -119,6 +119,7 @@ export const VODS = {
       { id:"UveQE3___7o", title:"TL nAts Iso Ascent RADIANT RANKED", player:"nAts", date:"2024-06-19" },
       { id:"GHgHXNPxzhM", title:"demon1 Iso Ascent RADIANT RANKED", player:"demon1", date:"2024-08-25" },
       { id:"N1tpXSJHxs4", title:"zekken Iso Ascent RADIANT AIM", player:"zekken", date:"2025-04-28" },
+      { id:"W8ww6urzSjc", title:"florescent Iso Ascent UNSTOPPABLE", player:"florescent", date:"2026-05-31" },
     ],
     waylay: [
       { id:"5SrKwvYnjgI", title:"C9 OXY Waylay Ascent RADIANT ENTRY", player:"OXY", date:"2025-09-20" },
@@ -191,6 +192,7 @@ export const VODS = {
     ],
     chamber: [
       { id:"G8DcznrXNrU", title:"demon1 Chamber Ascent RADIANT RANKED", player:"demon1", date:"2025-07-23" },
+      { id:"M-QvwZCaJOI", title:"NAVI hiro Chamber Ascent HEADSHOT MASTER", player:"hiro", date:"2026-05-31" },
     ],
     deadlock: [
       { id:"eC77lVdOk_g", title:"Wo0t Deadlock Ascent", player:"Wo0t", date:"2025-10-13" },
@@ -577,6 +579,7 @@ export const VODS = {
       { id:"t6593LydS8w", title:"s0m Viper Split RADIANT RANKED", player:"s0m", date:"2026-05-14" },
       { id:"T6W4L4W3EiM", title:"s0m Viper Split RADIANT GAMEPLAY", player:"s0m", date:"2026-05-21" },
       { id:"rDYOGrf2TEo", title:"NAVI hiro Viper Split RADIANT FLEX PLAYER", player:"hiro", date:"2026-05-22" },
+      { id:"2ISj6U-HGRw", title:"NAVI hiro Viper Split 30 KILL SHARPSHOOTER", player:"hiro", date:"2026-05-31" },
     ],
     brimstone: [
     ],
@@ -707,6 +710,7 @@ export const VODS = {
       { id:"j1v4zSZgFTI", title:"Jinggg Raze Fracture RADIANT RANKED", player:"Jinggg", date:"2026-05-24" },
       { id:"rHAMBQPYrPk", title:"PRX Jinggg Raze Fracture RADIANT MVP", player:"Jinggg", date:"2026-05-27" },
       { id:"yD7WjxYGYJg", title:"C9 OXY Raze Fracture RADIANT 30 KILLS", player:"OXY", date:"2026-05-28" },
+      { id:"xTIJ2C0Akm0", title:"C9 OXY Raze Fracture RADIANT SLAYER", player:"OXY", date:"2026-05-31" },
     ],
     neon: [
       { id:"dPulIDBZXtA", title:"C9 OXY Neon Fracture RADIANT RANKED", player:"OXY", date:"2026-04-28" },

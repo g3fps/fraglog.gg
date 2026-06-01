@@ -34,7 +34,7 @@ export async function GET({ request }: { request: Request }) {
 
   const content = readDataFile();
   const ids = [...content.matchAll(/id:"([a-zA-Z0-9_-]{11})"/g)].map(m => m[1]);
-  const titles = [...content.matchAll(/title:"([^"]+)"/g)].map(m => m[1].toLowerCase());
+  const titles = [...content.matchAll(/title:"([^"]+)"/g)].map(m => m[1]);
   return new Response(JSON.stringify({ ids, titles }), { headers: { 'Content-Type': 'application/json' } });
 }
 
@@ -55,7 +55,9 @@ export async function POST({ request }: { request: Request }) {
   if (content.includes(`id:"${id}"`)) {
     return new Response(JSON.stringify({ error: 'Duplicate: video ID already exists in data.js' }), { status: 409 });
   }
-  if (content.includes(`title:"${title}"`)) {
+  const titleLower = title.toLowerCase();
+  const allTitles = [...content.matchAll(/title:"([^"]+)"/g)].map(m => m[1].toLowerCase());
+  if (allTitles.includes(titleLower)) {
     return new Response(JSON.stringify({ error: 'Duplicate: title already exists in data.js' }), { status: 409 });
   }
 

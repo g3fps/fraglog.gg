@@ -369,7 +369,7 @@ async function loadExisting() {
 function checkDuplicates() {
   const idDup = currentVideoId && existingIds.includes(currentVideoId);
   const title = document.getElementById("inp-title").value.trim().toLowerCase();
-  const titleDup = title && existingTitles.includes(title);
+  const titleDup = title && existingTitles.some(t => t.toLowerCase() === title);
   const display = document.getElementById("video-id-display");
   if (idDup) {
     display.textContent = "⚠ Duplicate — this video ID is already in data.js";
