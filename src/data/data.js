@@ -14,35 +14,35 @@ export const MAPS = [
 ];
 
 export const AGENTS = [
-  {id:"jett",     name:"Jett",       role:"Duelist",    portrait:"/agents/jett.png",    color:"#25607a"},
-  {id:"reyna",    name:"Reyna",      role:"Duelist",    portrait:"/agents/reyna.png",    color:"#662d62"},
-  {id:"raze",     name:"Raze",       role:"Duelist",    portrait:"/agents/raze.png",    color:"#742e1e"},
-  {id:"neon",     name:"Neon",       role:"Duelist",    portrait:"/agents/neon.png",    color:"#413476"},
-  {id:"phoenix",  name:"Phoenix",    role:"Duelist",    portrait:"/agents/phoenix.png",    color:"#74321c"},
-  {id:"yoru",     name:"Yoru",       role:"Duelist",    portrait:"/agents/yoru.png",    color:"#222b67"},
-  {id:"iso",      name:"Iso",        role:"Duelist",    portrait:"/agents/iso.png",    color:"#30336e"},
-  {id:"waylay",   name:"Waylay",     role:"Duelist",    portrait:"/agents/waylay.png",    color:"#482e61"},
-  {id:"omen",     name:"Omen",       role:"Controller", portrait:"/agents/omen.png",    color:"#433178"},
-  {id:"viper",    name:"Viper",      role:"Controller", portrait:"/agents/viper.png",    color:"#1a5f46"},
-  {id:"brimstone",name:"Brimstone",  role:"Controller", portrait:"/agents/brimstone.png",    color:"#363c4f"},
+  {id:"jett",     name:"Jett",       role:"Duelist",    portrait:"/agents/jett.webp",    color:"#25607a"},
+  {id:"reyna",    name:"Reyna",      role:"Duelist",    portrait:"/agents/reyna.webp",    color:"#662d62"},
+  {id:"raze",     name:"Raze",       role:"Duelist",    portrait:"/agents/raze.webp",    color:"#742e1e"},
+  {id:"neon",     name:"Neon",       role:"Duelist",    portrait:"/agents/neon.webp",    color:"#413476"},
+  {id:"phoenix",  name:"Phoenix",    role:"Duelist",    portrait:"/agents/phoenix.webp",    color:"#74321c"},
+  {id:"yoru",     name:"Yoru",       role:"Duelist",    portrait:"/agents/yoru.webp",    color:"#222b67"},
+  {id:"iso",      name:"Iso",        role:"Duelist",    portrait:"/agents/iso.webp",    color:"#30336e"},
+  {id:"waylay",   name:"Waylay",     role:"Duelist",    portrait:"/agents/waylay.webp",    color:"#482e61"},
+  {id:"omen",     name:"Omen",       role:"Controller", portrait:"/agents/omen.webp",    color:"#433178"},
+  {id:"viper",    name:"Viper",      role:"Controller", portrait:"/agents/viper.webp",    color:"#1a5f46"},
+  {id:"brimstone",name:"Brimstone",  role:"Controller", portrait:"/agents/brimstone.webp",    color:"#363c4f"},
   {id:"astra",    name:"Astra",      role:"Controller", portrait:"/agents/astra.webp",    color:"#26146c"},
-  {id:"harbor",   name:"Harbor",     role:"Controller", portrait:"/agents/harbor.png",    color:"#275146"},
-  {id:"clove",    name:"Clove",      role:"Controller", portrait:"/agents/clove.png",    color:"#4b1d80"},
-  {id:"miks",     name:"Miks",       role:"Controller", portrait:"/agents/miks.png",    color:"#462b75"},
-  {id:"sage",     name:"Sage",       role:"Sentinel",   portrait:"/agents/sage.png",    color:"#1f5148"},
-  {id:"cypher",   name:"Cypher",     role:"Sentinel",   portrait:"/agents/cypher.png",    color:"#2f5078"},
-  {id:"killjoy",  name:"Killjoy",    role:"Sentinel",   portrait:"/agents/killjoy.png",    color:"#522162"},
-  {id:"chamber",  name:"Chamber",    role:"Sentinel",   portrait:"/agents/chamber.png",    color:"#20435b"},
-  {id:"deadlock", name:"Deadlock",   role:"Sentinel",   portrait:"/agents/deadlock.png",    color:"#425495"},
-  {id:"vyse",     name:"Vyse",       role:"Sentinel",   portrait:"/agents/vyse.png",    color:"#492280"},
-  {id:"veto",     name:"Veto",       role:"Sentinel",   portrait:"/agents/veto.png",    color:"#1a5d65"},
-  {id:"sova",     name:"Sova",       role:"Initiator",  portrait:"/agents/sova.png",    color:"#355285"},
-  {id:"breach",   name:"Breach",     role:"Initiator",  portrait:"/agents/breach.png",    color:"#81331a"},
-  {id:"skye",     name:"Skye",       role:"Initiator",  portrait:"/agents/skye.png",    color:"#436a51"},
-  {id:"kayo",     name:"KAY/O",      role:"Initiator",  portrait:"/agents/kayo.png",    color:"#1c2a69"},
-  {id:"fade",     name:"Fade",       role:"Initiator",  portrait:"/agents/fade.png",    color:"#1d2846"},
-  {id:"gekko",    name:"Gekko",      role:"Initiator",  portrait:"/agents/gekko.png",    color:"#371c5c"},
-  {id:"tejo",     name:"Tejo",       role:"Initiator",  portrait:"/agents/tejo.png",    color:"#80451b"},
+  {id:"harbor",   name:"Harbor",     role:"Controller", portrait:"/agents/harbor.webp",    color:"#275146"},
+  {id:"clove",    name:"Clove",      role:"Controller", portrait:"/agents/clove.webp",    color:"#4b1d80"},
+  {id:"miks",     name:"Miks",       role:"Controller", portrait:"/agents/miks.webp",    color:"#462b75"},
+  {id:"sage",     name:"Sage",       role:"Sentinel",   portrait:"/agents/sage.webp",    color:"#1f5148"},
+  {id:"cypher",   name:"Cypher",     role:"Sentinel",   portrait:"/agents/cypher.webp",    color:"#2f5078"},
+  {id:"killjoy",  name:"Killjoy",    role:"Sentinel",   portrait:"/agents/killjoy.webp",    color:"#522162"},
+  {id:"chamber",  name:"Chamber",    role:"Sentinel",   portrait:"/agents/chamber.webp",    color:"#20435b"},
+  {id:"deadlock", name:"Deadlock",   role:"Sentinel",   portrait:"/agents/deadlock.webp",    color:"#425495"},
+  {id:"vyse",     name:"Vyse",       role:"Sentinel",   portrait:"/agents/vyse.webp",    color:"#492280"},
+  {id:"veto",     name:"Veto",       role:"Sentinel",   portrait:"/agents/veto.webp",    color:"#1a5d65"},
+  {id:"sova",     name:"Sova",       role:"Initiator",  portrait:"/agents/sova.webp",    color:"#355285"},
+  {id:"breach",   name:"Breach",     role:"Initiator",  portrait:"/agents/breach.webp",    color:"#81331a"},
+  {id:"skye",     name:"Skye",       role:"Initiator",  portrait:"/agents/skye.webp",    color:"#436a51"},
+  {id:"kayo",     name:"KAY/O",      role:"Initiator",  portrait:"/agents/kayo.webp",    color:"#1c2a69"},
+  {id:"fade",     name:"Fade",       role:"Initiator",  portrait:"/agents/fade.webp",    color:"#1d2846"},
+  {id:"gekko",    name:"Gekko",      role:"Initiator",  portrait:"/agents/gekko.webp",    color:"#371c5c"},
+  {id:"tejo",     name:"Tejo",       role:"Initiator",  portrait:"/agents/tejo.webp",    color:"#80451b"},
 ];
 
 export const ROLES_ORDER = ["Duelist","Controller","Sentinel","Initiator"];
@@ -351,6 +351,7 @@ export const VODS = {
       { id:"gTAE_gj-qwQ", title:"Jinggg Jett Haven RADIANT 25 KILLS MVP", player:"Jinggg", date:"2026-05-22" },
       { id:"qCX3r_WvGTE", title:"s0m Jett Haven RADIANT VOD", player:"s0m", date:"2026-05-28" },
       { id:"CTdYRxECTk4", title:"PRX Jinggg Jett Haven RADIANT MVP", player:"Jinggg", date:"2026-05-30" },
+      { id:"98vfWveo4ZU", title:"Dambi Jett Haven RADIANT GOAT", player:"Dambi", date:"2026-05-31" },
     ],
     reyna: [
       { id:"GkkolEIngtQ", title:"florescent Reyna Haven RADIANT RANKED", player:"florescent", date:"2026-05-01" },
@@ -580,6 +581,7 @@ export const VODS = {
       { id:"T6W4L4W3EiM", title:"s0m Viper Split RADIANT GAMEPLAY", player:"s0m", date:"2026-05-21" },
       { id:"rDYOGrf2TEo", title:"NAVI hiro Viper Split RADIANT FLEX PLAYER", player:"hiro", date:"2026-05-22" },
       { id:"2ISj6U-HGRw", title:"NAVI hiro Viper Split 30 KILL SHARPSHOOTER", player:"hiro", date:"2026-05-31" },
+      { id:"1li_gINXmAQ", title:"TL nAts Viper Split CONTROLLER GOAT", player:"nAts", date:"2026-06-01" },
     ],
     brimstone: [
     ],
@@ -617,6 +619,7 @@ export const VODS = {
     killjoy: [
       { id:"G07s6m6-yJg", title:"TL nAts Killjoy Split RADIANT RANKED", player:"nAts", date:"2026-05-01" },
       { id:"PbInTdBM59M", title:"OXY Killjoy Split RADIANT RANKED", player:"OXY", date:"2026-05-13" },
+      { id:"2fYn8aM5LjU", title:"TL nAts Killjoy Split RADIANT LOCKDOWN", player:"nAts", date:"2026-06-01" },
     ],
     chamber: [
       { id:"F60rN7-Rk3w", title:"Flashback Chamber Split APAC DOMINATION", player:"Flashback", date:"2026-04-25" },
@@ -763,6 +766,7 @@ export const VODS = {
       { id:"MHilvNvTReA", title:"s0m Clove Fracture RADIANT SMOKES", player:"s0m", date:"2026-05-13" },
       { id:"MewIbCk9igw", title:"NRG s0m Clove Fracture RADIANT MVP", player:"s0m", date:"2026-05-16" },
       { id:"2XJn_jkrAUw", title:"NRG s0m Clove Fracture RADIANT CONTROLLER", player:"s0m", date:"2026-05-27" },
+      { id:"_TY7xnHigWA", title:"NRG s0m Clove Fracture CONTROLLER MASTERY", player:"s0m", date:"2026-06-01" },
     ],
     miks: [
       { id:"n2WgRq8mP-M", title:"aleksandar Miks Fracture SCRIMS DOMINATION", player:"aleksandar", date:"2026-03-16" },
@@ -797,6 +801,7 @@ export const VODS = {
       { id:"NYWLDV1Z6sE", title:"100T Hiko Chamber Fracture RADIANT RANKED", player:"Hiko", date:"2026-05-12" },
       { id:"TDl1yFI8wGo", title:"ZmjjKK Chamber Fracture RADIANT RANKED", player:"ZmjjKK", date:"2026-05-13" },
       { id:"Ke1GDeOSUyU", title:"OXY Chamber Fracture RADIANT AIMER", player:"OXY", date:"2026-05-17" },
+      { id:"0Iy5bK21qXo", title:"NRG s0m Chamber Fracture RADIANT SENTINEL", player:"s0m", date:"2026-06-01" },
     ],
     deadlock: [
     ],
@@ -943,6 +948,7 @@ export const VODS = {
       { id:"mWD429Gn1_4", title:"NRG s0m Clove Pearl RADIANT RANKED", player:"s0m", date:"2026-05-24" },
       { id:"kVxfh1-EVvA", title:"florescent Clove Pearl RADIANT MVP", player:"florescent", date:"2026-05-28" },
       { id:"MYKwxPq4UUs", title:"Tarik Clove Pearl RADIANT 24 KILLS", player:"Tarik", date:"2026-05-28" },
+      { id:"yE5Rnj6OtDQ", title:"NRG s0m Clove Pearl INSANE CONTROLLER", player:"s0m", date:"2026-06-01" },
     ],
     miks: [
       { id:"lXoQRdyVTeQ", title:"C9 OXY Miks Pearl RADIANT RANKED NEW", player:"OXY", date:"2026-03-26" },
@@ -1096,6 +1102,7 @@ export const VODS = {
       { id:"Xyovkd04H7s", title:"PRX Jinggg Jett Breeze RADIANT DUELIST", player:"Jinggg", date:"2026-05-22" },
       { id:"NkCxuHySgzE", title:"ENVY Demon1 Jett Breeze RADIANT MVP", player:"Demon1", date:"2026-05-22" },
       { id:"_bSFSRdw9i4", title:"Tarik Jett Breeze RADIANT DUELIST MVP", player:"Tarik", date:"2026-05-23" },
+      { id:"hckn47rB3gY", title:"florescent Jett Breeze UNTOUCHABLE PRECISION", player:"florescent", date:"2026-06-01" },
     ],
     reyna: [
       { id:"HrWzwyCfcZ0", title:"C9 OXY Reyna Breeze RADIANT RANKED", player:"OXY", date:"2026-04-25" },
@@ -1125,6 +1132,7 @@ export const VODS = {
       { id:"pZp_TlzXaXQ", title:"PRX f0rsaken Neon Breeze RADIANT RANKED", player:"f0rsaken", date:"2026-05-04" },
       { id:"HDljlxqRLy4", title:"Demon1 Neon Breeze RADIANT RANKED", player:"Demon1", date:"2026-05-13" },
       { id:"ZsD_4ffrg18", title:"PRX f0rsaken Neon Breeze RADIANT PRO", player:"f0rsaken", date:"2026-05-23" },
+      { id:"x9f_giwPMKo", title:"PRX f0rsakeN Neon Breeze RADIANT SLAYER", player:"f0rsakeN", date:"2026-06-01" },
     ],
     phoenix: [
       { id:"gTduYtZGucQ", title:"ENVY Eggsterr Phoenix Breeze RADIANT RANKED", player:"Eggsterr", date:"2026-05-07" },
@@ -1203,6 +1211,7 @@ export const VODS = {
       { id:"_lGyPFDHx7I", title:"hatto Chamber Breeze RADIANT RANKED", player:"hatto", date:"2026-01-23" },
       { id:"qZBTq-4f4tI", title:"aspas Chamber Breeze RADIANT AIMER", player:"aspas", date:"2026-01-19" },
       { id:"o7pXEapHtT8", title:"NRG s0m Chamber Breeze RADIANT ONE TAPS", player:"s0m", date:"2026-05-17" },
+      { id:"EujSBpZdR6o", title:"NXR Yotaa Chamber Breeze HARD CARRY", player:"Yotaa", date:"2026-06-02" },
     ],
     deadlock: [
     ],
@@ -1246,6 +1255,7 @@ export const VODS = {
       { id:"RUWDUzWsSUw", title:"ENVY Demon1 Jett Lotus RADIANT RANKED", player:"Demon1", date:"2026-05-23" },
       { id:"f_D24-N5WPA", title:"FS Primmie Jett Lotus RADIANT MVP", player:"Primmie", date:"2026-05-19" },
       { id:"U887zO_QXUY", title:"florescent Jett Lotus RADIANT CARRY", player:"florescent", date:"2026-05-30" },
+      { id:"a0V_Fam6Fgg", title:"Rb Jett Lotus RADIANT HIGHLIGHTS", player:"Rb", date:"2026-05-28" },
     ],
     reyna: [
       { id:"WiUJIaxH3fo", title:"C9 OXY Reyna Lotus RADIANT RANKED", player:"OXY", date:"2026-04-26" },
@@ -1275,6 +1285,7 @@ export const VODS = {
       { id:"4Cxz_eHfioo", title:"PRX Jinggg Raze Lotus RADIANT MVP", player:"Jinggg", date:"2026-05-29" },
       { id:"8H_yzctpYGQ", title:"s0m Raze Lotus RADIANT MASTERCLASS", player:"s0m", date:"2026-05-29" },
       { id:"QkEaVhtc9c0", title:"C9 OXY Raze Lotus RADIANT DOMINATION", player:"OXY", date:"2026-05-31" },
+      { id:"4pQyjPWOi40", title:"GEN t3xture Raze Lotus MATCH MVP", player:"t3xture", date:"2026-05-30" },
     ],
     neon: [
       { id:"diXmbYFTe4c", title:"MIBR zekken Neon Lotus RADIANT RANKED", player:"zekken", date:"2026-04-30" },
