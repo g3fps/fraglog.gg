@@ -2,6 +2,8 @@
 import { createClient } from '@supabase/supabase-js';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
+import { isAdminEmail } from '../../lib/admin.js';
+import { checkRateLimit } from '../../lib/ratelimit.js';
 
 export const prerender = false;
 
@@ -58,7 +60,11 @@ export async function POST({ request }: { request: Request }) {
     'sb_publishable_I16eAnYgsA9fd8ZMlmFQtA_RxepSaXi'
   );
   const { data: { user } } = await sb.auth.getUser(accessToken);
-  if (!user) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
+  if (!isAdminEmail(user?.email)) return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403 });
+
+  // Generous circuit-breaker against a runaway loop (admin-only endpoint)
+  const okBurst = await checkRateLimit(sb, `gentitle:user:${user.id}`, 30, 60);
+  if (!okBurst) return new Response(JSON.stringify({ error: 'Too many requests. Try again in a minute.' }), { status: 429 });
 
   if (!videoId || !map || !agent || !player) {
     return new Response(JSON.stringify({ error: 'Missing required fields' }), { status: 400 });

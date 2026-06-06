@@ -1,0 +1,446 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Nav from '../components/Nav.astro';
+import Footer from '../components/Footer.astro';
+import { createClient } from '@supabase/supabase-js';
+
+const supabase = createClient(
+  "https://cvdtykmkajmhlxydhzzl.supabase.co",
+  "sb_publishable_I16eAnYgsA9fd8ZMlmFQtA_RxepSaXi"
+);
+
+const accessToken = Astro.cookies.get('sb-access-token')?.value;
+const refreshToken = Astro.cookies.get('sb-refresh-token')?.value;
+
+let user = null;
+if (accessToken && refreshToken) {
+  const { data } = await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
+  user = data.session?.user ?? null;
+}
+---
+<BaseLayout title="Notes — fraglog.gg" description="Your freeform Valorant notes on FragLog.gg" user={user}>
+  <Nav crumbs={[{ label: 'ALL MAPS', href: '/' }, { label: 'NOTES' }]} user={user} />
+  <div class="page-content">
+    <div class="nb-header">
+      <div>
+        <div class="hero-eyebrow">Your Notebook</div>
+        <div class="nb-header-title">Notes</div>
+      </div>
+    </div>
+
+    <!-- Signed-out gate -->
+    <div class="nb-gate" id="nb-gate" style="display:none;">
+      <strong>Not signed in</strong>
+      <span>Sign in to write notes and chat with the AI coach</span>
+      <button class="auth-btn primary empty-cta" onclick="openAuth()">Sign In</button>
+    </div>
+
+    <div class="nb-app" id="nb-app" style="display:none;">
+      <!-- Sidebar -->
+      <aside class="nb-sidebar">
+        <button class="nb-new-btn" onclick="newNote()">+ New note</button>
+        <button class="nb-side-item nb-side-general" id="nb-general-item" onclick="selectGeneral()">
+          <span class="nb-side-icon">✦</span> General chat
+        </button>
+        <div class="nb-side-divider">Notes</div>
+        <div class="nb-side-list" id="nb-side-list"></div>
+      </aside>
+
+      <!-- Workspace -->
+      <section class="nb-workspace">
+        <!-- Note editor (shown when a note is open) -->
+        <div class="nb-editor" id="nb-editor" style="display:none;">
+          <div class="nb-editor-head">
+            <input id="nb-title" class="nb-editor-title" placeholder="Untitled note" maxlength="120" autocomplete="off">
+            <span class="nb-status" id="nb-status"></span>
+            <button class="nb-del-btn" id="nb-del" onclick="deleteCurrent()">Delete</button>
+          </div>
+          <textarea id="nb-body" class="nb-editor-body" placeholder="Write anything..."></textarea>
+        </div>
+
+        <!-- Drag to resize editor / chat -->
+        <div class="nb-resizer" id="nb-resizer" style="display:none;" title="Drag to resize"></div>
+
+        <!-- Chat -->
+        <div class="nb-chat" id="nb-chat">
+          <div class="ask-panel-header">
+            <span class="ask-ctx-icon">✦</span>
+            <span class="ask-ctx-label" id="ask-ctx-label">General chat</span>
+            <button class="ask-clear-btn" onclick="clearChat()">Clear</button>
+          </div>
+          <div class="ask-chat-thread" id="ask-chat-thread">
+            <div class="ask-chat-empty">Ask anything about Valorant — agents, maps, aim, economy, or how to improve.</div>
+          </div>
+          <div class="ask-bar-inner">
+            <span class="ask-bar-icon">✦</span>
+            <input id="ask-input" class="ask-bar-input" placeholder="Ask AI anything…" autocomplete="off" maxlength="600">
+            <button class="ask-bar-send" id="ask-send" onclick="askAI()">Ask</button>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <Footer />
+</BaseLayout>
+
+<script is:inline>
+let notebook = [];
+let editingId = null;       // note currently in the editor (null = none/new)
+let activeNoteId = null;    // chat context (null = general)
+let saveTimer = null;
+let localChats = {};        // { noteId | '__general': [{role,content},...] }
+
+function onAuthChange() { loadNotes(); }
+
+function esc(s) {
+  return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function fmtDate(ts) {
+  if (!ts) return '';
+  return new Date(ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+async function loadNotes() {
+  const gate = document.getElementById('nb-gate');
+  const app = document.getElementById('nb-app');
+
+  if (!currentUser) {
+    gate.style.display = 'flex';
+    app.style.display = 'none';
+    return;
+  }
+  gate.style.display = 'none';
+  app.style.display = 'flex';
+
+  const sb = initSupabase();
+  const { data, error } = await sb.from('notebook').select('*').eq('user_id', currentUser.id).order('updated_at', { ascending: false });
+  if (error) console.error('notes load failed:', error.message);
+  notebook = data || [];
+
+  const { data: gc } = await sb.from('general_chat').select('history').eq('user_id', currentUser.id).maybeSingle();
+  localChats.__general = Array.isArray(gc?.history) ? gc.history : [];
+
+  renderSidebar();
+  selectGeneral();
+}
+
+// ── Sidebar ───────────────────────────────────────────────────
+function renderSidebar() {
+  const list = document.getElementById('nb-side-list');
+  if (!notebook.length) {
+    list.innerHTML = '<div class="nb-side-empty">No notes yet</div>';
+  } else {
+    list.innerHTML = notebook.map(n => {
+      const title = n.title?.trim() || 'Untitled note';
+      return `<button class="nb-side-item nb-side-note${activeNoteId === n.id && editingId === n.id ? ' active' : ''}" data-id="${n.id}">
+        <span class="nb-side-note-title">${esc(title)}</span>
+        <span class="nb-side-note-date">${fmtDate(n.updated_at)}</span>
+      </button>`;
+    }).join('');
+    list.onclick = e => {
+      const item = e.target.closest('.nb-side-note[data-id]');
+      if (item) selectNote(item.dataset.id);
+    };
+  }
+  const gen = document.getElementById('nb-general-item');
+  if (gen) gen.classList.toggle('active', !editingId && !activeNoteId);
+}
+
+// ── Selection / views ─────────────────────────────────────────
+function showEditor(show) {
+  const ed = document.getElementById('nb-editor');
+  const rz = document.getElementById('nb-resizer');
+  ed.style.display = show ? 'flex' : 'none';
+  rz.style.display = show ? 'block' : 'none';
+  if (show && window.innerWidth > 860) {
+    const saved = parseInt(localStorage.getItem('nb-editor-h') || '', 10);
+    if (saved) { ed.style.flex = 'none'; ed.style.height = saved + 'px'; }
+  }
+}
+
+function selectGeneral() {
+  flushSave();
+  editingId = null;
+  activeNoteId = null;
+  showEditor(false);
+  renderSidebar();
+  updateAskContext();
+}
+
+function selectNote(id) {
+  flushSave();
+  const note = notebook.find(n => n.id === id);
+  if (!note) return;
+  editingId = id;
+  activeNoteId = id;
+  if (!localChats[id]) localChats[id] = note.chat_history || [];
+  document.getElementById('nb-title').value = note.title || '';
+  document.getElementById('nb-body').value = note.content || '';
+  document.getElementById('nb-status').textContent = '';
+  showEditor(true);
+  renderSidebar();
+  updateAskContext();
+  setTimeout(() => document.getElementById('nb-title').focus(), 20);
+}
+
+function newNote() {
+  flushSave();
+  editingId = null;        // unsaved; first save creates it
+  activeNoteId = null;     // general chat until the note exists
+  document.getElementById('nb-title').value = '';
+  document.getElementById('nb-body').value = '';
+  document.getElementById('nb-status').textContent = '';
+  showEditor(true);
+  renderSidebar();
+  updateAskContext();
+  setTimeout(() => document.getElementById('nb-title').focus(), 20);
+}
+
+// ── Saving ────────────────────────────────────────────────────
+function flushSave() {
+  if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; saveCurrent(); }
+}
+
+function scheduleSave() {
+  document.getElementById('nb-status').textContent = 'Saving…';
+  if (saveTimer) clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveCurrent, 700);
+}
+
+async function saveCurrent() {
+  if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; }
+  if (!currentUser) return;
+  if (document.getElementById('nb-editor').style.display === 'none') return;
+
+  const title = document.getElementById('nb-title').value.trim();
+  const content = document.getElementById('nb-body').value;
+  if (!editingId && !title && !content.trim()) return;
+
+  const sb = initSupabase();
+  const now = new Date().toISOString();
+
+  if (editingId) {
+    const { error } = await sb.from('notebook').update({ title, content, updated_at: now })
+      .eq('id', editingId).eq('user_id', currentUser.id);
+    if (error) { console.error('note save failed:', error.message); document.getElementById('nb-status').textContent = 'Save failed'; return; }
+    const local = notebook.find(n => n.id === editingId);
+    if (local) { local.title = title; local.content = content; local.updated_at = now; }
+  } else {
+    const { data, error } = await sb.from('notebook')
+      .insert({ user_id: currentUser.id, title, content, updated_at: now })
+      .select().single();
+    if (error) { console.error('note create failed:', error.message); document.getElementById('nb-status').textContent = 'Save failed'; return; }
+    editingId = data.id;
+    activeNoteId = data.id;
+    localChats[data.id] = [];
+    notebook.unshift(data);
+    updateAskContext();
+  }
+
+  document.getElementById('nb-status').textContent = 'Saved';
+  renderSidebar();
+}
+
+async function deleteCurrent() {
+  if (!editingId || !currentUser) { selectGeneral(); return; }
+  if (!confirm('Delete this note?')) return;
+  const sb = initSupabase();
+  const { error } = await sb.from('notebook').delete().eq('id', editingId).eq('user_id', currentUser.id);
+  if (error) { console.error('note delete failed:', error.message); return; }
+  delete localChats[editingId];
+  notebook = notebook.filter(n => n.id !== editingId);
+  if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; }
+  selectGeneral();
+}
+
+// ── Ask AI chat ───────────────────────────────────────────────
+function getActiveHistory() {
+  if (!activeNoteId) return localChats.__general || [];
+  return localChats[activeNoteId] || [];
+}
+
+function setActiveHistory(msgs) {
+  localChats[activeNoteId || '__general'] = msgs;
+}
+
+async function persistActive(history) {
+  if (!currentUser) return;
+  const sb = initSupabase();
+  if (activeNoteId) {
+    await sb.from('notebook').update({ chat_history: history })
+      .eq('id', activeNoteId).eq('user_id', currentUser.id);
+    const note = notebook.find(n => n.id === activeNoteId);
+    if (note) note.chat_history = history;
+  } else {
+    await sb.from('general_chat').upsert(
+      { user_id: currentUser.id, history, updated_at: new Date().toISOString() },
+      { onConflict: 'user_id' }
+    );
+  }
+}
+
+function updateAskContext() {
+  const label = document.getElementById('ask-ctx-label');
+  if (label) {
+    const note = activeNoteId ? notebook.find(n => n.id === activeNoteId) : null;
+    label.textContent = note ? (note.title?.trim() || 'Untitled note') : 'General chat';
+  }
+  renderChatThread();
+}
+
+function renderChatThread() {
+  const thread = document.getElementById('ask-chat-thread');
+  if (!thread) return;
+  const history = getActiveHistory();
+  if (!history.length) {
+    const msg = activeNoteId
+      ? 'Ask anything about Valorant — this conversation stays tied to this note.'
+      : 'Ask anything about Valorant — agents, maps, aim, economy, or how to improve.';
+    thread.innerHTML = `<div class="ask-chat-empty">${msg}</div>`;
+    return;
+  }
+  thread.innerHTML = history.map(m => {
+    const isUser = m.role === 'user';
+    const label = isUser ? 'You' : 'Coach';
+    const body = !isUser && typeof renderCoachHtml === 'function'
+      ? renderCoachHtml(m.content)
+      : esc(m.content);
+    return `<div class="ask-msg ${isUser ? 'user' : 'ai'}"><div class="ask-msg-label">${label}</div><div class="ask-msg-body">${body}</div></div>`;
+  }).join('');
+  thread.scrollTop = thread.scrollHeight;
+}
+
+async function askAI() {
+  const input = document.getElementById('ask-input');
+  const q = input.value.trim();
+  if (!q) return;
+  if (!currentUser) { openAuth(); return; }
+
+  const sendBtn = document.getElementById('ask-send');
+  sendBtn.disabled = true;
+  input.value = '';
+
+  const history = [...getActiveHistory(), { role: 'user', content: q }];
+  setActiveHistory(history);
+  renderChatThread();
+
+  const thread = document.getElementById('ask-chat-thread');
+  const loadingEl = document.createElement('div');
+  loadingEl.className = 'ask-msg ai';
+  loadingEl.innerHTML = '<div class="ask-msg-label">Coach</div><div class="ask-msg-body"><span class="ask-loading">Thinking…</span></div>';
+  thread.appendChild(loadingEl);
+  thread.scrollTop = thread.scrollHeight;
+
+  try {
+    const session = (await initSupabase().auth.getSession()).data.session;
+    const historyToSend = history.slice(0, -1);
+    const res = await fetch('/api/ask', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (session?.access_token || '') },
+      body: JSON.stringify({ question: q, history: historyToSend })
+    });
+
+    loadingEl.remove();
+
+    if (res.status === 401) { openAuth(); return; }
+    const data = await res.json();
+
+    if (!res.ok) {
+      setActiveHistory(history.slice(0, -1));
+      renderChatThread();
+      const errEl = document.createElement('div');
+      errEl.className = 'ask-msg ai';
+      errEl.innerHTML = `<div class="ask-msg-label">Coach</div><div class="ask-msg-body ask-error">${esc(data.error || 'Something went wrong. Try again.')}</div>`;
+      thread.appendChild(errEl);
+      thread.scrollTop = thread.scrollHeight;
+      return;
+    }
+
+    const updated = [...history, { role: 'assistant', content: data.text }];
+    setActiveHistory(updated);
+    renderChatThread();
+    await persistActive(updated);
+  } catch (e) {
+    loadingEl.remove();
+    setActiveHistory(history.slice(0, -1));
+    renderChatThread();
+    const errEl = document.createElement('div');
+    errEl.className = 'ask-msg ai';
+    errEl.innerHTML = '<div class="ask-msg-label">Coach</div><div class="ask-msg-body ask-error">Network error. Try again.</div>';
+    thread.appendChild(errEl);
+    thread.scrollTop = thread.scrollHeight;
+  } finally {
+    sendBtn.disabled = false;
+  }
+}
+
+async function clearChat() {
+  if (!getActiveHistory().length) return;
+  if (!confirm('Clear this conversation?')) return;
+  setActiveHistory([]);
+  renderChatThread();
+  await persistActive([]);
+}
+
+document.getElementById('ask-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') { e.preventDefault(); askAI(); }
+});
+document.getElementById('nb-title').addEventListener('input', scheduleSave);
+document.getElementById('nb-body').addEventListener('input', scheduleSave);
+
+// ── Resizable editor / chat split ─────────────────────────────
+(function initResizer() {
+  const rz = document.getElementById('nb-resizer');
+  const ed = document.getElementById('nb-editor');
+  if (!rz || !ed) return;
+  let dragging = false, startY = 0, startH = 0, wsH = 0;
+
+  const onMove = e => {
+    if (!dragging) return;
+    const y = e.touches ? e.touches[0].clientY : e.clientY;
+    let h = startH + (y - startY);
+    h = Math.max(120, Math.min(h, wsH - 200));  // keep room for the chat
+    ed.style.flex = 'none';
+    ed.style.height = h + 'px';
+    if (e.cancelable) e.preventDefault();
+  };
+  const onUp = () => {
+    if (!dragging) return;
+    dragging = false;
+    document.body.style.userSelect = '';
+    const h = parseInt(ed.style.height, 10);
+    if (h) localStorage.setItem('nb-editor-h', String(h));
+    window.removeEventListener('mousemove', onMove);
+    window.removeEventListener('mouseup', onUp);
+    window.removeEventListener('touchmove', onMove);
+    window.removeEventListener('touchend', onUp);
+  };
+  const onDown = e => {
+    if (window.innerWidth <= 860) return;  // stacked layout, no resize
+    dragging = true;
+    startY = e.touches ? e.touches[0].clientY : e.clientY;
+    startH = ed.getBoundingClientRect().height;
+    wsH = ed.parentElement.getBoundingClientRect().height;
+    document.body.style.userSelect = 'none';
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+    window.addEventListener('touchmove', onMove, { passive: false });
+    window.addEventListener('touchend', onUp);
+    e.preventDefault();
+  };
+  rz.addEventListener('mousedown', onDown);
+  rz.addEventListener('touchstart', onDown, { passive: false });
+})();
+
+window.askAI = askAI;
+window.clearChat = clearChat;
+window.newNote = newNote;
+window.selectGeneral = selectGeneral;
+window.deleteCurrent = deleteCurrent;
+window.onAuthChange = onAuthChange;
+
+window.__onAuthReady = loadNotes;
+if (window.__authReady) loadNotes();
+</script>

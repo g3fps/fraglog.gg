@@ -31,8 +31,9 @@ const { crumbs = [], user = null } = Astro.props as { crumbs: { label: string; h
   <div class="nav-bottom">
     <div class="feature-tabs">
       <a class="feature-tab" href="/" id="tab-vods">Ranked</a>
-      <a class="feature-tab" href="/util" id="tab-util">Util</a>
       <a class="feature-tab" href="/pro" id="tab-pro">Pro</a>
+      <a class="feature-tab" href="/gameplan" id="tab-gameplan">Gameplan</a>
+      <a class="feature-tab" href="/notes" id="tab-notes" style="display:none">Notes</a>
     </div>
     <div class="nav-bottom-right">
       <a class="feature-tab" href="/favorites" id="tab-favorites" style="display:none"><span class="fav-heart">♥ </span>Favorites</a>
@@ -50,7 +51,7 @@ function handleNavSearch(val) {
 // Active tab
 (function() {
   const path = window.location.pathname;
-  const map = { '/util': 'tab-util', '/pro': 'tab-pro', '/favorites': 'tab-favorites', '/my-vods': 'tab-myvods' };
+  const map = { '/pro': 'tab-pro', '/gameplan': 'tab-gameplan', '/favorites': 'tab-favorites', '/notes': 'tab-notes', '/my-vods': 'tab-myvods' };
   const matched = Object.entries(map).find(([p]) => path.startsWith(p));
   document.getElementById(matched ? matched[1] : 'tab-vods')?.classList.add('active');
 })();
@@ -68,6 +69,7 @@ function handleNavSearch(val) {
 
     // Show favorites/my vods tabs
     document.getElementById('tab-favorites').style.display = '';
+    document.getElementById('tab-notes').style.display = '';
     document.getElementById('tab-myvods').style.display = '';
 
     // Load profile

@@ -3,6 +3,7 @@ import '../styles/global.css';
 
 const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radiant and pro player Valorant gameplay VODs filtered by map and agent. Study the best players in the world on fraglog.gg', ogImage = 'https://media.valorant-api.com/maps/7eaecc1b-4337-bbf6-6ab9-04b8f06b3319/splash.png', canonical = 'https://fraglog.gg', user = null, noindex = false, jsonLd = null, preloadImage = null } = Astro.props;
 const resolvedOgImage = ogImage?.startsWith('/') ? `https://fraglog.gg${ogImage}` : ogImage;
+const TURNSTILE_SITE_KEY = import.meta.env.TURNSTILE_SITE_KEY || '';
 ---
 <!DOCTYPE html>
 <html lang="en">
@@ -76,6 +77,7 @@ const resolvedOgImage = ogImage?.startsWith('/') ? `https://fraglog.gg${ogImage}
         <input type="password" id="auth-confirm" placeholder="••••••••" autocomplete="new-password">
       </div>
       <div class="auth-error" id="auth-error"></div>
+      {TURNSTILE_SITE_KEY && <div id="auth-turnstile" data-sitekey={TURNSTILE_SITE_KEY} data-theme="dark" style="margin-bottom:12px"></div>}
       <button class="auth-btn primary" style="width:100%;padding:10px" onclick="submitAuth()">Sign In</button>
     </div>
   </div>
@@ -368,10 +370,21 @@ const resolvedOgImage = ogImage?.startsWith('/') ? `https://fraglog.gg${ogImage}
     }
   }
 
+  // ── Cloudflare Turnstile (bot check on auth) ──────────────
+  let authTurnstileId = null;
+  function renderAuthTurnstile(attempt = 0) {
+    const el = document.getElementById("auth-turnstile");
+    if (!el) return; // not configured (no site key) — nothing to render
+    if (!window.turnstile) { if (attempt < 25) setTimeout(() => renderAuthTurnstile(attempt + 1), 150); return; }
+    if (authTurnstileId !== null) { try { window.turnstile.reset(authTurnstileId); } catch (e) {} return; }
+    try { authTurnstileId = window.turnstile.render(el, { sitekey: el.dataset.sitekey, theme: "dark" }); } catch (e) {}
+  }
+
   function openAuth(mode = "login") {
     authMode = mode;
     switchTab(mode);
     document.getElementById("auth-modal").classList.add("open");
+    renderAuthTurnstile();
   }
   function closeAuthModalDirect() {
     document.getElementById("auth-modal").classList.remove("open");
@@ -399,19 +412,31 @@ const resolvedOgImage = ogImage?.startsWith('/') ? `https://fraglog.gg${ogImage}
     const btn = document.querySelector(".auth-modal .primary");
     const sb = initSupabase();
     if (!email || !pass) { errEl.textContent = "Please fill in all fields."; errEl.style.display = "block"; return; }
+
+    // Require the Cloudflare human-check token when the widget is present
+    let captchaToken;
+    const tsEl = document.getElementById("auth-turnstile");
+    if (tsEl && window.turnstile && authTurnstileId !== null) {
+      captchaToken = window.turnstile.getResponse(authTurnstileId) || "";
+      if (!captchaToken) { errEl.textContent = "Please complete the verification below."; errEl.style.display = "block"; return; }
+    }
+    const authOpts = captchaToken ? { captchaToken } : {};
+
     btn.textContent = "Please wait..."; btn.disabled = true;
     let error;
     if (authMode === "register") {
       if (pass !== confirm) { errEl.textContent = "Passwords don't match."; errEl.style.display = "block"; btn.textContent = "Create Account"; btn.disabled = false; return; }
       if (pass.length < 6) { errEl.textContent = "Password must be at least 6 characters."; errEl.style.display = "block"; btn.textContent = "Create Account"; btn.disabled = false; return; }
-      const { data, error: e } = await sb.auth.signUp({ email, password: pass });
+      const { data, error: e } = await sb.auth.signUp({ email, password: pass, options: authOpts });
       error = e;
       if (!e) currentUser = data.user;
     } else {
-      const { data, error: e } = await sb.auth.signInWithPassword({ email, password: pass });
+      const { data, error: e } = await sb.auth.signInWithPassword({ email, password: pass, options: authOpts });
       error = e;
       if (!e) currentUser = data.user;
     }
+    // Reset the widget so a retry always gets a fresh token (tokens are single-use)
+    if (tsEl && window.turnstile && authTurnstileId !== null) { try { window.turnstile.reset(authTurnstileId); } catch (e) {} }
     btn.disabled = false;
     btn.textContent = authMode==="login" ? "Sign In" : "Create Account";
     if (error) { errEl.textContent = error.message; errEl.style.display = "block"; return; }
@@ -794,7 +819,7 @@ const resolvedOgImage = ogImage?.startsWith('/') ? `https://fraglog.gg${ogImage}
     footer.style.display = 'flex';
     document.getElementById('vm-coach-btn').textContent = 'Regenerate';
     document.getElementById('vm-char-count').textContent = '';
-    if (todayFollowupUsed >= FOLLOWUP_LIMIT) vmLockFollowUp();
+    if (!_isAdmin() && todayFollowupUsed >= FOLLOWUP_LIMIT) vmLockFollowUp();
   }
 
   async function vmSendFollowUp() {
@@ -877,7 +902,7 @@ const resolvedOgImage = ogImage?.startsWith('/') ? `https://fraglog.gg${ogImage}
       </div>`;
       aiText.scrollTop = aiText.scrollHeight;
 
-      if (todayFollowupUsed >= FOLLOWUP_LIMIT) vmLockFollowUp();
+      if (!_isAdmin() && todayFollowupUsed >= FOLLOWUP_LIMIT) vmLockFollowUp();
     } catch(e) {
       const loading = document.getElementById(loadingId);
       if (loading) loading.textContent = e.message || 'Something went wrong. Try again.';
@@ -900,9 +925,13 @@ const resolvedOgImage = ogImage?.startsWith('/') ? `https://fraglog.gg${ogImage}
     if (toggle) toggle.style.display = vmOriginalMode === 'own' ? 'flex' : 'none';
   }
 
+  const _ADMIN_EMAILS = ['g3holliday@proton.me', 'kettlejalapenochips@gmail.com'];
+  function _isAdmin() { return !!(currentUser?.email && _ADMIN_EMAILS.includes(currentUser.email)); }
+
   function updateCoachUsageDisplay() {
     const el = document.getElementById('vm-coach-usage');
     if (!el || !currentUser) { if (el) el.textContent = ''; return; }
+    if (_isAdmin()) { el.textContent = '∞'; el.style.color = 'var(--muted)'; return; }
     const remaining = COACHING_LIMIT - todayCoachingUsed;
     el.textContent = `${remaining}/${COACHING_LIMIT} left`;
     el.style.color = remaining === 0 ? 'var(--red)' : 'var(--muted)';
@@ -1077,5 +1106,6 @@ const resolvedOgImage = ogImage?.startsWith('/') ? `https://fraglog.gg${ogImage}
     if (e.key === "Escape") { closeVideoModalDirect(); closeAuthModalDirect(); }
   });
   </script>
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer is:inline></script>
 </body>
 </html>

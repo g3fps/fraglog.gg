@@ -130,7 +130,9 @@ function applyFilters() {
     if (map && v.mapId !== map) return false;
     if (q) {
       const s = [v.title, v.player, v.mapName, v.agentName].join(" ").toLowerCase();
-      if (!s.includes(q)) return false;
+      // Match each typed word independently so word order doesn't matter
+      // (e.g. "oxy phoenix" and "phoenix oxy" both match)
+      if (!q.split(/\s+/).every(term => s.includes(term))) return false;
     }
     return true;
   });

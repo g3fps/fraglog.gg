@@ -2,7 +2,7 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Nav from '../components/Nav.astro';
 import Footer from '../components/Footer.astro';
-import { getAllVods } from '../data/data.js';
+import { getAllVods, AGENTS, MAPS } from '../data/data.js';
 import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
@@ -20,6 +20,7 @@ if (accessToken && refreshToken) {
 }
 
 const allVods = getAllVods();
+const agentRoles = Object.fromEntries(AGENTS.map((a: any) => [a.id, a.role]));
 ---
 <BaseLayout title="Favorites — fraglog.gg" description="Your saved Valorant VODs on FragLog.gg" user={user}>
   <Nav crumbs={[{ label: 'ALL MAPS', href: '/' }, { label: 'FAVORITES' }]} user={user} />
@@ -28,6 +29,47 @@ const allVods = getAllVods();
       <div class="hero-eyebrow">Your Collection</div>
       <div class="hero-title">Favorites</div>
       <div class="hero-sub">VODs you've saved for later study</div>
+    </div>
+    <div id="fav-filters" style="display:none;">
+      <div class="vod-controls">
+        <div class="vod-field">
+          <span class="vod-field-label">Role</span>
+          <select class="vod-select" id="f-role" aria-label="Filter by role">
+            <option value="">All roles</option>
+            <option value="Duelist">Duelist</option>
+            <option value="Controller">Controller</option>
+            <option value="Sentinel">Sentinel</option>
+            <option value="Initiator">Initiator</option>
+          </select>
+        </div>
+        <div class="vod-field">
+          <span class="vod-field-label">Agent</span>
+          <select class="vod-select" id="f-agent" aria-label="Filter by agent">
+            <option value="">All agents</option>
+          </select>
+        </div>
+        <div class="vod-field">
+          <span class="vod-field-label">Map</span>
+          <select class="vod-select" id="f-map" aria-label="Filter by map">
+            <option value="">All maps</option>
+            {MAPS.map((m: any) => <option value={m.id}>{m.name}</option>)}
+          </select>
+        </div>
+        <div class="vod-field">
+          <span class="vod-field-label">Player</span>
+          <select class="vod-select" id="f-player" aria-label="Filter by player">
+            <option value="">All players</option>
+          </select>
+        </div>
+        <div class="vod-field">
+          <span class="vod-field-label">Sort</span>
+          <select class="vod-select" id="f-sort" aria-label="Sort results">
+            <option value="newest">Newest</option>
+            <option value="oldest">Oldest</option>
+            <option value="player">Player A–Z</option>
+          </select>
+        </div>
+      </div>
     </div>
     <div id="fav-container">
       <div class="video-grid">
@@ -38,33 +80,61 @@ const allVods = getAllVods();
   <Footer />
 </BaseLayout>
 
-<script define:vars={{ allVods }}>
+<script define:vars={{ allVods, agentRoles }}>
 const ALL_VODS = allVods;
+const AGENT_ROLES = agentRoles;
 
-function onAuthChange() { renderFavorites(); }
-function onFavChange() { renderFavorites(); }
+function onAuthChange() { applyFilters(); }
+function onFavChange() { applyFilters(); }
 
-function renderFavorites() {
+function showFilters(show) {
+  const el = document.getElementById("fav-filters");
+  if (el) el.style.display = show ? "" : "none";
+}
+
+function escAttr(s) {
+  return String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+const setIfValid = (sel, val) => { if (val && [...sel.options].some(o => o.value === val)) sel.value = val; };
+
+// Agent and Player lists are scoped to what's actually in the user's favorites.
+let dynamicHydrated = false;
+function buildDynamicOptions(base) {
+  const agentSel = document.getElementById("f-agent");
+  const playerSel = document.getElementById("f-player");
+
+  const agentMap = new Map();
+  base.forEach(v => { if (v.agentId && !agentMap.has(v.agentId)) agentMap.set(v.agentId, v.agentName); });
+  const agents = [...agentMap.entries()].sort((a, b) => a[1].localeCompare(b[1]));
+  const players = [...new Set(base.map(v => v.player).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+
+  const prevAgent = agentSel.value;
+  const prevPlayer = playerSel.value;
+
+  agentSel.innerHTML = '<option value="">All agents</option>' +
+    agents.map(([id, name]) => `<option value="${escAttr(id)}">${escAttr(name)}</option>`).join("");
+  playerSel.innerHTML = '<option value="">All players</option>' +
+    players.map(p => `<option value="${escAttr(p)}">${escAttr(p)}</option>`).join("");
+
+  if (!dynamicHydrated) {
+    const params = new URLSearchParams(window.location.search);
+    setIfValid(agentSel, params.get("agent"));
+    setIfValid(playerSel, params.get("player"));
+    dynamicHydrated = true;
+  } else {
+    setIfValid(agentSel, prevAgent);
+    setIfValid(playerSel, prevPlayer);
+  }
+}
+
+function renderGrid(vods) {
   const container = document.getElementById("fav-container");
-
-  if (!currentUser) {
-    container.innerHTML = '<div class="video-grid"><div class="empty"><strong>Not signed in</strong>Sign in to see your saved VODs<button class="auth-btn primary empty-cta" onclick="openAuth()">Sign In</button></div></div>';
+  if (!vods.length) {
+    container.innerHTML = '<div class="video-grid"><div class="empty"><strong>No results</strong>Try a different filter</div></div>';
     return;
   }
-
-  const favIds = userFavorites;
-  if (!favIds.length) {
-    container.innerHTML = '<div class="video-grid"><div class="empty"><strong>No favorites yet</strong>Hit the ♥ on any video to save it here</div></div>';
-    return;
-  }
-
-  const found = ALL_VODS.filter(v => favIds.includes(v.id));
-  if (!found.length) {
-    container.innerHTML = '<div class="video-grid"><div class="empty"><strong>No favorites found</strong>Some saved videos may have been removed</div></div>';
-    return;
-  }
-
-  container.innerHTML = `<div class="video-grid">${found.map(v => `
+  container.innerHTML = `<div class="video-grid">${vods.map(v => `
     <div class="video-card"
       data-vid="${v.id}"
       data-title="${v.title.replace(/"/g, '&quot;')}"
@@ -100,6 +170,75 @@ function renderFavorites() {
   if (window.applyWatchProgress) window.applyWatchProgress();
 }
 
-window.__onAuthReady = renderFavorites;
-if (window.__authReady) renderFavorites();
+function applyFilters() {
+  const container = document.getElementById("fav-container");
+
+  if (!currentUser) {
+    showFilters(false);
+    container.innerHTML = '<div class="video-grid"><div class="empty"><strong>Not signed in</strong>Sign in to see your saved VODs<button class="auth-btn primary empty-cta" onclick="openAuth()">Sign In</button></div></div>';
+    return;
+  }
+
+  const favIds = userFavorites;
+  const base = ALL_VODS.filter(v => favIds.includes(v.id));
+  if (!base.length) {
+    showFilters(false);
+    container.innerHTML = '<div class="video-grid"><div class="empty"><strong>No favorites yet</strong>Hit the ♥ on any video to save it here</div></div>';
+    return;
+  }
+
+  showFilters(true);
+  buildDynamicOptions(base);
+
+  const role = document.getElementById("f-role").value;
+  const agent = document.getElementById("f-agent").value;
+  const map = document.getElementById("f-map").value;
+  const player = document.getElementById("f-player").value;
+  const sort = document.getElementById("f-sort").value;
+
+  let results = base.filter(v => {
+    if (role && AGENT_ROLES[v.agentId] !== role) return false;
+    if (agent && v.agentId !== agent) return false;
+    if (map && v.mapId !== map) return false;
+    if (player && v.player !== player) return false;
+    return true;
+  });
+
+  results.sort((a, b) => {
+    if (sort === "player") return (a.player || "").localeCompare(b.player || "");
+    const da = a.date || "", db = b.date || "";
+    if (!da) return 1;
+    if (!db) return -1;
+    return sort === "oldest" ? da.localeCompare(db) : db.localeCompare(da);
+  });
+
+  renderGrid(results);
+
+  const params = new URLSearchParams();
+  if (role) params.set("role", role);
+  if (agent) params.set("agent", agent);
+  if (map) params.set("map", map);
+  if (player) params.set("player", player);
+  if (sort && sort !== "newest") params.set("sort", sort);
+  const qs = params.toString();
+  history.replaceState({}, "", qs ? "/favorites?" + qs : "/favorites");
+}
+
+// Init — hydrate the static controls from the URL, then wire them.
+// (Agent/Player options are built dynamically in buildDynamicOptions and
+//  hydrated from the URL on their first build.)
+const params = new URLSearchParams(window.location.search);
+const roleSel = document.getElementById("f-role");
+const agentSel = document.getElementById("f-agent");
+const mapSel = document.getElementById("f-map");
+const playerSel = document.getElementById("f-player");
+const sortSel = document.getElementById("f-sort");
+setIfValid(roleSel, params.get("role"));
+setIfValid(mapSel, params.get("map"));
+setIfValid(sortSel, params.get("sort"));
+
+[roleSel, agentSel, mapSel, playerSel, sortSel].forEach(sel => sel.addEventListener("change", applyFilters));
+
+window.__onAuthReady = applyFilters;
+if (window.__authReady) applyFilters();
 </script>

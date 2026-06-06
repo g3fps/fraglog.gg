@@ -1,7 +1,7 @@
 export const AGENT_KNOWLEDGE = {
   jett: {
     role: "Duelist",
-    core_philosophy: "Jett's job is making space and getting info for teammates, not getting kills. She can take aggressive angles other agents can't because she always has a dash escape. Entry, clear angles, get info — let teammates follow into the space you made.",
+    core_philosophy: "Jett's job is making space and getting info for teammates, not getting kills. Dash is both an entry tool and an escape — use it to get onto site through a smoke, to close distance on an angle, or to get out when pressure comes. Entry, clear angles, get info — let teammates follow into the space you made.",
     watch: [],
     abilities: {
       cloudburst: {
@@ -13,13 +13,13 @@ export const AGENT_KNOWLEDGE = {
         key_insight: "Exact timing matters — jump and updraft at the same moment, not before or after."
       },
       tailwind: {
-        correct_usage: "Only pop when you know you're about to engage. It has a use window — if unused it expires. Jump + dash simultaneously for extra distance. On defense, save it until you actually need an escape — don't burn it speculatively.",
+        correct_usage: "Only pop when you know you're about to engage. It has a use window — if unused it expires. Jump + dash simultaneously for extra distance. On attack, dash is a primary entry tool — dash into your own smoke, dash onto site, dash to close distance on an angle. On defense, you can still dash onto an early angle but have a plan for where you're dashing and what comes after.",
         common_mistakes: [
           "Popping dash before peeking angles on defense when no fight is guaranteed",
-          "Using dash to peek then having no escape when pressure comes",
+          "Dashing onto site with no follow-up — get in, do something, then get out or stay positioned",
           "Dash updrafting into multiple enemies — only do this in confirmed 1v1s"
         ],
-        key_insight: "High elo Jett players like Aspas take angles dry without popping dash, saving it for when they actually need to escape. The dash is your life insurance — don't spend it speculatively."
+        key_insight: "Dash is both an entry tool and an escape. The mistake isn't using it to get somewhere — it's popping it with no clear purpose and no plan for what happens next."
       },
       bladestorm: {
         correct_usage: "Fully accurate while moving, running, or in air on left click. Click knives individually for precision — don't hold left click and spray. Right click is close range only due to spread. Glide while shooting to slow momentum and improve accuracy. Save dash while using knives — updraft for height, keep dash for repositioning after a kill.",

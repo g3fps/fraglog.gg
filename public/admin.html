@@ -345,6 +345,21 @@ select option { background: var(--surface); }
   <div class="card">
     <div class="entries-list" id="pro-recent-list"><div class="empty-state">No pro matches yet.</div></div>
   </div>
+
+  <hr style="border:none;border-top:1px solid var(--border);margin:2.5rem 0">
+
+  <div class="section-title" style="display:flex;justify-content:space-between;align-items:center">
+    <span>Gameplan Training Data (<span id="gameplan-count">0</span> total)</span>
+    <button class="btn btn-secondary" style="font-size:10px;padding:5px 12px" onclick="loadGameplanData(0)">Refresh</button>
+  </div>
+  <div class="card" id="gameplan-data-card">
+    <div class="empty-state">Loading...</div>
+  </div>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2rem">
+    <button class="btn btn-secondary" id="gameplan-prev-btn" style="font-size:10px;padding:5px 12px;display:none" onclick="gameplanPage(-1)">← Prev</button>
+    <span id="gameplan-page-info" style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted)"></span>
+    <button class="btn btn-secondary" id="gameplan-next-btn" style="font-size:10px;padding:5px 12px;display:none" onclick="gameplanPage(1)">Next →</button>
+  </div>
 </div>
 
 <script>
@@ -561,6 +576,7 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
   }
   document.getElementById('pro-date').valueAsDate = new Date();
   loadProRecent();
+  if (session) loadGameplanData(0);
 })();
 
 async function adminSignIn() {
@@ -670,6 +686,93 @@ async function deleteProMatch(id) {
   if (!confirm('Delete this match?')) return;
   await sb.from('pro_matches').delete().eq('id', id);
   loadProRecent();
+}
+
+// ── Gameplan training data ────────────────────────────────────
+let gameplanOffset = 0;
+const GAMEPLAN_PAGE_SIZE = 10;
+let gameplanTotal = 0;
+let gameplanExpanded = new Set();
+
+async function loadGameplanData(offset) {
+  const token = await getAccessToken();
+  if (!token) return;
+  gameplanOffset = offset;
+  const card = document.getElementById('gameplan-data-card');
+  card.innerHTML = '<div class="empty-state">Loading...</div>';
+  try {
+    const res = await fetch(`/api/admin-gameplan-data?offset=${offset}&limit=${GAMEPLAN_PAGE_SIZE}`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (!res.ok) { card.innerHTML = `<div class="empty-state">Error loading data (${res.status})</div>`; return; }
+    const { data, count } = await res.json();
+    gameplanTotal = count || 0;
+    document.getElementById('gameplan-count').textContent = gameplanTotal;
+    renderGameplanData(data || []);
+    const prevBtn = document.getElementById('gameplan-prev-btn');
+    const nextBtn = document.getElementById('gameplan-next-btn');
+    const pageInfo = document.getElementById('gameplan-page-info');
+    const page = Math.floor(offset / GAMEPLAN_PAGE_SIZE) + 1;
+    const totalPages = Math.max(1, Math.ceil(gameplanTotal / GAMEPLAN_PAGE_SIZE));
+    pageInfo.textContent = `Page ${page} of ${totalPages}`;
+    prevBtn.style.display = offset > 0 ? '' : 'none';
+    nextBtn.style.display = offset + GAMEPLAN_PAGE_SIZE < gameplanTotal ? '' : 'none';
+  } catch (e) {
+    card.innerHTML = '<div class="empty-state">Failed to load.</div>';
+  }
+}
+
+function gameplanPage(dir) {
+  loadGameplanData(Math.max(0, gameplanOffset + dir * GAMEPLAN_PAGE_SIZE));
+}
+
+function renderGameplanData(rows) {
+  const card = document.getElementById('gameplan-data-card');
+  if (!rows.length) { card.innerHTML = '<div class="empty-state">No gameplan data yet.</div>'; return; }
+  card.innerHTML = rows.map((row, i) => {
+    const goals = Array.isArray(row.goals) ? row.goals : [];
+    const goalSummary = goals.map(g => `${g.type}: ${g.title}`).join(' · ') || '(no goals)';
+    const date = row.created_at ? new Date(row.created_at).toLocaleString() : '';
+    const itemId = `gp-${row.id}`;
+    const schedule = row.routine?.schedule || [];
+    const scheduleHtml = schedule.map(s =>
+      `<div style="display:flex;gap:8px;margin-bottom:4px"><span style="color:var(--red);min-width:70px">${s.time}</span><span style="color:var(--muted);min-width:70px">${s.category}</span><span>${s.title}${s.count ? ' · '+s.count : ''}</span></div>`
+    ).join('');
+    const goalsHtml = goals.map(g => {
+      let line = `<b>${g.type}</b>: ${g.title}`;
+      if (g.current_value) line += ` · current: ${g.current_value}`;
+      if (g.target) line += ` → ${g.target}`;
+      if (g.notes) line += `<br><span style="color:var(--muted)">${g.notes}</span>`;
+      return `<div style="margin-bottom:6px">${line}</div>`;
+    }).join('');
+    return `
+    <div style="border:1px solid var(--border);border-radius:8px;margin-bottom:8px;overflow:hidden">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;cursor:pointer;background:var(--darker)" onclick="toggleGameplanRow('${itemId}')">
+        <div style="font-size:12px;flex:1;min-width:0">
+          <span style="font-family:'DM Mono',monospace;color:var(--red);margin-right:8px">${date}</span>
+          <span style="color:var(--muted)">${row.agents || 'no agent'}</span>
+          <span style="color:var(--muted);margin:0 6px">·</span>
+          <span style="font-size:11px">${goalSummary}</span>
+        </div>
+        <span id="${itemId}-chevron" style="color:var(--muted);font-family:'DM Mono',monospace;font-size:11px;margin-left:8px">▶</span>
+      </div>
+      <div id="${itemId}" style="display:none;padding:14px;background:var(--surface);border-top:1px solid var(--border)">
+        <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Goals</div>
+        <div style="font-size:12px;margin-bottom:14px">${goalsHtml}</div>
+        ${row.time_per_day ? `<div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);margin-bottom:4px">TIME: ${row.time_per_day} min${row.wake_time ? ' · WAKE: '+row.wake_time : ''}${row.details ? ' · PREFS: '+row.details : ''}</div>` : ''}
+        <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin:12px 0 8px">Generated Schedule</div>
+        <div style="font-size:12px">${scheduleHtml || '(no schedule)'}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleGameplanRow(id) {
+  const el = document.getElementById(id);
+  const chevron = document.getElementById(id + '-chevron');
+  const isOpen = el.style.display !== 'none';
+  el.style.display = isOpen ? 'none' : 'block';
+  if (chevron) chevron.textContent = isOpen ? '▶' : '▼';
 }
 </script>
 </body>

@@ -1,0 +1,1098 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Nav from '../components/Nav.astro';
+import Footer from '../components/Footer.astro';
+import { getAdminEmails } from '../lib/admin.js';
+
+const sbAccess = Astro.cookies.get('sb-access-token')?.value;
+const sbRefresh = Astro.cookies.get('sb-refresh-token')?.value;
+let user = null;
+if (sbAccess && sbRefresh) {
+  const { createClient } = await import('@supabase/supabase-js');
+  const sb = createClient('https://cvdtykmkajmhlxydhzzl.supabase.co', 'sb_publishable_I16eAnYgsA9fd8ZMlmFQtA_RxepSaXi');
+  const { data: { user: u } } = await sb.auth.setSession({ access_token: sbAccess, refresh_token: sbRefresh });
+  user = u;
+}
+const isAdminUser = !!(user?.email && getAdminEmails().includes(user.email));
+---
+<BaseLayout title="Gameplan — fraglog.gg" description="Your personalized Valorant goals and daily practice plan" user={user}>
+  <Nav crumbs={[{ label: 'ALL MAPS', href: '/' }, { label: 'GAMEPLAN' }]} user={user} />
+  <div class="page-content">
+    <div id="routine-loading" class="routine-loading">Loading...</div>
+
+    <div id="routine-unauth" style="display:none" class="routine-unauth">
+      <div class="routine-unauth-inner">
+        <div class="routine-unauth-title">Sign in to build your gameplan</div>
+        <div class="routine-unauth-sub">Set goals and get a daily AI-generated practice plan built around what you're working toward.</div>
+        <button class="routine-cta-btn" onclick="openAuth()">Sign In</button>
+      </div>
+    </div>
+
+    <div id="routine-main" style="display:none">
+      <div class="gameplan-grid">
+
+        <!-- Left: Goals -->
+        <div class="gameplan-goals-col">
+          <div class="gp-col-head">
+            <span class="gp-col-title">Goals</span>
+            <button class="routine-add-btn" onclick="openGoalModal()">+ Add Goal</button>
+          </div>
+          <div id="goals-container"></div>
+        </div>
+
+        <!-- Right: Routine -->
+        <div class="gameplan-routine-col">
+          <div class="gp-col-head">
+            <div>
+              <span class="gp-col-title" id="routine-date"></span><span class="streak-badge" id="streak-badge" style="display:none"></span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <button class="routine-time-btn" id="routine-time-btn" onclick="editTimeModal()"></button>
+              <button class="routine-clear-btn" id="routine-clear-btn" onclick="clearRoutine()" style="display:none">Clear</button>
+              <button class="routine-new-btn" id="routine-new-btn" onclick="openGeneratePanel()">+ New Routine</button>
+              <button class="routine-regen-btn" id="routine-regen-btn" onclick="regenWithSamePrefs()">↺ Regenerate</button>
+            </div>
+          </div>
+
+          <!-- Generate panel -->
+          <div class="gp-gen-panel" id="gp-gen-panel" style="display:none">
+            <div class="gp-gen-panel-row">
+              <span class="gp-gen-panel-label">Wake up</span>
+              <input type="text" id="prefs-wake-time" class="prefs-wake-input" placeholder="e.g. 9:00 AM" maxlength="20">
+            </div>
+            <div class="gp-gen-panel-row">
+              <span class="gp-gen-panel-label">Intensity</span>
+              <div class="prefs-btn-group" id="prefs-intensity">
+                <button class="prefs-opt" data-val="light" onclick="setPrefIntensity(this)">Light</button>
+                <button class="prefs-opt" data-val="moderate" onclick="setPrefIntensity(this)">Moderate</button>
+                <button class="prefs-opt" data-val="intense" onclick="setPrefIntensity(this)">Intense</button>
+                <button class="prefs-opt" data-val="grind" onclick="setPrefIntensity(this)">Max Grind</button>
+              </div>
+            </div>
+            <input type="text" id="prefs-notes" class="routine-prefs-notes" placeholder="Anything else... e.g. focus on Reyna, keep it under 90 min" maxlength="300">
+            <div class="gp-gen-panel-actions">
+              <button class="goal-modal-btn secondary" onclick="closeGeneratePanel()">Cancel</button>
+              <button class="goal-modal-btn primary" onclick="confirmGenerate()">Generate →</button>
+            </div>
+          </div>
+
+          <div id="routine-tasks-container"></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+  <Footer />
+</BaseLayout>
+
+<!-- Goal modal -->
+<div class="goal-modal-backdrop" id="goal-modal" onclick="closeGoalModalClick(event)">
+  <div class="goal-modal-inner">
+    <div class="goal-modal-header">
+      <div class="goal-modal-title" id="goal-modal-title">Add Goal</div>
+      <button class="goal-modal-close" onclick="closeGoalModal()">✕</button>
+    </div>
+
+    <div class="goal-type-tabs" id="goal-type-tabs">
+      <button class="goal-type-tab active" data-type="rank" onclick="setGoalType('rank')">Rank</button>
+      <button class="goal-type-tab" data-type="skill" onclick="setGoalType('skill')">Skill</button>
+      <button class="goal-type-tab" data-type="custom" onclick="setGoalType('custom')">Custom</button>
+    </div>
+
+    <div class="goal-form">
+      <div class="goal-form-field">
+        <label id="goal-title-label">Goal</label>
+        <input type="text" id="goal-title" placeholder="e.g. Hit Immortal" maxlength="150">
+      </div>
+      <div class="goal-form-row" id="goal-current-target-row">
+        <div class="goal-form-field">
+          <label id="goal-current-label">Current</label>
+          <input type="text" id="goal-current-text" placeholder="e.g. 35% HS rate" maxlength="100">
+          <select id="goal-current-rank" style="display:none">
+            <option value="">Select rank...</option>
+            <optgroup label="Iron"><option>Iron 1</option><option>Iron 2</option><option>Iron 3</option></optgroup>
+            <optgroup label="Bronze"><option>Bronze 1</option><option>Bronze 2</option><option>Bronze 3</option></optgroup>
+            <optgroup label="Silver"><option>Silver 1</option><option>Silver 2</option><option>Silver 3</option></optgroup>
+            <optgroup label="Gold"><option>Gold 1</option><option>Gold 2</option><option>Gold 3</option></optgroup>
+            <optgroup label="Platinum"><option>Platinum 1</option><option>Platinum 2</option><option>Platinum 3</option></optgroup>
+            <optgroup label="Diamond"><option>Diamond 1</option><option>Diamond 2</option><option>Diamond 3</option></optgroup>
+            <optgroup label="Ascendant"><option>Ascendant 1</option><option>Ascendant 2</option><option>Ascendant 3</option></optgroup>
+            <optgroup label="Immortal"><option>Immortal 1</option><option>Immortal 2</option><option>Immortal 3</option></optgroup>
+            <option>Radiant</option>
+          </select>
+        </div>
+        <div class="goal-form-field">
+          <label id="goal-target-label">Target</label>
+          <input type="text" id="goal-target-text" placeholder="e.g. 60% HS rate" maxlength="100">
+          <select id="goal-target-rank" style="display:none">
+            <option value="">Select rank...</option>
+            <optgroup label="Iron"><option>Iron 1</option><option>Iron 2</option><option>Iron 3</option></optgroup>
+            <optgroup label="Bronze"><option>Bronze 1</option><option>Bronze 2</option><option>Bronze 3</option></optgroup>
+            <optgroup label="Silver"><option>Silver 1</option><option>Silver 2</option><option>Silver 3</option></optgroup>
+            <optgroup label="Gold"><option>Gold 1</option><option>Gold 2</option><option>Gold 3</option></optgroup>
+            <optgroup label="Platinum"><option>Platinum 1</option><option>Platinum 2</option><option>Platinum 3</option></optgroup>
+            <optgroup label="Diamond"><option>Diamond 1</option><option>Diamond 2</option><option>Diamond 3</option></optgroup>
+            <optgroup label="Ascendant"><option>Ascendant 1</option><option>Ascendant 2</option><option>Ascendant 3</option></optgroup>
+            <optgroup label="Immortal"><option>Immortal 1</option><option>Immortal 2</option><option>Immortal 3</option></optgroup>
+            <option>Radiant</option>
+          </select>
+        </div>
+      </div>
+      <div id="goal-rr-fields" style="display:none" class="goal-form-rr-group">
+        <div class="goal-form-field">
+          <label>Starting RR <span class="goal-form-optional">(your current RR in that rank, 0–99)</span></label>
+          <input type="number" id="goal-current-rr" placeholder="e.g. 45" min="0" max="99">
+        </div>
+      </div>
+      <div class="goal-form-field">
+        <label>Deadline <span class="goal-form-optional">(optional)</span></label>
+        <input type="date" id="goal-deadline">
+      </div>
+      <div class="goal-form-field" id="goal-notes-field">
+        <label>Notes <span class="goal-form-optional">(optional)</span></label>
+        <input type="text" id="goal-notes" placeholder="Anything extra for the AI to consider" maxlength="400">
+      </div>
+    </div>
+
+    <div class="goal-modal-error" id="goal-modal-error"></div>
+    <div class="goal-modal-actions">
+      <button class="goal-modal-btn secondary" onclick="closeGoalModal()">Cancel</button>
+      <button class="goal-modal-btn primary" id="goal-save-btn" onclick="saveGoal()">Save Goal</button>
+    </div>
+  </div>
+</div>
+
+<!-- Time modal -->
+<div class="goal-modal-backdrop" id="time-modal" onclick="closeTimeModalClick(event)">
+  <div class="goal-modal-inner" style="max-width:360px">
+    <div class="goal-modal-header">
+      <div class="goal-modal-title">Time Available</div>
+      <button class="goal-modal-close" onclick="closeTimeModal()">✕</button>
+    </div>
+    <div class="goal-form">
+      <div class="goal-form-field">
+        <label>Minutes available to practice per day</label>
+        <input type="number" id="time-input" min="15" step="5" placeholder="60">
+      </div>
+    </div>
+    <div class="goal-modal-actions">
+      <button class="goal-modal-btn secondary" onclick="closeTimeModal()">Cancel</button>
+      <button class="goal-modal-btn primary" onclick="saveTimePerDay()">Save</button>
+    </div>
+  </div>
+</div>
+
+<script define:vars={{ isAdminUser }}> window.__IS_ADMIN = isAdminUser; </script>
+<script is:inline>
+// ── State ─────────────────────────────────────────────────────
+let goals = [];
+let routineData = { tasks: null, generated_at: null, time_per_day: 60, routine_prefs: {}, daily_generate_date: null, daily_finetune_count: 0, daily_finetune_date: null };
+let editingGoalId = null;
+let goalType = 'rank';
+let routinePrefs = { intensity: 'moderate', wake_time: '', notes: '' };
+let completedToday = new Set();
+let streak = { count: 0, lastDate: null };
+
+// ── Rank icons ────────────────────────────────────────────────
+const RANK_ICON = {
+  'iron 1':'/ranks/iron-1.webp','iron 2':'/ranks/iron-2.webp','iron 3':'/ranks/iron-3.webp',
+  'bronze 1':'/ranks/bronze-1.webp','bronze 2':'/ranks/bronze-2.webp','bronze 3':'/ranks/bronze-3.webp',
+  'silver 1':'/ranks/silver-1.webp','silver 2':'/ranks/silver-2.webp','silver 3':'/ranks/silver-3.webp',
+  'gold 1':'/ranks/gold-1.webp','gold 2':'/ranks/gold-2.webp','gold 3':'/ranks/gold-3.webp',
+  'platinum 1':'/ranks/platinum-1.webp','platinum 2':'/ranks/platinum-2.webp','platinum 3':'/ranks/platinum-3.webp',
+  'diamond 1':'/ranks/diamond-1.webp','diamond 2':'/ranks/diamond-2.webp','diamond 3':'/ranks/diamond-3.webp',
+  'ascendant 1':'/ranks/ascendant-1.webp','ascendant 2':'/ranks/ascendant-2.webp','ascendant 3':'/ranks/ascendant-3.webp',
+  'immortal 1':'/ranks/immortal-1.webp','immortal 2':'/ranks/immortal-2.webp','immortal 3':'/ranks/immortal-3.webp',
+  'radiant':'/ranks/radiant.webp',
+};
+function rankIcon(str) {
+  if (!str) return null;
+  const n = str.toLowerCase().replace(/\bplat\b/g,'platinum').replace(/\bdia\b/g,'diamond').replace(/\basc\b/g,'ascendant').replace(/\bimm\b/g,'immortal').replace(/\s+/g,' ').trim();
+  return RANK_ICON[n] || null;
+}
+
+// ── Rank RR lookup ────────────────────────────────────────────
+const RANK_TO_RR = {
+  'iron 1':0,'iron 2':100,'iron 3':200,
+  'bronze 1':300,'bronze 2':400,'bronze 3':500,
+  'silver 1':600,'silver 2':700,'silver 3':800,
+  'gold 1':900,'gold 2':1000,'gold 3':1100,
+  'platinum 1':1200,'platinum 2':1300,'platinum 3':1400,
+  'diamond 1':1500,'diamond 2':1600,'diamond 3':1700,
+  'ascendant 1':1800,'ascendant 2':1900,'ascendant 3':2000,
+  'immortal 1':2100,'immortal 2':2200,'immortal 3':2300,
+  'radiant':2400,
+};
+function rankToRR(str) {
+  if (!str) return null;
+  const n = str.toLowerCase()
+    .replace(/\bplat\b/g,'platinum').replace(/\bdia\b/g,'diamond')
+    .replace(/\basc\b/g,'ascendant').replace(/\bimm\b/g,'immortal')
+    .replace(/\bp(\d)\b/g,'platinum $1').replace(/\bd(\d)\b/g,'diamond $1')
+    .replace(/\s+/g,' ').trim();
+  return RANK_TO_RR[n] ?? null;
+}
+
+function rrToRank(totalRR) {
+  const sorted = Object.entries(RANK_TO_RR).sort((a, b) => b[1] - a[1]);
+  for (const [rank, base] of sorted) {
+    if (totalRR >= base) {
+      const display = rank.replace(/\b\w/g, c => c.toUpperCase());
+      return { rank: display, currentRR: Math.min(totalRR - base, 99) };
+    }
+  }
+  return { rank: 'Iron 1', currentRR: 0 };
+}
+
+// ── Admin check ───────────────────────────────────────────────
+function isAdmin() { return !!window.__IS_ADMIN; }
+
+// ── Boot ──────────────────────────────────────────────────────
+function initRoutine() {
+  if (!currentUser) {
+    document.getElementById('routine-loading').style.display = 'none';
+    document.getElementById('routine-unauth').style.display = '';
+    return;
+  }
+  loadData();
+}
+
+if (window.__authReady) {
+  initRoutine();
+} else {
+  window.__onAuthReady = initRoutine;
+}
+
+// ── Completion + streak ───────────────────────────────────────
+function loadCompletion() {
+  if (!currentUser) return;
+  const today = new Date().toISOString().slice(0, 10);
+  try {
+    const raw = localStorage.getItem(`gp-done-${currentUser.id}-${today}`);
+    completedToday = new Set(raw ? JSON.parse(raw) : []);
+    const rawStreak = localStorage.getItem(`gp-streak-${currentUser.id}`);
+    streak = rawStreak ? JSON.parse(rawStreak) : { count: 0, lastDate: null };
+  } catch { completedToday = new Set(); streak = { count: 0, lastDate: null }; }
+}
+
+function saveCompletion() {
+  if (!currentUser) return;
+  const today = new Date().toISOString().slice(0, 10);
+  localStorage.setItem(`gp-done-${currentUser.id}-${today}`, JSON.stringify([...completedToday]));
+}
+
+function toggleCheck(itemId) {
+  const today = new Date().toISOString().slice(0, 10);
+  const wasEmpty = completedToday.size === 0;
+  if (completedToday.has(itemId)) {
+    completedToday.delete(itemId);
+  } else {
+    completedToday.add(itemId);
+    if (wasEmpty && streak.lastDate !== today) {
+      const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+      streak.count = streak.lastDate === yesterday ? streak.count + 1 : 1;
+      streak.lastDate = today;
+      if (currentUser) localStorage.setItem(`gp-streak-${currentUser.id}`, JSON.stringify(streak));
+      updateStreakBadge();
+    }
+  }
+  saveCompletion();
+  const rowEl = document.querySelector(`.schedule-row[data-id="${itemId}"]`);
+  if (rowEl) {
+    const checked = completedToday.has(itemId);
+    rowEl.classList.toggle('checked', checked);
+    rowEl.querySelector('.schedule-check')?.classList.toggle('done', checked);
+  }
+}
+
+function updateStreakBadge() {
+  const badge = document.getElementById('streak-badge');
+  if (!badge) return;
+  if (streak.count >= 1) {
+    const n = streak.count;
+    const prefix = n >= 14 ? '🔥🔥 ' : n >= 7 ? '🔥 ' : '';
+    const label = n === 1 ? '1 day streak' : `${n} day streak`;
+    badge.textContent = `${prefix}${label}`;
+    badge.className = 'streak-badge ' + (n >= 14 ? 'streak-max' : n >= 7 ? 'streak-high' : n >= 4 ? 'streak-mid' : 'streak-low');
+    badge.style.display = '';
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+// ── Session helper ────────────────────────────────────────────
+async function ensureSession(sb) {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) {
+    const cookieAccess = document.cookie.match(/sb-access-token=([^;]+)/)?.[1];
+    const cookieRefresh = document.cookie.match(/sb-refresh-token=([^;]+)/)?.[1];
+    if (cookieAccess && cookieRefresh) {
+      await sb.auth.setSession({ access_token: cookieAccess, refresh_token: cookieRefresh });
+    }
+  }
+}
+
+// ── Data loading ──────────────────────────────────────────────
+async function loadData() {
+  const sb = initSupabase();
+  if (!currentUser) return;
+
+  await ensureSession(sb);
+
+  const [{ data: goalsData }, { data: routineRow }] = await Promise.all([
+    sb.from('goals').select('*').eq('user_id', currentUser.id).order('created_at'),
+    sb.from('routine').select('*').eq('user_id', currentUser.id).maybeSingle(),
+  ]);
+
+  goals = goalsData || [];
+  if (routineRow) {
+    routineData = routineRow;
+    // Discard old array format
+    if (Array.isArray(routineData.tasks)) routineData.tasks = null;
+    if (routineData.routine_prefs && typeof routineData.routine_prefs === 'object') {
+      routinePrefs = { intensity: 'moderate', wake_time: '', notes: '', ...routineData.routine_prefs };
+    }
+  }
+
+  loadCompletion();
+  document.getElementById('routine-loading').style.display = 'none';
+  document.getElementById('routine-main').style.display = '';
+  renderGoals();
+  renderRoutine();
+}
+
+// ── Goals rendering ───────────────────────────────────────────
+function renderGoals() {
+  const el = document.getElementById('goals-container');
+
+  if (!goals.length) {
+    el.innerHTML = `<div class="routine-empty">
+      <div class="routine-empty-title">No goals yet</div>
+      <div class="routine-empty-sub">Add a goal to get a personalized routine built around what you're working toward.</div>
+      <button class="routine-cta-btn" onclick="openGoalModal()">+ Add your first goal</button>
+    </div>`;
+    return;
+  }
+
+  el.innerHTML = goals.map(g => goalCardHtml(g)).join('');
+}
+
+function goalCardHtml(g) {
+  const typeLabel = { rank: 'RANK', skill: 'SKILL', custom: 'CUSTOM' }[g.type] || g.type.toUpperCase();
+  const typeClass = `goal-card-${g.type}`;
+
+  // Compute effective current rank/RR by adding accumulated net RR to starting baseline
+  let displayCurrentValue = g.current_value;
+  let displayCurrentRR = g.current_rr || 0;
+  if (g.type === 'rank' && g.current_value) {
+    const startBase = rankToRR(g.current_value);
+    if (startBase !== null) {
+      const winSum = (Array.isArray(g.win_rr) ? g.win_rr : []).reduce((a, b) => a + b, 0);
+      const lossSum = (Array.isArray(g.loss_rr) ? g.loss_rr : []).reduce((a, b) => a + b, 0);
+      const dodgeSum = (Array.isArray(g.dodge_rr) ? g.dodge_rr : []).reduce((a, b) => a + b, 0);
+      const r = rrToRank(startBase + (g.current_rr || 0) + winSum - lossSum - dodgeSum);
+      displayCurrentValue = r.rank;
+      displayCurrentRR = r.currentRR;
+    }
+  }
+
+  let progressHtml = '';
+  if (g.current_value || g.target) {
+    const fromIcon = g.type === 'rank' ? rankIcon(displayCurrentValue) : null;
+    const toIcon = g.type === 'rank' && g.target ? rankIcon(g.target) : null;
+    const fromImg = fromIcon ? `<img src="${fromIcon}" class="goal-rank-icon" alt="">` : '';
+    const toImg = toIcon ? `<img src="${toIcon}" class="goal-rank-icon" alt="">` : '';
+    const rrBadge = g.type === 'rank' && displayCurrentValue ? `<span class="goal-from-rr">${displayCurrentRR} RR</span>` : '';
+    const from = displayCurrentValue ? `<span class="goal-from">${fromImg}${esc(displayCurrentValue)}${rrBadge}</span>` : '';
+    const to = g.target ? `<span class="goal-to">${toImg}${esc(g.target)}</span>` : '';
+    const arrow = from && to ? '<span class="goal-arrow">→</span>' : '';
+    progressHtml = `<div class="goal-progress-row">${from}${arrow}${to}</div>`;
+  }
+
+  let deadlineHtml = '';
+  if (g.deadline) {
+    const daysLeft = Math.ceil((new Date(g.deadline).getTime() - Date.now()) / 86400000);
+    const urgency = daysLeft <= 7 ? 'goal-deadline-urgent' : daysLeft <= 14 ? 'goal-deadline-soon' : '';
+    const label = daysLeft > 0 ? `${daysLeft} days left` : daysLeft === 0 ? 'Due today' : 'Overdue';
+    deadlineHtml = `<div class="goal-deadline ${urgency}">${label}</div>`;
+  }
+
+  let wlHtml = '';
+  if (g.type === 'rank') {
+    const winRR = Array.isArray(g.win_rr) ? g.win_rr : [];
+    const lossRR = Array.isArray(g.loss_rr) ? g.loss_rr : [];
+    const dodgeRR = Array.isArray(g.dodge_rr) ? g.dodge_rr : [];
+    const wins = winRR.length || (g.wins || 0);
+    const losses = lossRR.length || (g.losses || 0);
+    // Winrate intentionally excludes dodges — they cost RR but aren't games played
+    const total = wins + losses;
+    const wr = total > 0 ? Math.round((wins / total) * 100) : null;
+    const barW = wr !== null ? wr : 50;
+
+    let rrHtml = '';
+    if (winRR.length || lossRR.length || dodgeRR.length) {
+      const sumWin = winRR.reduce((a, b) => a + b, 0);
+      const sumLoss = lossRR.reduce((a, b) => a + b, 0);
+      const sumDodge = dodgeRR.reduce((a, b) => a + b, 0);
+      const netRR = sumWin - sumLoss - sumDodge;
+      const avgRR = total > 0 ? netRR / total : null;
+      const avgWin = winRR.length ? (sumWin / winRR.length).toFixed(0) : null;
+      const avgLoss = lossRR.length ? (sumLoss / lossRR.length).toFixed(0) : null;
+
+      let rrProgressHtml = '';
+      const curBase = rankToRR(g.current_value);
+      const tarBase = rankToRR(g.target);
+      if (curBase !== null && tarBase !== null) {
+        const remainingRR = (tarBase - (curBase + (g.current_rr || 0))) - netRR;
+        if (remainingRR <= 0) {
+          rrProgressHtml = `<span class="goal-rr-done">Goal reached!</span>`;
+        } else {
+          rrProgressHtml = `<span class="goal-rr-remaining">${remainingRR} RR to go</span>`;
+          if (avgRR !== null && avgRR > 0) {
+            const gamesNeeded = Math.ceil(remainingRR / avgRR);
+            rrProgressHtml += `<span class="goal-rr-est">~${gamesNeeded} games</span>`;
+            // Project days from the player's actual games/day pace since the goal started
+            if (total >= 5 && g.created_at) {
+              const daysSinceStart = Math.max(1, (Date.now() - new Date(g.created_at).getTime()) / 86400000);
+              const gamesPerDay = total / daysSinceStart;
+              if (gamesPerDay > 0) {
+                const daysEst = Math.ceil(gamesNeeded / gamesPerDay);
+                rrProgressHtml += `<span class="goal-projection" style="margin-top:0;margin-left:auto">~${daysEst}d at this pace</span>`;
+              }
+            }
+          }
+        }
+      }
+
+      rrHtml = `<div class="goal-rr-stats">
+        <div class="goal-rr-row">
+          ${avgWin ? `<span class="goal-rr-tag">avg +${avgWin}${avgLoss ? '/−' + avgLoss : ''}</span>` : ''}
+        </div>
+        ${rrProgressHtml ? `<div class="goal-rr-progress">${rrProgressHtml}</div>` : ''}
+      </div>`;
+    }
+
+    wlHtml = `
+      <div class="goal-wl">
+        <div class="goal-wl-bar-row">
+          <span class="goal-wl-label">WIN RATE</span>
+          <div class="goal-wl-bar"><div class="goal-wl-fill" style="width:${barW}%"></div></div>
+          ${wr !== null ? `<span class="goal-wl-rate">${wr}%</span>` : ''}
+        </div>
+        <div class="goal-wl-row">
+          <span class="goal-wl-stat win">${wins}W</span>
+          <span class="goal-wl-sep">–</span>
+          <span class="goal-wl-stat loss">${losses}L</span>
+        </div>
+        ${rrHtml}
+        <div class="goal-wl-btns" id="wl-btns-${g.id}">
+          <button class="goal-wl-btn win" onclick="startLogRR('${g.id}','win')">+ Win</button>
+          <button class="goal-wl-btn loss" onclick="startLogRR('${g.id}','loss')">+ Loss</button>
+          <button class="goal-wl-btn dodge" onclick="startLogRR('${g.id}','dodge')">Dodge</button>
+        </div>
+      </div>`;
+  }
+
+  return `<div class="goal-card ${typeClass}" data-id="${g.id}">
+    <div class="goal-card-header">
+      <span class="goal-type-badge">${typeLabel}</span>
+      <div class="goal-card-actions">
+        <button class="goal-card-btn" onclick="openGoalModal('${g.id}')">Edit</button>
+        <button class="goal-card-btn danger" onclick="deleteGoal('${g.id}')">✕</button>
+      </div>
+    </div>
+    <div class="goal-title">${esc(g.title)}</div>
+    ${progressHtml}
+    ${deadlineHtml}
+    ${wlHtml}
+  </div>`;
+}
+
+// ── Routine rendering ─────────────────────────────────────────
+function renderRoutine() {
+  const dateEl = document.getElementById('routine-date');
+  if (dateEl) dateEl.textContent = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+
+  const timeBtn = document.getElementById('routine-time-btn');
+  if (timeBtn) timeBtn.textContent = `${routineData.time_per_day || 60} min/day`;
+
+  const routine = routineData.tasks && !Array.isArray(routineData.tasks) ? routineData.tasks : null;
+
+  const clearBtn = document.getElementById('routine-clear-btn');
+  if (clearBtn) clearBtn.style.display = routine?.schedule?.length ? '' : 'none';
+
+  const today = new Date().toISOString().slice(0, 10);
+  const usedToday = !isAdmin() && routineData.daily_generate_date === today;
+
+  const regenBtn = document.getElementById('routine-regen-btn');
+  if (regenBtn) {
+    regenBtn.style.display = routine?.schedule?.length ? '' : 'none';
+    regenBtn.textContent = '↺ Regenerate';
+    regenBtn.disabled = usedToday;
+    regenBtn.title = usedToday ? 'Already regenerated today — use fine tune to adjust' : '';
+  }
+
+  const newBtn = document.getElementById('routine-new-btn');
+  if (newBtn) {
+    newBtn.disabled = usedToday;
+    newBtn.title = usedToday ? 'Already generated today — use fine tune to adjust' : '';
+  }
+
+  const el = document.getElementById('routine-tasks-container');
+
+  if (!routine?.schedule?.length) {
+    const hasGoals = goals.length > 0;
+    el.innerHTML = hasGoals
+      ? `<div class="routine-empty">
+          <div class="routine-empty-sub">Generate a plan and it'll stay until you regenerate or clear it.</div>
+          <button class="routine-cta-btn" onclick="openGeneratePanel()">Generate gameplan with AI</button>
+        </div>`
+      : `<div class="routine-empty">
+          <div class="routine-empty-sub">Add a goal first, then generate your gameplan.</div>
+        </div>`;
+    return;
+  }
+
+  let html = '';
+
+  // Daily schedule
+  const wakeLabel = routine.wake_time ? ` — WAKE AT ${routine.wake_time.toUpperCase()}` : '';
+  const doneCount = (routine.schedule || []).filter(item => completedToday.has(item.id)).length;
+  const totalCount = (routine.schedule || []).length;
+  const completionBadge = totalCount > 0 ? `<span class="schedule-completion-badge">${doneCount}/${totalCount}</span>` : '';
+  html += `<div class="routine-section-title schedule-section-title-row">DAILY SCHEDULE${wakeLabel}${completionBadge}</div>`;
+
+  const nowPos = getScheduleNowPosition(routine.schedule || []);
+  html += '<div class="routine-schedule-list">';
+  (routine.schedule || []).forEach((item, idx) => {
+    if (nowPos?.type === 'between' && nowPos.afterIndex === idx - 1) {
+      html += `<div class="schedule-now-bar"><span>NOW</span></div>`;
+    }
+    html += renderScheduleRow(item, nowPos?.type === 'during' && nowPos.index === idx);
+  });
+  if (nowPos?.type === 'before') {
+    html += `<div class="schedule-now-bar top"><span>NOW</span></div>`;
+  }
+  html += '</div>';
+
+  if (routineData.generated_at) {
+    html += `<div class="routine-gen-label">Generated ${timeAgo(routineData.generated_at)}</div>`;
+  }
+
+  html += `<div class="routine-finetune-wrap">
+    <div class="routine-finetune-row">
+      <input type="text" class="routine-finetune-input" id="finetune-input" placeholder="Fine tune... e.g. make it shorter, add more ranked" maxlength="400">
+      <button class="routine-finetune-btn" id="finetune-btn" onclick="fineTuneRoutine()">Fine tune</button>
+    </div>
+    <div class="routine-finetune-usage" id="finetune-usage">${fineTuneUsageLabel()}</div>
+  </div>`;
+
+  updateStreakBadge();
+  el.innerHTML = html;
+}
+
+function renderScheduleRow(item, isNow) {
+  const catLabels = { wakeup:'wake up', warmup:'warmup / mechs', ranked:'ranked', vod:'pro vod', review:'review', break:'break', done:'done', utility:'utility', custom:'custom' };
+  const label = catLabels[item.category] || item.category || 'custom';
+  const durStr = item.duration ? ` — ${item.duration} min` : '';
+  const isChecked = completedToday.has(item.id);
+  const nowClass = isNow ? ' now-active' : '';
+  const metaStr = item.count ? ` — ${esc(item.count)}` : durStr;
+  const descHtml = item.description ? `<div class="schedule-desc">${esc(item.description)}</div>` : '';
+  return `<div class="schedule-row cat-row-${esc(item.category || 'custom')}${isChecked ? ' checked' : ''}${nowClass}" data-id="${esc(item.id)}">
+    <div class="schedule-time">${esc(item.time || '')}</div>
+    <div class="schedule-body">
+      <div class="schedule-top">
+        <span class="schedule-cat-pill cat-${esc(item.category || 'custom')}">${esc(label)}</span>
+        <span class="schedule-title">${esc(item.title)}${metaStr}</span>
+      </div>
+      ${descHtml}
+    </div>
+    <button class="schedule-check${isChecked ? ' done' : ''}" onclick="toggleCheck('${esc(item.id)}')" aria-label="Mark done">✓</button>
+  </div>`;
+}
+
+function parseTimeMins(str) {
+  const m = String(str || '').match(/(\d+):(\d+)\s*(AM|PM)/i);
+  if (!m) return null;
+  let h = parseInt(m[1]), mins = parseInt(m[2]);
+  const ampm = m[3].toUpperCase();
+  if (ampm === 'PM' && h !== 12) h += 12;
+  if (ampm === 'AM' && h === 12) h = 0;
+  return h * 60 + mins;
+}
+
+function getScheduleNowPosition(schedule) {
+  const now = new Date();
+  const nowMins = now.getHours() * 60 + now.getMinutes();
+  let prevEnd = null;
+  for (let i = 0; i < schedule.length; i++) {
+    const start = parseTimeMins(schedule[i].time);
+    if (start === null) continue;
+    const end = start + (schedule[i].duration || 0);
+    if (prevEnd !== null && nowMins >= prevEnd && nowMins < start) {
+      return { type: 'between', afterIndex: i - 1 };
+    }
+    if (nowMins >= start && nowMins < end) {
+      return { type: 'during', index: i };
+    }
+    prevEnd = end;
+  }
+  if (prevEnd !== null && nowMins >= prevEnd) return null;
+  if (schedule.length && parseTimeMins(schedule[0].time) !== null && nowMins < parseTimeMins(schedule[0].time)) {
+    return { type: 'before' };
+  }
+  return null;
+}
+
+// ── Goal modal ────────────────────────────────────────────────
+function openGoalModal(id) {
+  editingGoalId = id || null;
+  const modal = document.getElementById('goal-modal');
+  document.getElementById('goal-modal-title').textContent = id ? 'Edit Goal' : 'Add Goal';
+  document.getElementById('goal-modal-error').textContent = '';
+
+  if (id) {
+    const g = goals.find(x => x.id === id);
+    if (!g) return;
+    setGoalType(g.type);
+    document.getElementById('goal-title').value = g.title || '';
+    if (g.type === 'rank') {
+      document.getElementById('goal-current-rank').value = g.current_value || '';
+      document.getElementById('goal-target-rank').value = g.target || '';
+    } else {
+      document.getElementById('goal-current-text').value = g.current_value || '';
+      document.getElementById('goal-target-text').value = g.target || '';
+    }
+    document.getElementById('goal-deadline').value = g.deadline || '';
+    document.getElementById('goal-notes').value = g.notes || '';
+    document.getElementById('goal-current-rr').value = g.current_rr ?? '';
+    document.querySelectorAll('.goal-type-tab').forEach(t => t.disabled = true);
+  } else {
+    setGoalType('rank');
+    document.getElementById('goal-title').value = '';
+    document.getElementById('goal-current-rank').value = '';
+    document.getElementById('goal-target-rank').value = '';
+    document.getElementById('goal-current-text').value = '';
+    document.getElementById('goal-target-text').value = '';
+    document.getElementById('goal-deadline').value = '';
+    document.getElementById('goal-notes').value = '';
+    document.getElementById('goal-current-rr').value = '';
+    document.querySelectorAll('.goal-type-tab').forEach(t => t.disabled = false);
+  }
+
+  modal.classList.add('open');
+}
+
+function closeGoalModal() {
+  document.getElementById('goal-modal').classList.remove('open');
+  editingGoalId = null;
+}
+
+function closeGoalModalClick(e) {
+  if (e.target === document.getElementById('goal-modal')) closeGoalModal();
+}
+
+function setGoalType(type) {
+  goalType = type;
+  document.querySelectorAll('.goal-type-tab').forEach(t => t.classList.toggle('active', t.dataset.type === type));
+
+  const labels = {
+    rank:   { title: 'Goal',             current: 'Current rank',  target: 'Target rank',  titlePh: 'e.g. Hit Immortal',        curPh: 'e.g. Diamond 2',   tarPh: 'e.g. Immortal 1' },
+    skill:  { title: 'Skill to improve', current: 'Current level', target: 'Target',       titlePh: 'e.g. Crosshair placement', curPh: 'e.g. 35% HS rate', tarPh: 'e.g. 60% HS rate' },
+    custom: { title: 'Goal',             current: 'Starting point', target: 'Target',      titlePh: 'e.g. Watch 20 pro VODs',   curPh: 'Optional',         tarPh: 'Optional' },
+  }[type];
+
+  const isRankType = type === 'rank';
+  document.getElementById('goal-title-label').textContent = labels.title;
+  document.getElementById('goal-title').placeholder = labels.titlePh;
+  document.getElementById('goal-current-target-row').style.display = isRankType ? '' : 'none';
+  document.getElementById('goal-current-rank').style.display = isRankType ? '' : 'none';
+  document.getElementById('goal-target-rank').style.display = isRankType ? '' : 'none';
+  document.getElementById('goal-rr-fields').style.display = isRankType ? '' : 'none';
+  const notesEl = document.getElementById('goal-notes');
+  const notesLabel = document.querySelector('#goal-notes-field label');
+  if (!isRankType) {
+    if (notesLabel) notesLabel.innerHTML = 'Tell the AI what you want to work on <span class="goal-form-optional">(optional)</span>';
+    if (notesEl) notesEl.placeholder = 'e.g. my crosshair is always too low when I peek, I want to fix that';
+  } else {
+    if (notesLabel) notesLabel.innerHTML = 'Notes <span class="goal-form-optional">(optional)</span>';
+    if (notesEl) notesEl.placeholder = 'Anything extra for the AI to consider';
+  }
+  document.getElementById('goal-notes-field').style.display = '';
+}
+
+async function saveGoal() {
+  const title = document.getElementById('goal-title').value.trim();
+  const errEl = document.getElementById('goal-modal-error');
+  if (!title) { errEl.textContent = 'Goal title is required.'; return; }
+
+  const btn = document.getElementById('goal-save-btn');
+  btn.textContent = 'Saving...'; btn.disabled = true;
+
+  const sb = initSupabase();
+  const payload = {
+    user_id: currentUser.id,
+    type: goalType,
+    title,
+    current_value: (goalType === 'rank' ? document.getElementById('goal-current-rank').value : document.getElementById('goal-current-text').value.trim()) || null,
+    target: (goalType === 'rank' ? document.getElementById('goal-target-rank').value : document.getElementById('goal-target-text').value.trim()) || null,
+    deadline: document.getElementById('goal-deadline').value || null,
+    notes: document.getElementById('goal-notes').value.trim() || null,
+    current_rr: parseInt(document.getElementById('goal-current-rr').value) || 0,
+  };
+
+  let error;
+  if (editingGoalId) {
+    const { error: e } = await sb.from('goals').update(payload).eq('id', editingGoalId).eq('user_id', currentUser.id);
+    error = e;
+    if (!e) goals = goals.map(g => g.id === editingGoalId ? { ...g, ...payload } : g);
+  } else {
+    const { data, error: e } = await sb.from('goals').insert({ ...payload, wins: 0, losses: 0, win_rr: [], loss_rr: [], dodge_rr: [] }).select().single();
+    error = e;
+    if (!e && data) goals.push(data);
+  }
+
+  btn.textContent = 'Save Goal'; btn.disabled = false;
+  if (error) { errEl.textContent = error.message; return; }
+
+  closeGoalModal();
+  renderGoals();
+  renderRoutine();
+}
+
+async function deleteGoal(id) {
+  if (!confirm('Delete this goal?')) return;
+  const sb = initSupabase();
+  await sb.from('goals').delete().eq('id', id).eq('user_id', currentUser.id);
+  goals = goals.filter(g => g.id !== id);
+  renderGoals();
+  renderRoutine();
+}
+
+// ── W/L tracking ─────────────────────────────────────────────
+let _pendingRR = null;
+
+function startLogRR(id, type) {
+  _pendingRR = { id, type };
+  const btns = document.getElementById(`wl-btns-${id}`);
+  if (!btns) return;
+  const label = type === 'win' ? 'RR gained' : type === 'dodge' ? 'RR lost (dodge)' : 'RR lost';
+  const ph = type === 'win' ? '22' : type === 'dodge' ? '3' : '18';
+  btns.innerHTML = `<div class="goal-wl-rr-row">
+    <span class="goal-wl-rr-label">${label}:</span>
+    <input type="number" class="goal-wl-rr-input" id="rr-inp-${id}" min="1" max="100" placeholder="${ph}" autofocus>
+    <button class="goal-wl-rr-ok" onclick="confirmRR('${id}')">✓</button>
+    <button class="goal-wl-rr-cancel" onclick="renderGoals()">✕</button>
+  </div>`;
+  const inp = document.getElementById(`rr-inp-${id}`);
+  inp?.focus();
+  inp?.addEventListener('keydown', e => {
+    if (e.key === 'Enter') confirmRR(id);
+    if (e.key === 'Escape') { _pendingRR = null; renderGoals(); }
+  });
+}
+
+async function confirmRR(id) {
+  if (!_pendingRR || _pendingRR.id !== id) return;
+  const rr = parseInt(document.getElementById(`rr-inp-${id}`)?.value);
+  if (!rr || rr < 1 || rr > 100) { document.getElementById(`rr-inp-${id}`)?.focus(); return; }
+  const { type } = _pendingRR;
+  _pendingRR = null;
+
+  const sb = initSupabase();
+  const goal = goals.find(g => g.id === id);
+  if (!goal) return;
+
+  if (type === 'win') {
+    goal.win_rr = [...(Array.isArray(goal.win_rr) ? goal.win_rr : []), rr];
+    goal.wins = goal.win_rr.length;
+  } else if (type === 'dodge') {
+    // Dodges cost RR but don't count as a game — leave wins/losses untouched
+    goal.dodge_rr = [...(Array.isArray(goal.dodge_rr) ? goal.dodge_rr : []), rr];
+  } else {
+    goal.loss_rr = [...(Array.isArray(goal.loss_rr) ? goal.loss_rr : []), rr];
+    goal.losses = goal.loss_rr.length;
+  }
+
+  const update = { win_rr: goal.win_rr, wins: goal.wins, loss_rr: goal.loss_rr, losses: goal.losses, dodge_rr: goal.dodge_rr };
+  await ensureSession(sb);
+  const { error: rrErr } = await sb.from('goals').update(update).eq('id', id).eq('user_id', currentUser.id);
+  if (rrErr) console.error('RR save failed:', rrErr.message);
+  renderGoals();
+}
+
+// ── Save helper ───────────────────────────────────────────────
+async function saveRoutine() {
+  const sb = initSupabase();
+  await ensureSession(sb);
+  const { error } = await sb.from('routine').upsert({
+    user_id: currentUser.id,
+    tasks: routineData.tasks,
+    generated_at: routineData.generated_at,
+    time_per_day: routineData.time_per_day,
+    daily_generate_date: routineData.daily_generate_date,
+    daily_finetune_count: routineData.daily_finetune_count,
+    daily_finetune_date: routineData.daily_finetune_date,
+  }, { onConflict: 'user_id' });
+  if (error) console.error('routine save failed:', error.message);
+  return error;
+}
+
+// Routine mutations the client can't do directly (routine table is service-key
+// only under RLS) — clearing and time-per-day go through /api/save-routine.
+async function postRoutineUpdate(payload) {
+  try {
+    const session = (await initSupabase().auth.getSession()).data.session;
+    const res = await fetch('/api/save-routine', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+      },
+      body: JSON.stringify(payload),
+    });
+    if (res.status === 401) { openAuth(); return 'unauthorized'; }
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      return data.error || 'save failed';
+    }
+    return null;
+  } catch (e) {
+    return e.message || 'network error';
+  }
+}
+
+// ── Clear routine ─────────────────────────────────────────────
+async function clearRoutine() {
+  if (!confirm('Clear your gameplan?')) return;
+  routineData.tasks = null;
+  routineData.generated_at = null;
+  renderRoutine();
+  const err = await postRoutineUpdate({ clear: true });
+  if (err) console.error('clear routine failed:', err);
+}
+
+// ── Routine generation ────────────────────────────────────────
+async function generateRoutine() {
+  const btn = document.getElementById('routine-regen-btn');
+  const el = document.getElementById('routine-tasks-container');
+  if (btn) { btn.textContent = 'Generating...'; btn.disabled = true; }
+  el.innerHTML = `<div class="routine-generating">
+    <div class="routine-gen-dots"><span></span><span></span><span></span></div>
+    <div>Building your gameplan...</div>
+  </div>`;
+
+  try {
+    const session = (await initSupabase().auth.getSession()).data.session;
+    const res = await fetch('/api/generate-routine', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+      },
+      body: JSON.stringify({
+        goals,
+        timePerDay: routineData.time_per_day || 60,
+        routineDetails: prefsToText(routinePrefs),
+        wakeTime: routinePrefs.wake_time || '',
+      }),
+    });
+
+    if (res.status === 401) { openAuth(); return; }
+    if (res.status === 429) {
+      renderRoutine();
+      const el = document.getElementById('routine-tasks-container');
+      const notice = document.createElement('div');
+      notice.className = 'routine-limit-notice';
+      notice.textContent = 'Out of generations for today — resets at midnight.';
+      el?.prepend(notice);
+      return;
+    }
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to generate');
+
+    routineData.tasks = data.routine;
+    routineData.generated_at = data.generated_at || new Date().toISOString();
+    if (data.daily_generate_date) routineData.daily_generate_date = data.daily_generate_date;
+    if (data.daily_finetune_count !== undefined) routineData.daily_finetune_count = data.daily_finetune_count;
+    if (data.daily_finetune_date) routineData.daily_finetune_date = data.daily_finetune_date;
+    completedToday.clear();
+    saveCompletion();
+
+    if (data.save_error) {
+      console.warn('Server save failed, attempting client backup:', data.save_error);
+      await saveRoutine();
+    }
+
+    renderRoutine();
+  } catch (e) {
+    el.innerHTML = `<div class="routine-error">${esc(e.message || 'Something went wrong. Try again.')}</div>`;
+    if (btn) { btn.textContent = '↺ Regenerate'; btn.disabled = false; }
+  }
+}
+
+// ── Fine tune ─────────────────────────────────────────────────
+function fineTuneUsageLabel() {
+  if (isAdmin()) return '∞ fine tunes';
+  const today = new Date().toISOString().slice(0, 10);
+  const sameDay = routineData.daily_finetune_date === today;
+  const used = sameDay ? (routineData.daily_finetune_count || 0) : 0;
+  const left = 3 - used;
+  if (left <= 0) return 'Fine tune limit reached for today';
+  return `${left}/3 fine tunes remaining today`;
+}
+
+async function fineTuneRoutine() {
+  const input = document.getElementById('finetune-input');
+  const instruction = input?.value?.trim();
+  if (!instruction) { input?.focus(); return; }
+
+  const routine = routineData.tasks && !Array.isArray(routineData.tasks) ? routineData.tasks : null;
+  if (!routine?.schedule?.length) { alert('Generate a gameplan first.'); return; }
+
+  const today = new Date().toISOString().slice(0, 10);
+  const sameDay = routineData.daily_finetune_date === today;
+  const used = sameDay ? (routineData.daily_finetune_count || 0) : 0;
+  if (!isAdmin() && used >= 3) { alert('Fine tune limit reached for today (3/3).'); return; }
+
+  const btn = document.getElementById('finetune-btn');
+  btn.textContent = 'Tuning...'; btn.disabled = true;
+
+  try {
+    const session = (await initSupabase().auth.getSession()).data.session;
+    const res = await fetch('/api/generate-routine', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+      },
+      body: JSON.stringify({
+        goals,
+        timePerDay: routineData.time_per_day || 60,
+        routineDetails: prefsToText(routinePrefs),
+        wakeTime: routinePrefs.wake_time || '',
+        fineTune: instruction,
+        currentRoutine: routine,
+      }),
+    });
+
+    if (res.status === 401) { openAuth(); return; }
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to fine tune');
+
+    routineData.tasks = data.routine;
+    routineData.generated_at = data.generated_at || new Date().toISOString();
+    if (data.daily_finetune_count !== undefined) routineData.daily_finetune_count = data.daily_finetune_count;
+    if (data.daily_finetune_date) routineData.daily_finetune_date = data.daily_finetune_date;
+
+    if (data.save_error) {
+      console.warn('Server save failed, attempting client backup:', data.save_error);
+      await saveRoutine();
+    }
+
+    if (input) input.value = '';
+
+    renderRoutine();
+  } catch (e) {
+    const el = document.getElementById('routine-tasks-container');
+    if (el) el.innerHTML += `<div class="routine-error" style="margin-top:8px">${esc(e.message || 'Something went wrong.')}</div>`;
+  }
+
+  btn.textContent = 'Fine tune'; btn.disabled = false;
+}
+
+// ── Generate panel ────────────────────────────────────────────
+async function regenWithSamePrefs() {
+  if (!goals.length) { alert('Add a goal first.'); return; }
+  await generateRoutine();
+}
+
+function openGeneratePanel() {
+  if (!goals.length) { alert('Add a goal first.'); return; }
+  document.querySelectorAll('#prefs-intensity .prefs-opt').forEach(b =>
+    b.classList.toggle('active', b.dataset.val === (routinePrefs.intensity || 'moderate'))
+  );
+  document.getElementById('prefs-wake-time').value = routinePrefs.wake_time || '';
+  document.getElementById('prefs-notes').value = routinePrefs.notes || '';
+  document.getElementById('gp-gen-panel').style.display = '';
+  document.getElementById('routine-regen-btn').style.display = 'none';
+  document.getElementById('routine-new-btn').style.display = 'none';
+}
+
+function closeGeneratePanel() {
+  document.getElementById('gp-gen-panel').style.display = 'none';
+  document.getElementById('routine-regen-btn').style.display = '';
+  document.getElementById('routine-new-btn').style.display = '';
+}
+
+async function confirmGenerate() {
+  routinePrefs = {
+    intensity: document.querySelector('#prefs-intensity .prefs-opt.active')?.dataset.val || 'moderate',
+    wake_time: document.getElementById('prefs-wake-time')?.value.trim() || '',
+    notes: document.getElementById('prefs-notes')?.value.trim() || '',
+  };
+  routineData.routine_prefs = routinePrefs;
+  closeGeneratePanel();
+  await generateRoutine();
+}
+
+function setPrefIntensity(btn) {
+  document.querySelectorAll('#prefs-intensity .prefs-opt').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function prefsToText(prefs) {
+  if (!prefs) return '';
+  const parts = [];
+  const iMap = { light:'light and easy — keep it relaxed', moderate:'moderate', intense:'intense and challenging — push hard', grind:'maximum grind mode, brutal and demanding' };
+  if (prefs.intensity && iMap[prefs.intensity]) parts.push(`Intensity: ${iMap[prefs.intensity]}`);
+  if (prefs.notes) parts.push(prefs.notes);
+  return parts.join('. ');
+}
+
+// ── Time per day modal ────────────────────────────────────────
+function editTimeModal() {
+  document.getElementById('time-input').value = routineData.time_per_day || 60;
+  document.getElementById('time-modal').classList.add('open');
+}
+
+function closeTimeModal() {
+  document.getElementById('time-modal').classList.remove('open');
+}
+
+function closeTimeModalClick(e) {
+  if (e.target === document.getElementById('time-modal')) closeTimeModal();
+}
+
+async function saveTimePerDay() {
+  const val = parseInt(document.getElementById('time-input').value, 10);
+  if (!val || val < 1) { alert('Enter at least 1 minute.'); return; }
+  routineData.time_per_day = val;
+  closeTimeModal();
+  renderRoutine();
+  const err = await postRoutineUpdate({ timePerDay: val });
+  if (err) console.error('time per day save failed:', err);
+}
+
+// ── Helpers ───────────────────────────────────────────────────
+function esc(str) {
+  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function timeAgo(iso) {
+  const diff = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  return `${Math.floor(hrs / 24)}d ago`;
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { closeGoalModal(); closeTimeModal(); }
+});
+</script>

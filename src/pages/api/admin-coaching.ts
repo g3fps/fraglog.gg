@@ -1,6 +1,7 @@
 /// <reference types="astro/client" />
 import type { APIRoute } from 'astro';
 import { createClient } from '@supabase/supabase-js';
+import { isAdminEmail } from '../../lib/admin.js';
 
 export const DELETE: APIRoute = async ({ request }) => {
   const authHeader = request.headers.get('authorization');
@@ -16,8 +17,8 @@ export const DELETE: APIRoute = async ({ request }) => {
   }
 
   const { data: { user } } = await sb.auth.getUser(accessToken);
-  if (!user) {
-    return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
+  if (!isAdminEmail(user?.email)) {
+    return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403 });
   }
 
   const url = new URL(request.url);
@@ -48,8 +49,8 @@ export const GET: APIRoute = async ({ request }) => {
   }
 
   const { data: { user } } = await sb.auth.getUser(accessToken);
-  if (!user) {
-    return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
+  if (!isAdminEmail(user?.email)) {
+    return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403 });
   }
 
   const url = new URL(request.url);
