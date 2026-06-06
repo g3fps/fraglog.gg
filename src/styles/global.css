@@ -635,6 +635,7 @@ footer { border-top: 1px solid var(--border); padding: 3rem 2.5rem; margin-top: 
 .vm-ai-text p { margin-bottom: 8px; }
 .vm-coach-section-header { font-family: 'Barlow', sans-serif; font-size: 18px; font-weight: 800; color: var(--red); margin-top: 16px; margin-bottom: 6px; padding-bottom: 4px; border-bottom: 1px solid rgba(255,70,85,0.2); }
 .vm-notes-label { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+.vm-notes-hint { font-family: 'Barlow', sans-serif; font-size: 12px; line-height: 1.5; color: var(--muted); background: rgba(255,70,85,0.06); border: 1px solid rgba(255,70,85,0.15); border-radius: 6px; padding: 8px 10px; margin-bottom: 10px; flex-shrink: 0; }
 .vm-notes-textarea {
   width: 100%; background: var(--darker); border: 1px solid var(--border); color: var(--text);
   font-family: 'Barlow', sans-serif; font-size: 14px; padding: 14px; border-radius: 4px;

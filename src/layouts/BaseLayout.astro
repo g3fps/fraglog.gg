@@ -617,6 +617,8 @@ const TURNSTILE_SITE_KEY = import.meta.env.TURNSTILE_SITE_KEY || '';
       html += `<button onclick="switchToCoachMode()" style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;background:rgba(255,70,85,0.1);border:1px solid rgba(255,70,85,0.3);color:var(--red);padding:6px 12px;border-radius:6px;cursor:pointer;align-self:flex-start;flex-shrink:0">View coaching →</button>`;
     }
 
+    html += `<div class="vm-notes-hint">Your notes coach the same regardless of format — use whatever feels natural.</div>`;
+
     // Mobile tab bar (hidden on desktop via CSS)
     html += `<div class="vm-notes-tab-bar">
       <button class="active" onclick="vmSwitchTab('general', this)">General</button>
