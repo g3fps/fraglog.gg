@@ -666,7 +666,6 @@ footer { border-top: 1px solid var(--border); padding: 3rem 2.5rem; margin-top: 
 .vm-round-block { display: grid; grid-template-columns: 32px 130px 1fr; border-bottom: 1px solid rgba(255,255,255,0.04); }
 .vm-round-block:last-child { border-bottom: none; }
 .vm-round-num { display: flex; align-items: center; justify-content: center; font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); border-right: 1px solid rgba(255,255,255,0.04); flex-shrink: 0; position: relative; }
-.vm-round-num.has-notes::after { content: ''; position: absolute; top: 6px; right: 5px; width: 4px; height: 4px; border-radius: 50%; background: var(--red); opacity: 0.7; }
 .vm-round-select { background: none; border: none; border-right: 1px solid rgba(255,255,255,0.04); color: var(--muted); font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.5px; padding: 6px 8px; outline: none; width: 100%; cursor: pointer; appearance: none; -webkit-appearance: none; transition: background 0.1s; }
 .vm-round-select:focus { background: rgba(255,255,255,0.03); }
 .vm-round-select option { background: #1a1a1f; color: var(--text); }
