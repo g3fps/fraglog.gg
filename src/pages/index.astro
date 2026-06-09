@@ -20,6 +20,7 @@ if (accessToken && refreshToken) {
 }
 
 const totalVods = MAPS.reduce((sum, map) => sum + vodCount(map.id), 0);
+const displayVods = Math.floor(totalVods / 100) * 100;
 
 // Recently added — last 8 VODs by date
 const recentVods = getAllVods()
@@ -59,7 +60,7 @@ const jsonLd = JSON.stringify({
 ---
 <BaseLayout
   title="fraglog.gg — Valorant VOD Library"
-  description={`Browse ${totalVods}+ Radiant and pro player Valorant VODs filtered by map and agent. Study the best players in the world with full POV gameplay footage on fraglog.gg.`}
+  description={`Browse ${displayVods}+ Radiant and pro player Valorant VODs filtered by map and agent. Study the best players in the world with full POV gameplay footage on fraglog.gg.`}
   canonical="https://fraglog.gg"
   jsonLd={jsonLd}
   preloadImage="/hero-banner.jpg"
@@ -71,7 +72,7 @@ const jsonLd = JSON.stringify({
     <div class="home-hero-inner">
       <div class="home-hero-eyebrow">Valorant VOD Library</div>
       <h1 class="home-hero-title"><span class="ht-part">Study the Best.</span> <span class="ht-part ht-accent">Beat the Rest.</span></h1>
-      <p class="home-hero-sub">{totalVods.toLocaleString()}+ Radiant &amp; pro player VODs — filtered by map and agent.</p>
+      <p class="home-hero-sub">{displayVods.toLocaleString()}+ Radiant &amp; pro player VODs — filtered by map and agent.</p>
       <div class="home-search-wrap">
         <div class="home-search-icon">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
