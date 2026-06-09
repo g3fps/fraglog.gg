@@ -98,11 +98,14 @@ const TURNSTILE_SITE_KEY = import.meta.env.TURNSTILE_SITE_KEY || '';
         </div>
         <div class="video-modal-info">
           <div class="video-modal-title" id="vm-title"></div>
-          <div class="video-modal-meta">
-            <a class="video-modal-player" id="vm-player" href=""></a>
+          <div class="vm-info-row">
+            <div class="vm-info-left">
+              <div class="vm-tags" id="vm-tags"></div>
+              <a class="video-modal-player" id="vm-player" href=""></a>
+              <div class="video-modal-actions" id="vm-actions"></div>
+            </div>
             <span class="video-modal-stat" id="vm-date" style="display:none"></span>
           </div>
-          <div class="video-modal-actions" id="vm-actions"></div>
         </div>
       </div>
 
@@ -343,7 +346,18 @@ const TURNSTILE_SITE_KEY = import.meta.env.TURNSTILE_SITE_KEY || '';
     todayCoachingUsed = usage?.coaching_count ?? 0;
     todayFollowupUsed = usage?.followup_count ?? 0;
     updateCoachUsageDisplay();
+    applyFavButtons();
   }
+
+  function applyFavButtons() {
+    document.querySelectorAll('[data-fav-btn]').forEach(btn => {
+      const fav = isFav(btn.dataset.favBtn);
+      btn.textContent = fav ? '♥' : '♡';
+      btn.classList.toggle('fav', fav);
+      btn.classList.toggle('active', fav);
+    });
+  }
+  window.applyFavButtons = applyFavButtons;
 
   async function renderNav() {
     const nr = document.getElementById("nav-right");
@@ -465,18 +479,17 @@ const TURNSTILE_SITE_KEY = import.meta.env.TURNSTILE_SITE_KEY || '';
   function getUserNote(videoId) { return userNotes[videoId] || ""; }
   function isWatched(videoId) { return userWatched.includes(videoId); }
 
-  async function toggleFav(videoId, btn) {
+  async function toggleFav(videoId) {
     if (!currentUser) { openAuth(); return; }
     const sb = initSupabase();
     if (isFav(videoId)) {
       userFavorites = userFavorites.filter(id => id !== videoId);
-      btn.classList.remove("active"); btn.textContent = "♡ Save";
       await sb.from("favorites").delete().eq("user_id", currentUser.id).eq("video_id", videoId);
     } else {
       userFavorites.push(videoId);
-      btn.classList.add("active"); btn.textContent = "♥ Saved";
       await sb.from("favorites").insert({ user_id: currentUser.id, video_id: videoId });
     }
+    applyFavButtons();
     if (typeof onFavChange === 'function') onFavChange();
   }
 
@@ -526,6 +539,22 @@ const TURNSTILE_SITE_KEY = import.meta.env.TURNSTILE_SITE_KEY || '';
     document.getElementById('vm-fallback-link').href = `https://youtube.com/watch?v=${videoId}`;
 
     document.getElementById('vm-title').textContent = title;
+
+    const tagsEl = document.getElementById('vm-tags');
+    const mapId = opts.mapId || opts.map || null;
+    const agentId = opts.agentId || opts.agent || null;
+    const mapName = opts.mapName || null;
+    const agentName = opts.agentName || null;
+    if (mapId || agentId) {
+      tagsEl.innerHTML =
+        (mapId ? `<a class="video-map-tag" href="/${mapId}">${mapName || mapId}</a>` : '') +
+        (agentId ? `<a class="video-agent-tag" href="/agent/${agentId}">${agentName || agentId}</a>` : '');
+      tagsEl.style.display = '';
+    } else {
+      tagsEl.innerHTML = '';
+      tagsEl.style.display = 'none';
+    }
+
     const playerEl = document.getElementById('vm-player');
     playerEl.textContent = player;
     playerEl.href = opts.playerHref || '';
@@ -543,17 +572,8 @@ const TURNSTILE_SITE_KEY = import.meta.env.TURNSTILE_SITE_KEY || '';
 
   function renderVmActions(videoId) {
     const actions = document.getElementById('vm-actions');
-    const ytHref = `https://youtube.com/watch?v=${videoId}`;
-    if (currentUser) {
-      const favText = isFav(videoId) ? "♥ Saved" : "♡ Save";
-      const favClass = isFav(videoId) ? "active" : "";
-      actions.innerHTML = `
-        <button class="vm-action-btn ${favClass}" id="vm-fav-btn" onclick="toggleFav('${videoId}', this)">${favText}</button>
-        <a class="vm-yt-link" href="${ytHref}" target="_blank" rel="noopener">↗ YouTube</a>
-      `;
-    } else {
-      actions.innerHTML = `<a class="vm-yt-link" href="${ytHref}" target="_blank" rel="noopener">↗ YouTube</a>`;
-    }
+    const fav = isFav(videoId);
+    actions.innerHTML = `<button class="vm-fav-btn${fav ? ' active' : ''}" data-fav-btn="${videoId}">${fav ? '♥' : '♡'}</button>`;
   }
 
   function renderVmNotes(videoId, adminNote, mode) {
@@ -1106,6 +1126,12 @@ const TURNSTILE_SITE_KEY = import.meta.env.TURNSTILE_SITE_KEY || '';
 
   document.addEventListener("keydown", e => {
     if (e.key === "Escape") { closeVideoModalDirect(); closeAuthModalDirect(); }
+  });
+
+  document.addEventListener("click", e => {
+    const btn = e.target.closest('[data-fav-btn]');
+    if (!btn) return;
+    toggleFav(btn.dataset.favBtn);
   });
   </script>
   <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer is:inline></script>

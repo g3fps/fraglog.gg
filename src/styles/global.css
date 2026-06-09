@@ -259,6 +259,16 @@ body::before {
   border-radius: 8px;
 }
 .video-card:hover .play-overlay { opacity: 1; }
+.vc-actions { position: absolute; top: 7px; right: 7px; display: flex; gap: 5px; opacity: 0; transition: opacity 0.2s; z-index: 2; }
+.video-card:hover .vc-actions { opacity: 1; }
+.vc-action-btn { width: 30px; height: 30px; border-radius: 50%; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; background: rgba(8,12,18,0.65); backdrop-filter: blur(6px); color: rgba(255,255,255,0.7); transition: background 0.15s, color 0.15s; }
+.vc-action-btn:hover { background: rgba(8,12,18,0.9); color: #fff; }
+.vc-action-btn.fav { color: var(--red); }
+.vc-action-btn.fav:hover { color: #fff; }
+.vm-fav-btn { cursor: pointer; background: none; border: none; font-size: 22px; color: var(--muted); transition: color 0.15s, transform 0.1s; line-height: 1; padding: 0; }
+.vm-fav-btn:hover { color: var(--text); transform: scale(1.15); }
+.vm-fav-btn.active { color: var(--red); }
+.vm-fav-btn.active:hover { color: #ff6b77; }
 .play-icon {
   width: 48px; height: 48px;
   background: rgba(255,255,255,0.15);
@@ -327,14 +337,16 @@ body::before {
   font-family: 'Barlow Condensed', sans-serif; font-size: 10px; font-weight: 600;
   letter-spacing: 0.5px; text-transform: uppercase;
   padding: 1px 6px; background: var(--surface2); color: var(--muted);
-  border: none; border-radius: 2px;
+  border: none; border-radius: 2px; text-decoration: none;
 }
+.video-map-tag:hover { color: var(--text); }
 .video-agent-tag {
   font-family: 'Barlow Condensed', sans-serif; font-size: 10px; font-weight: 600;
   letter-spacing: 0.5px; text-transform: uppercase;
   padding: 1px 6px; background: rgba(255,70,85,0.12); color: var(--red);
-  border: none; border-radius: 2px;
+  border: none; border-radius: 2px; text-decoration: none;
 }
+.video-agent-tag:hover { opacity: 0.8; }
 
 /* ── AUTH ────────────────────────────────────────────────── */
 .nav-right { display: flex; align-items: center; gap: 10px; }
@@ -590,12 +602,15 @@ footer { border-top: 1px solid var(--border); padding: 3rem 2.5rem; margin-top: 
   font-family: 'DM Mono', monospace; font-size: 12px; text-align: center; padding: 2rem;
 }
 .video-modal-info { padding: 14px 16px; border-top: 1px solid var(--border); background: var(--darker); }
-.video-modal-title { font-family: 'Barlow', sans-serif; font-size: 14px; font-weight: 500; color: var(--text); margin-bottom: 6px; line-height: 1.4; }
-.video-modal-meta { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-.video-modal-player { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--red); text-decoration: none; }
-.video-modal-player:hover { text-decoration: underline; }
+.video-modal-title { font-family: 'Barlow', sans-serif; font-size: 16px; font-weight: 600; color: var(--text); margin-bottom: 6px; line-height: 1.3; }
+.vm-info-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.vm-info-left { display: flex; align-items: center; gap: 8px; flex: 1; flex-wrap: wrap; min-width: 0; }
+.vm-tags { display: flex; gap: 4px; flex-shrink: 0; }
+.video-modal-player { font-family: 'Barlow Condensed', sans-serif; font-size: 10px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; padding: 4px 10px; background: var(--surface2); color: var(--muted); border-radius: 4px; text-decoration: none; border: 1px solid var(--border); }
+.vm-info-left .video-map-tag, .vm-info-left .video-agent-tag { font-size: 10px; padding: 4px 10px; border-radius: 4px; letter-spacing: 1px; }
+.video-modal-player:hover { color: var(--text); }
 .video-modal-stat { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); }
-.video-modal-actions { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+.video-modal-actions { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
 .vm-action-btn {
   font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 1px; text-transform: uppercase;
   padding: 4px 10px; background: none; border: 1px solid var(--border); color: var(--muted);

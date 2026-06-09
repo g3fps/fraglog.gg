@@ -2,7 +2,7 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Nav from '../../components/Nav.astro';
 import Footer from '../../components/Footer.astro';
-import { getAllVods, formatDate } from '../../data/data.js';
+import { getAllVods, AGENTS, formatDate } from '../../data/data.js';
 import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
@@ -19,28 +19,29 @@ if (accessToken && refreshToken) {
   user = data.session?.user ?? null;
 }
 
-const { player } = Astro.params;
-const allVods = getAllVods();
-const playerVods = allVods.filter(v => v.player.toLowerCase() === (player ?? '').toLowerCase());
-if (!playerVods.length) return Astro.redirect('/');
+const { agent } = Astro.params;
+const agentData = (AGENTS as any[]).find((a: any) => a.id === agent);
+if (!agentData) return Astro.redirect('/');
 
-const displayName = playerVods[0].player;
-const title = `${displayName} VODs — fraglog.gg`;
-const description = `Watch all ${playerVods.length} ${displayName} VODs on FragLog.gg`;
+const agentVods = getAllVods().filter((v: any) => v.agentId === agent);
+if (!agentVods.length) return Astro.redirect('/');
+
+const title = `${agentData.name} VODs — fraglog.gg`;
+const description = `Watch all ${agentVods.length} ${agentData.name} VODs on FragLog.gg — filtered by map.`;
 ---
 <BaseLayout title={title} description={description} user={user}>
-  <Nav crumbs={[{ label: 'ALL MAPS', href: '/' }, { label: displayName.toUpperCase() }]} user={user} />
+  <Nav crumbs={[{ label: 'ALL MAPS', href: '/' }, { label: agentData.name.toUpperCase() }]} user={user} />
   <div class="page-content">
     <div class="videos-header">
       <div>
-        <div class="hero-eyebrow">Player Profile</div>
-        <div class="videos-title">{displayName}</div>
-        <div class="hero-sub">{playerVods.length} VOD{playerVods.length !== 1 ? 's' : ''} in the library</div>
+        <div class="hero-eyebrow">{agentData.role}</div>
+        <div class="videos-title">{agentData.name}</div>
+        <div class="hero-sub">{agentVods.length} VOD{agentVods.length !== 1 ? 's' : ''} across all maps</div>
       </div>
     </div>
 
     <div class="video-grid" id="video-grid">
-      {playerVods.map(v => (
+      {agentVods.map((v: any) => (
         <div class="video-card"
           data-vid={v.id}
           data-title={v.title}
@@ -64,11 +65,12 @@ const description = `Watch all ${playerVods.length} ${displayName} VODs on FragL
           </div>
           <div class="video-info">
             <div class="video-tag-row">
-              <span class="video-map-tag">{v.mapName}</span>
-              <span class="video-agent-tag">{v.agentName}</span>
+              <a class="video-map-tag" href={`/${v.mapId}`}>{v.mapName}</a>
+              <a class="video-agent-tag" href={`/${v.mapId}/${v.agentId}`}>{v.agentName}</a>
             </div>
             <div class="video-title">{v.title}</div>
             <div class="video-meta-row">
+              <span class="video-player">{v.player}</span>
               {v.date && <span class="video-date">{formatDate(v.date)}</span>}
             </div>
           </div>

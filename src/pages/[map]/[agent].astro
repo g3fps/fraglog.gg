@@ -120,6 +120,8 @@ const jsonLd = vods.length > 0 ? JSON.stringify({
             data-note={v.note || ''}
             data-agent={agentId}
             data-map={mapId}
+            data-map-name={mapData.name}
+            data-agent-name={agentData.name}
             data-player-href={`/player/${v.player.toLowerCase().replace(/\//g,'').replace(/ /g,'-')}`}
             tabindex="0"
             role="button"
@@ -131,23 +133,15 @@ const jsonLd = vods.length > 0 ? JSON.stringify({
               <div class="play-overlay">
                 <div class="play-icon"><div class="play-tri"></div></div>
               </div>
+              <div class="vc-actions">
+                <button class="vc-action-btn" data-fav-btn={v.id} title="Save to favorites">♡</button>
+              </div>
             </div>
             <div class="video-info">
               <div class="video-title">{v.title}</div>
               <div class="video-meta-row">
                 <span class="video-player">{v.player}</span>
                 {v.date && <span class="video-date">{formatDate(v.date)}</span>}
-              </div>
-              <div class="notes-section"
-                data-vid={v.id}
-                data-title={v.title}
-                data-player={v.player}
-                data-note={v.note || ''}
-                data-agent={agentId}
-                data-map={mapId}
-                data-player-href={`/player/${v.player.toLowerCase().replace(/\//g,'').replace(/ /g,'-')}`}
-              >
-                <span class="note-login-prompt"><span class="note-auth-link" onclick="openAuth()">Sign in</span> to save &amp; add notes</span>
               </div>
             </div>
           </div>
@@ -166,8 +160,10 @@ function playCard(card) {
     date: card.dataset.date || '',
     adminNote: card.dataset.note || '',
     playerHref: card.dataset.playerHref || '',
-    agent: card.dataset.agent || '',
-    map: card.dataset.map || ''
+    agentId: card.dataset.agent || '',
+    mapId: card.dataset.map || '',
+    agentName: card.dataset.agentName || '',
+    mapName: card.dataset.mapName || ''
   });
 }
 
@@ -238,36 +234,8 @@ document.addEventListener('keydown', function(e) {
   apply();
 })();
 
-function openVodNotes(el) {
-  const ns = el.closest('.notes-section');
-  const card = el.closest('.video-card');
-  openVideo(ns.dataset.vid, ns.dataset.title, ns.dataset.player, {
-    adminNote: ns.dataset.note || '',
-    playerHref: ns.dataset.playerHref || '',
-    agent: ns.dataset.agent || '',
-    map: ns.dataset.map || '',
-    date: card?.dataset.date || ''
-  });
-}
+function onFavChange() {}
 
-function updateActions() {
-  if (!currentUser) return;
-  document.querySelectorAll('#video-grid .notes-section').forEach(el => {
-    const vid = el.dataset.vid;
-    const title = (el.dataset.title || '').replace(/'/g, "\\'");
-    const player = el.dataset.player || '';
-    const noteText = getUserNote(vid) ? 'View notes' : 'Add notes';
-    const noteClass = getUserNote(vid) ? 'has-note' : '';
-    const favText = isFav(vid) ? '♥ Saved' : '♡ Save';
-    const favClass = isFav(vid) ? 'has-note' : '';
-    el.innerHTML = `
-      <button class="notes-btn ${noteClass}" onclick="openVodNotes(this)">📝 ${noteText}</button>
-      <button class="notes-btn ${favClass}" onclick="toggleFav('${vid}',this)">${favText}</button>`;
-  });
-}
-
-function onFavChange() { updateActions(); }
-
-window.__onAuthReady = updateActions;
-if (window.__authReady) updateActions();
+window.__onAuthReady = function() {};
+if (window.__authReady) {}
 </script>

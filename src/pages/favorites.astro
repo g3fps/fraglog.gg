@@ -140,16 +140,21 @@ function renderGrid(vods) {
       data-title="${v.title.replace(/"/g, '&quot;')}"
       data-player="${v.player}"
       data-note="${(v.note || '').replace(/"/g, '&quot;')}"
+      data-map-id="${v.mapId}" data-map-name="${v.mapName}"
+      data-agent-id="${v.agentId}" data-agent-name="${v.agentName}"
       style="cursor:pointer"
     >
       <div class="video-thumb">
         <img src="https://img.youtube.com/vi/${v.id}/mqdefault.jpg" alt="${v.title}" loading="lazy">
         <div class="play-overlay"><div class="play-icon"><div class="play-tri"></div></div></div>
+        <div class="vc-actions">
+          <button class="vc-action-btn fav" data-fav-btn="${v.id}" title="Remove from favorites">♥</button>
+        </div>
       </div>
       <div class="video-info">
         <div class="video-tag-row">
-          <span class="video-map-tag">${v.mapName}</span>
-          <span class="video-agent-tag">${v.agentName}</span>
+          <a class="video-map-tag" href="/${v.mapId}">${v.mapName}</a>
+          <a class="video-agent-tag" href="/agent/${v.agentId}">${v.agentName}</a>
         </div>
         <div class="video-title">${v.title}</div>
         <div class="video-meta-row">
@@ -161,10 +166,21 @@ function renderGrid(vods) {
   `).join("")}</div>`;
 
   container.onclick = e => {
+    const unfavBtn = e.target.closest('[data-fav-btn]');
+    if (unfavBtn) {
+      const card = unfavBtn.closest('.video-card');
+      if (card) card.remove();
+      toggleFav(unfavBtn.dataset.favBtn);
+      return;
+    }
     const card = e.target.closest('.video-card[data-vid]');
     if (!card || e.target.closest('button') || e.target.closest('a')) return;
     openVideo(card.dataset.vid, card.dataset.title, card.dataset.player, {
-      adminNote: card.dataset.note || ''
+      adminNote: card.dataset.note || '',
+      mapId: card.dataset.mapId || '',
+      mapName: card.dataset.mapName || '',
+      agentId: card.dataset.agentId || '',
+      agentName: card.dataset.agentName || ''
     });
   };
   if (window.applyWatchProgress) window.applyWatchProgress();

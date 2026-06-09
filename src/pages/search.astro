@@ -89,6 +89,7 @@ function renderVods(vods) {
       <div class="video-thumb" data-vid="${v.id}" style="cursor:pointer">
         <img src="https://img.youtube.com/vi/${v.id}/mqdefault.jpg" alt="${v.title}" loading="lazy" decoding="async">
         <div class="play-overlay"><div class="play-icon"><div class="play-tri"></div></div></div>
+        <div class="vc-actions"><button class="vc-action-btn" data-fav-btn="${v.id}" title="Save to favorites">♡</button></div>
       </div>
       <div class="video-info">
         <div class="video-tag-row">
@@ -100,9 +101,6 @@ function renderVods(vods) {
           <a class="video-player" href="/player/${v.player.toLowerCase().replace(/\//g,'').replace(/ /g,'-')}" onclick="event.stopPropagation()">${v.player}</a>
           ${v.date ? `<span class="video-date">${new Date(v.date).toLocaleDateString('en-US',{month:'short',year:'numeric'})}</span>` : ''}
         </div>
-        <div class="notes-section" data-vid="${v.id}" data-title="${v.title.replace(/"/g,'&quot;')}" data-player="${v.player}">
-          <span class="note-login-prompt"><span class="note-auth-link" onclick="openAuth()">Sign in</span> to save &amp; add notes</span>
-        </div>
       </div>
     </div>
   `).join("");
@@ -111,12 +109,13 @@ function renderVods(vods) {
     const el = e.target.closest("[data-vid]");
     if (el && !e.target.closest("button") && !e.target.closest("a")) {
       const vod = ALL_VODS.find(v => v.id === el.dataset.vid);
-      if (vod) openVideo(vod.id, vod.title, vod.player, { agent: vod.agentId, map: vod.mapId, date: vod.date });
+      if (vod) openVideo(vod.id, vod.title, vod.player, { mapId: vod.mapId, mapName: vod.mapName, agentId: vod.agentId, agentName: vod.agentName, date: vod.date });
     }
   };
 
-  updateSearchActions();
+
   if (window.applyWatchProgress) window.applyWatchProgress();
+  if (window.applyFavButtons) window.applyFavButtons();
 }
 
 function applyFilters() {
@@ -161,23 +160,7 @@ function applyFilters() {
   history.replaceState({}, "", qs ? "/search?" + qs : "/search");
 }
 
-function updateSearchActions() {
-  if (!currentUser) return;
-  document.querySelectorAll("#search-grid .notes-section").forEach(el => {
-    const vid = el.dataset.vid;
-    const title = el.dataset.title;
-    const player = el.dataset.player;
-    const noteText = getUserNote(vid) ? "View notes" : "Add notes";
-    const noteClass = getUserNote(vid) ? "has-note" : "";
-    const favText = isFav(vid) ? "♥ Saved" : "♡ Save";
-    const favClass = isFav(vid) ? "has-note" : "";
-    el.innerHTML = `
-      <button class="notes-btn ${noteClass}" onclick="openNotes('${vid}','${title.replace(/'/g,"\\'")}','${player}')">📝 ${noteText}</button>
-      <button class="notes-btn ${favClass}" onclick="toggleFav('${vid}',this)">${favText}</button>`;
-  });
-}
-
-function onAuthChange() { updateSearchActions(); }
+function onAuthChange() {}
 
 // Init — hydrate all controls from the URL, then wire them
 const params = new URLSearchParams(window.location.search);
@@ -195,6 +178,6 @@ if (input) input.addEventListener("input", applyFilters);
 [roleSel, mapSel, sortSel].forEach(sel => sel.addEventListener("change", applyFilters));
 applyFilters();
 
-window.__onAuthReady = updateSearchActions;
-if (window.__authReady) updateSearchActions();
+window.__onAuthReady = function() {};
+if (window.__authReady) {}
 </script>
