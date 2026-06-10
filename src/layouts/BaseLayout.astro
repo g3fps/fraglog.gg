@@ -129,7 +129,6 @@ const TURNSTILE_SITE_KEY = import.meta.env.TURNSTILE_SITE_KEY || '';
             </div>
             <span id="vm-coach-usage" style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted)"></span>
             <button class="vm-save-btn secondary" onclick="vmCoachMe()" id="vm-coach-btn">Coach me</button>
-            <button class="vm-save-btn primary" onclick="vmSaveNote()">Save</button>
           </div>
         </div>
       </div>
@@ -202,6 +201,68 @@ const TURNSTILE_SITE_KEY = import.meta.env.TURNSTILE_SITE_KEY || '';
       }
     });
   };
+
+  let _twitchEmbed = null;
+  let _twitchSdkLoaded = false;
+
+  function secondsToTwitchTime(s) {
+    if (!s) return '0h0m0s';
+    return `${Math.floor(s/3600)}h${Math.floor((s%3600)/60)}m${s%60}s`;
+  }
+
+  function _initTwitchEmbed(twitchId, container, startSeconds) {
+    _twitchEmbed = new Twitch.Embed(container, {
+      video: twitchId,
+      width: '100%',
+      height: '100%',
+      autoplay: true,
+      time: secondsToTwitchTime(startSeconds),
+      parent: [window.location.hostname],
+    });
+
+    _twitchEmbed.addEventListener(Twitch.Embed.VIDEO_READY, () => {
+      const player = _twitchEmbed.getPlayer();
+      clearInterval(ytTimestampSaveInterval);
+      ytTimestampSaveInterval = setInterval(() => {
+        if (!vmVideoId) return;
+        const t = Math.floor(player.getCurrentTime());
+        const dur = Math.floor(player.getDuration()) || 0;
+        if (t > 0) saveTimestamp(vmVideoId, t);
+        if (dur > 0) { userDurations[vmVideoId] = dur; applyWatchProgress(); }
+      }, 10000);
+    });
+
+    _twitchEmbed.addEventListener(Twitch.Embed.VIDEO_PAUSE, () => {
+      if (!vmVideoId) return;
+      try {
+        const t = Math.floor(_twitchEmbed.getPlayer().getCurrentTime());
+        if (t > 0) saveTimestamp(vmVideoId, t);
+      } catch(e) {}
+    });
+  }
+
+  function loadTwitchVideo(twitchId, startSeconds) {
+    document.getElementById('twitch-player')?.remove();
+    _twitchEmbed = null;
+    const ytEl = document.getElementById('yt-player');
+    ytEl.style.display = 'none';
+    document.getElementById('vm-fallback').style.display = 'none';
+    clearInterval(ytTimestampSaveInterval);
+
+    const container = document.createElement('div');
+    container.id = 'twitch-player';
+    container.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%';
+    ytEl.parentElement.appendChild(container);
+
+    if (_twitchSdkLoaded) {
+      _initTwitchEmbed(twitchId, container, startSeconds);
+    } else {
+      const tag = document.createElement('script');
+      tag.src = 'https://embed.twitch.tv/embed/v1.js';
+      tag.onload = () => { _twitchSdkLoaded = true; _initTwitchEmbed(twitchId, container, startSeconds); };
+      document.head.appendChild(tag);
+    }
+  }
 
   function loadYtVideo(videoId, startSeconds) {
     document.getElementById('yt-player').style.display = 'block';
@@ -525,6 +586,7 @@ const TURNSTILE_SITE_KEY = import.meta.env.TURNSTILE_SITE_KEY || '';
   let vmMap = null;
   let vmCurrentNotes = '';
   let vmAutosaveTimer = null;
+  let vmStartingSide = null;
 
   function openVideo(videoId, title, player, opts = {}) {
     vmVideoId = videoId;
@@ -534,9 +596,14 @@ const TURNSTILE_SITE_KEY = import.meta.env.TURNSTILE_SITE_KEY || '';
     vmMap = opts.map || null;
     vmCurrentNotes = getUserNote(videoId) || '';
 
-    const startSeconds = getTimestamp(videoId);
-    loadYtVideo(videoId, startSeconds);
-    document.getElementById('vm-fallback-link').href = `https://youtube.com/watch?v=${videoId}`;
+    const twitchId = videoId.startsWith('twitch:') ? videoId.slice(7) : null;
+    if (twitchId) {
+      loadTwitchVideo(twitchId, getTimestamp(videoId));
+      document.getElementById('vm-fallback-link').href = `https://www.twitch.tv/videos/${twitchId}`;
+    } else {
+      loadYtVideo(videoId, getTimestamp(videoId));
+      document.getElementById('vm-fallback-link').href = `https://youtube.com/watch?v=${videoId}`;
+    }
 
     document.getElementById('vm-title').textContent = title;
 
@@ -618,7 +685,9 @@ const TURNSTILE_SITE_KEY = import.meta.env.TURNSTILE_SITE_KEY || '';
         const parsed = JSON.parse(rawSaved);
         savedGeneral = parsed.general || '';
         savedRounds = parsed.rounds || [];
+        vmStartingSide = parsed.startingSide || null;
       } catch(e) {
+        vmStartingSide = null;
         // Legacy plain text — only put in general if it doesn't look like raw JSON
         if (!rawSaved.startsWith('{') && !rawSaved.startsWith('[')) {
           savedGeneral = rawSaved;
@@ -676,9 +745,10 @@ const TURNSTILE_SITE_KEY = import.meta.env.TURNSTILE_SITE_KEY || '';
       delete cats['Aim/Mechanics'];
       return { round: r.round, categories: cats };
     });
-    const initialRounds = normalizedRounds.length > 0
-      ? normalizedRounds
-      : Array.from({length: 24}, (_, i) => ({ round: i + 1, categories: {} }));
+    // Always start with 24 rounds; merge in any saved notes; append OT rounds beyond 24
+    const savedMap = new Map(normalizedRounds.map(r => [r.round, r]));
+    const initialRounds = Array.from({length: 24}, (_, i) => savedMap.get(i + 1) || { round: i + 1, categories: {} });
+    normalizedRounds.filter(r => r.round > 24).forEach(r => initialRounds.push(r));
 
     const buildRoundBlock = (roundNum, cats) => {
       const hasNotes = Object.values(cats).some(v => v.trim());
@@ -696,15 +766,28 @@ const TURNSTILE_SITE_KEY = import.meta.env.TURNSTILE_SITE_KEY || '';
       </div>`;
     };
 
+    const atkActive = vmStartingSide === 'atk' ? ' active' : '';
+    const defActive = vmStartingSide === 'def' ? ' active' : '';
     html += `<div class="vm-notes-panel" id="vm-panel-rounds" style="flex:1;min-height:0">
-      <div class="vm-notes-label" style="margin-bottom:6px">Round by Round</div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-shrink:0">
+        <div class="vm-notes-label" style="margin-bottom:0">Round by Round</div>
+        <div class="vm-side-selector">
+          <span class="vm-side-label">Starting:</span>
+          <button class="vm-side-btn${atkActive}" id="vm-side-atk" onclick="vmSetSide('atk')">ATK</button>
+          <button class="vm-side-btn${defActive}" id="vm-side-def" onclick="vmSetSide('def')">DEF</button>
+        </div>
+      </div>
       <div class="vm-rounds-scroll" id="vm-rounds-scroll">
         <div id="vm-rounds-body">`;
 
-    initialRounds.forEach(r => { html += buildRoundBlock(r.round, r.categories || {}); });
+    initialRounds.forEach(r => {
+      if (r.round === 13) html += `<div class="vm-half-divider"><span>HALF</span></div>`;
+      if (r.round === 25) html += `<div class="vm-half-divider vm-ot-divider"><span>OT</span></div>`;
+      html += buildRoundBlock(r.round, r.categories || {});
+    });
 
     html += `</div>
-        <button class="vm-add-round-btn" onclick="vmAddRound()">+ Add Round</button>
+        <button class="vm-add-round-btn" onclick="vmAddRound()">+ Add OT Round</button>
       </div>
     </div>`;
 
@@ -758,6 +841,15 @@ const TURNSTILE_SITE_KEY = import.meta.env.TURNSTILE_SITE_KEY || '';
     if (cat) block.querySelector(`.vm-round-input[data-cat="${cat}"]`)?.focus();
   }
 
+  function vmSetSide(side) {
+    vmStartingSide = vmStartingSide === side ? null : side;
+    document.getElementById('vm-side-atk')?.classList.toggle('active', vmStartingSide === 'atk');
+    document.getElementById('vm-side-def')?.classList.toggle('active', vmStartingSide === 'def');
+    document.getElementById('vm-saved-msg').style.display = 'none';
+    clearTimeout(vmAutosaveTimer);
+    vmAutosaveTimer = setTimeout(vmSaveNote, 1500);
+  }
+
   function vmAddRound() {
     const tbody = document.getElementById('vm-rounds-body');
     if (!tbody) return;
@@ -774,6 +866,17 @@ const TURNSTILE_SITE_KEY = import.meta.env.TURNSTILE_SITE_KEY || '';
       <div class="vm-round-inputs">${CATS.map((c, i) =>
         `<input class="vm-round-input${i === 0 ? ' active' : ''}" data-round="${nextNum}" data-cat="${c}" placeholder="${c}...">`
       ).join('')}</div>`;
+    if (nextNum === 13) {
+      const div = document.createElement('div');
+      div.className = 'vm-half-divider';
+      div.innerHTML = '<span>HALF</span>';
+      tbody.appendChild(div);
+    } else if (nextNum === 25) {
+      const div = document.createElement('div');
+      div.className = 'vm-half-divider vm-ot-divider';
+      div.innerHTML = '<span>OT</span>';
+      tbody.appendChild(div);
+    }
     tbody.appendChild(block);
     block.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
@@ -794,20 +897,36 @@ const TURNSTILE_SITE_KEY = import.meta.env.TURNSTILE_SITE_KEY || '';
   function vmCollectNotes() {
     const general = document.getElementById('vm-textarea')?.value || '';
     const rounds = vmCollectRounds();
-    if (!rounds.length) return general;
-    return JSON.stringify({ general, rounds });
+    if (!rounds.length && !vmStartingSide) return general;
+    const obj = { general, rounds };
+    if (vmStartingSide) obj.startingSide = vmStartingSide;
+    return JSON.stringify(obj);
+  }
+
+  function vmRoundSideLabel(roundNum) {
+    if (!vmStartingSide) return '';
+    const atk = vmStartingSide === 'atk';
+    if (roundNum <= 12) return atk ? 'ATK' : 'DEF';
+    if (roundNum <= 24) return atk ? 'DEF' : 'ATK';
+    return 'OT';
   }
 
   function vmBuildNotesString() {
     const general = document.getElementById('vm-textarea')?.value.trim() || '';
     const rounds = vmCollectRounds();
     let str = '';
+    if (vmStartingSide) {
+      const atk = vmStartingSide === 'atk';
+      str += `Starting side: ${atk ? 'Attack' : 'Defense'} (rounds 1–12 = ${atk ? 'Attack' : 'Defense'}, rounds 13–24 = ${atk ? 'Defense' : 'Attack'})\n\n`;
+    }
     if (general) str += `General observations:\n${general}\n\n`;
     if (rounds.length) {
       str += `Round-by-round notes:\n`;
       rounds.forEach(r => {
+        const side = vmRoundSideLabel(r.round);
+        const sideTag = side ? ` [${side}]` : '';
         Object.entries(r.categories).forEach(([cat, notes]) => {
-          if (notes.trim()) str += `Round ${r.round} [${cat}]: ${notes.trim()}\n`;
+          if (notes.trim()) str += `Round ${r.round}${sideTag} [${cat}]: ${notes.trim()}\n`;
         });
       });
     }
@@ -1095,7 +1214,16 @@ const TURNSTILE_SITE_KEY = import.meta.env.TURNSTILE_SITE_KEY || '';
   }
 
   function closeVideoModalDirect() {
-    if (ytPlayer && typeof ytPlayer.getCurrentTime === 'function' && vmVideoId) {
+    if (vmVideoId?.startsWith('twitch:')) {
+      if (_twitchEmbed) {
+        try {
+          const t = Math.floor(_twitchEmbed.getPlayer().getCurrentTime());
+          if (t > 0) saveTimestamp(vmVideoId, t);
+        } catch(e) {}
+        _twitchEmbed = null;
+      }
+      document.getElementById('twitch-player')?.remove();
+    } else if (ytPlayer && typeof ytPlayer.getCurrentTime === 'function' && vmVideoId) {
       const t = Math.floor(ytPlayer.getCurrentTime());
       if (t > 0) saveTimestamp(vmVideoId, t);
       ytPlayer.stopVideo();

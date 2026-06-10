@@ -32,8 +32,8 @@ if (accessToken && refreshToken) {
       <div class="section-label" style="margin-bottom:0">Add a VOD</div>
       <div class="myvods-fields">
         <div class="myvods-field">
-          <label>YouTube URL</label>
-          <input type="text" id="mv-url" placeholder="https://youtube.com/watch?v=..." oninput="mvExtractId()">
+          <label>Video URL</label>
+          <input type="text" id="mv-url" placeholder="YouTube or Twitch VOD URL..." oninput="mvExtractId()">
           <div class="mv-id-display" id="mv-id-display"></div>
         </div>
         <div class="myvods-row">
@@ -85,10 +85,19 @@ let mvVideoId = "";
 
 function mvExtractId() {
   const url = document.getElementById("mv-url").value.trim();
-  const match = url.match(/(?:v=|youtu\.be\/|embed\/)([a-zA-Z0-9_-]{11})/);
   const display = document.getElementById("mv-id-display");
-  if (match) { mvVideoId = match[1]; display.textContent = "ID: " + mvVideoId; }
-  else { mvVideoId = ""; display.textContent = url.length > 5 ? "No video ID found" : ""; }
+  const ytMatch = url.match(/(?:v=|youtu\.be\/|embed\/)([a-zA-Z0-9_-]{11})/);
+  const twitchMatch = url.match(/twitch\.tv\/videos\/(\d+)/);
+  if (ytMatch) {
+    mvVideoId = ytMatch[1];
+    display.textContent = "YouTube · " + mvVideoId;
+  } else if (twitchMatch) {
+    mvVideoId = "twitch:" + twitchMatch[1];
+    display.textContent = "Twitch · " + twitchMatch[1];
+  } else {
+    mvVideoId = "";
+    display.textContent = url.length > 5 ? "No video ID found" : "";
+  }
 }
 
 async function submitMyVod() {
@@ -100,7 +109,7 @@ async function submitMyVod() {
   const btn = document.getElementById("mv-submit-btn");
 
   errEl.textContent = "";
-  if (!mvVideoId) { errEl.textContent = "Paste a valid YouTube URL."; return; }
+  if (!mvVideoId) { errEl.textContent = "Paste a valid YouTube or Twitch VOD URL."; return; }
   if (!mapId) { errEl.textContent = "Select a map."; return; }
   if (!agentId) { errEl.textContent = "Select an agent."; return; }
   if (!title) { errEl.textContent = "Enter a title."; return; }
@@ -163,10 +172,15 @@ async function renderMyVods() {
   const mapName = id => MAPS_DATA.find(m=>m.id===id)?.name || id;
   const agentName = id => AGENTS_DATA.find(a=>a.id===id)?.name || id;
 
-  grid.innerHTML = data.map(v => `
+  grid.innerHTML = data.map(v => {
+    const isTwitch = v.video_id.startsWith('twitch:');
+    const thumb = isTwitch
+      ? `<div class="mv-twitch-thumb"><svg viewBox="0 0 24 24" fill="currentColor" width="32" height="32"><path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714z"/></svg><span>Twitch VOD</span></div>`
+      : `<img src="https://img.youtube.com/vi/${v.video_id}/mqdefault.jpg" alt="${v.title}" loading="lazy">`;
+    return `
     <div class="video-card" data-vid="${v.video_id}" data-title="${v.title.replace(/"/g, '&quot;')}" style="cursor:pointer">
       <div class="video-thumb">
-        <img src="https://img.youtube.com/vi/${v.video_id}/mqdefault.jpg" alt="${v.title}" loading="lazy">
+        ${thumb}
         <div class="play-overlay"><div class="play-icon"><div class="play-tri"></div></div></div>
       </div>
       <div class="video-info">
@@ -181,7 +195,7 @@ async function renderMyVods() {
         </div>
       </div>
     </div>
-  `).join("");
+  `; }).join("");
 
   grid.onclick = e => {
     const card = e.target.closest('.video-card[data-vid]');
@@ -189,6 +203,25 @@ async function renderMyVods() {
     openVideo(card.dataset.vid, card.dataset.title, 'Me', { mode: 'own' });
   };
   if (window.applyWatchProgress) window.applyWatchProgress();
+
+  // Fetch real thumbnails for Twitch VODs
+  data.filter(v => v.video_id.startsWith('twitch:')).forEach(async v => {
+    const twitchId = v.video_id.slice(7);
+    try {
+      const res = await fetch(`/api/twitch-thumb?id=${twitchId}`);
+      const json = await res.json();
+      if (json.url) {
+        const placeholder = grid.querySelector(`[data-vid="${v.video_id}"] .mv-twitch-thumb`);
+        if (placeholder) {
+          const img = document.createElement('img');
+          img.src = json.url;
+          img.alt = v.title;
+          img.loading = 'lazy';
+          placeholder.replaceWith(img);
+        }
+      }
+    } catch(e) {}
+  });
 }
 
 async function deleteMyVod(id) {
