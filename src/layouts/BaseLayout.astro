@@ -755,7 +755,7 @@ const TURNSTILE_SITE_KEY = import.meta.env.TURNSTILE_SITE_KEY || '';
       const numClass = hasNotes ? ' has-notes' : '';
       const defaultCat = ROUND_CATEGORIES.find(c => cats[c]?.trim()) || ROUND_CATEGORIES[0];
       const inputs = ROUND_CATEGORIES.map(c =>
-        `<input class="vm-round-input${c === defaultCat ? ' active' : ''}" data-round="${roundNum}" data-cat="${c}" placeholder="${c}..." value="${(cats[c]||'').replace(/"/g,'&quot;')}">`
+        `<textarea class="vm-round-input${c === defaultCat ? ' active' : ''}" data-round="${roundNum}" data-cat="${c}" placeholder="${c}..." rows="1">${(cats[c]||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</textarea>`
       ).join('');
       return `<div class="vm-round-block" data-round="${roundNum}">
         <div class="vm-round-num${numClass}">${roundNum}</div>
@@ -808,12 +808,15 @@ const TURNSTILE_SITE_KEY = import.meta.env.TURNSTILE_SITE_KEY || '';
     document.getElementById('vm-rounds-body').addEventListener('input', e => {
       const inp = e.target.closest('.vm-round-input');
       if (inp) {
+        vmAutoResize(inp);
         const block = inp.closest('.vm-round-block');
         const hasAny = [...block.querySelectorAll('.vm-round-input')].some(i => i.value.trim());
         block.querySelector('.vm-round-num').classList.toggle('has-notes', hasAny);
       }
       vmTriggerAutosave();
     });
+    // Resize any pre-filled textareas on load
+    document.querySelectorAll('.vm-round-input.active').forEach(vmAutoResize);
   }
 
   function vmToggleVideo() {
@@ -831,6 +834,11 @@ const TURNSTILE_SITE_KEY = import.meta.env.TURNSTILE_SITE_KEY || '';
     document.getElementById('vm-panel-' + tab)?.classList.add('active');
   }
 
+  function vmAutoResize(el) {
+    el.style.height = 'auto';
+    el.style.height = el.scrollHeight + 'px';
+  }
+
   function vmSwitchCat(sel) {
     const block = sel.closest('.vm-round-block');
     const cat = sel.value;
@@ -838,7 +846,8 @@ const TURNSTILE_SITE_KEY = import.meta.env.TURNSTILE_SITE_KEY || '';
     block.querySelectorAll('.vm-round-input').forEach(inp => {
       inp.classList.toggle('active', inp.dataset.cat === cat);
     });
-    if (cat) block.querySelector(`.vm-round-input[data-cat="${cat}"]`)?.focus();
+    const active = cat ? block.querySelector(`.vm-round-input[data-cat="${cat}"]`) : null;
+    if (active) { vmAutoResize(active); active.focus(); }
   }
 
   function vmSetSide(side) {
@@ -864,7 +873,7 @@ const TURNSTILE_SITE_KEY = import.meta.env.TURNSTILE_SITE_KEY || '';
         ${CATS.map((c, i) => `<option value="${c}"${i === 0 ? ' selected' : ''}>${c}</option>`).join('')}
       </select>
       <div class="vm-round-inputs">${CATS.map((c, i) =>
-        `<input class="vm-round-input${i === 0 ? ' active' : ''}" data-round="${nextNum}" data-cat="${c}" placeholder="${c}...">`
+        `<textarea class="vm-round-input${i === 0 ? ' active' : ''}" data-round="${nextNum}" data-cat="${c}" placeholder="${c}..." rows="1"></textarea>`
       ).join('')}</div>`;
     if (nextNum === 13) {
       const div = document.createElement('div');

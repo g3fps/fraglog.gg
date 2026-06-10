@@ -688,7 +688,7 @@ footer { border-top: 1px solid var(--border); padding: 3rem 2.5rem; margin-top: 
 .vm-round-select option { background: #1a1a1f; color: var(--text); }
 .vm-round-select.has-value { color: var(--text); }
 .vm-round-inputs { position: relative; flex: 1; min-width: 0; }
-.vm-round-input { background: none; border: none; color: var(--text); font-family: 'Barlow', sans-serif; font-size: 12px; padding: 6px 8px; outline: none; width: 100%; display: none; transition: background 0.1s; }
+.vm-round-input { background: none; border: none; color: var(--text); font-family: 'Barlow', sans-serif; font-size: 12px; padding: 6px 8px; outline: none; width: 100%; display: none; transition: background 0.1s; resize: none; overflow: hidden; min-height: 30px; box-sizing: border-box; line-height: 1.4; }
 .vm-round-input.active { display: block; }
 .vm-round-input:focus { background: rgba(255,255,255,0.03); }
 .vm-round-input::placeholder { color: var(--muted); opacity: 0.5; }
