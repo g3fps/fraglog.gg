@@ -4,6 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 import { isAdminEmail } from '../../lib/admin.js';
 import { checkRateLimit, getClientIp } from '../../lib/ratelimit.js';
 import { buildAskPrompt } from '../../lib/coaching-prompt.js';
+import { getAllVods } from '../../data/data.js';
 
 // ── Daily Ask AI limit ────────────────────────────────────────
 // Flat cap for now; premium tiers (higher cap) can come later.
@@ -47,8 +48,64 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
     }
   }
 
+  // Fetch user's notes for context
+  const allLibVods = getAllVods();
+  const libVodMap = new Map(allLibVods.map((v: any) => [v.id, v]));
+
+  const [{ data: videoNotes }, { data: notebookNotes }, { data: userVods }] = await Promise.all([
+    sb.from('notes').select('video_id, content').eq('user_id', verifiedUserId).limit(30),
+    sb.from('notebook').select('title, content').eq('user_id', verifiedUserId).order('updated_at', { ascending: false }).limit(15),
+    sb.from('user_vods').select('video_id, title, map_id, agent_id').eq('user_id', verifiedUserId),
+  ]);
+
+  const userVodMap = new Map((userVods || []).map((v: any) => [v.video_id, v]));
+
+  let playerNotesContext = '';
+
+  if (videoNotes?.length) {
+    const formatted = videoNotes.map((n: any) => {
+      const uv = userVodMap.get(n.video_id);
+      const lv = libVodMap.get(n.video_id);
+      const meta = uv
+        ? `[${uv.title || n.video_id} | Map: ${uv.map_id} | Agent: ${uv.agent_id}]`
+        : lv
+        ? `[${lv.title} | Map: ${lv.mapName} | Agent: ${lv.agentName} | Player: ${lv.player}]`
+        : `[video: ${n.video_id}]`;
+
+      let text = meta + '\n';
+      try {
+        const parsed = JSON.parse(n.content);
+        if (parsed.general?.trim()) text += `General: ${parsed.general.trim().slice(0, 250)}\n`;
+        if (parsed.rounds?.length) {
+          const roundLines = parsed.rounds
+            .filter((r: any) => Object.values(r.categories || {}).some((v: any) => v?.trim()))
+            .map((r: any) => {
+              const cats = Object.entries(r.categories || {})
+                .filter(([, v]: any) => v?.trim())
+                .map(([cat, v]: any) => `${cat.split(' ')[0]}: ${String(v).trim().slice(0, 60)}`)
+                .join(', ');
+              return `R${r.round}: ${cats}`;
+            });
+          if (roundLines.length) text += `Rounds: ${roundLines.join(' | ').slice(0, 500)}`;
+        }
+      } catch {
+        text += (n.content || '').trim().slice(0, 400);
+      }
+      return text.trim();
+    }).filter(Boolean);
+
+    if (formatted.length) playerNotesContext += `Player's VOD notes (${formatted.length} games):\n${formatted.join('\n\n')}`;
+  }
+
+  if (notebookNotes?.length) {
+    const formatted = (notebookNotes as any[]).map(n =>
+      `${n.title ? `[${n.title}] ` : ''}${(n.content || '').trim().slice(0, 400)}`
+    ).filter((t: string) => t.trim());
+    if (formatted.length) playerNotesContext += `\n\nPlayer's notebook entries:\n${formatted.join('\n\n')}`;
+  }
+
   const body = await request.json().catch(() => ({}));
-  const { system, messages, safeQuestion } = buildAskPrompt(body);
+  const { system, messages, safeQuestion } = buildAskPrompt({ ...body, playerNotesContext });
 
   if (!safeQuestion.trim()) {
     return new Response(JSON.stringify({ error: 'No question provided' }), { status: 400 });
