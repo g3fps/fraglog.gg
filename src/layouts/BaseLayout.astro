@@ -683,14 +683,14 @@ const TURNSTILE_SITE_KEY = import.meta.env.TURNSTILE_SITE_KEY || '';
     const buildRoundBlock = (roundNum, cats) => {
       const hasNotes = Object.values(cats).some(v => v.trim());
       const numClass = hasNotes ? ' has-notes' : '';
+      const defaultCat = ROUND_CATEGORIES.find(c => cats[c]?.trim()) || ROUND_CATEGORIES[0];
       const inputs = ROUND_CATEGORIES.map(c =>
-        `<input class="vm-round-input" data-round="${roundNum}" data-cat="${c}" placeholder="${c}..." value="${(cats[c]||'').replace(/"/g,'&quot;')}">`
+        `<input class="vm-round-input${c === defaultCat ? ' active' : ''}" data-round="${roundNum}" data-cat="${c}" placeholder="${c}..." value="${(cats[c]||'').replace(/"/g,'&quot;')}">`
       ).join('');
       return `<div class="vm-round-block" data-round="${roundNum}">
         <div class="vm-round-num${numClass}">${roundNum}</div>
-        <select class="vm-round-select" data-round="${roundNum}" onchange="vmSwitchCat(this)">
-          <option value="">—</option>
-          ${ROUND_CATEGORIES.map(c => `<option value="${c}">${c}</option>`).join('')}
+        <select class="vm-round-select has-value" data-round="${roundNum}" onchange="vmSwitchCat(this)">
+          ${ROUND_CATEGORIES.map(c => `<option value="${c}"${c === defaultCat ? ' selected' : ''}>${c}</option>`).join('')}
         </select>
         <div class="vm-round-inputs">${inputs}</div>
       </div>`;
@@ -768,12 +768,11 @@ const TURNSTILE_SITE_KEY = import.meta.env.TURNSTILE_SITE_KEY || '';
     block.className = 'vm-round-block';
     block.dataset.round = nextNum;
     block.innerHTML = `<div class="vm-round-num">${nextNum}</div>
-      <select class="vm-round-select" data-round="${nextNum}" onchange="vmSwitchCat(this)">
-        <option value="">—</option>
-        ${CATS.map(c => `<option value="${c}">${c}</option>`).join('')}
+      <select class="vm-round-select has-value" data-round="${nextNum}" onchange="vmSwitchCat(this)">
+        ${CATS.map((c, i) => `<option value="${c}"${i === 0 ? ' selected' : ''}>${c}</option>`).join('')}
       </select>
-      <div class="vm-round-inputs">${CATS.map(c =>
-        `<input class="vm-round-input" data-round="${nextNum}" data-cat="${c}" placeholder="${c}...">`
+      <div class="vm-round-inputs">${CATS.map((c, i) =>
+        `<input class="vm-round-input${i === 0 ? ' active' : ''}" data-round="${nextNum}" data-cat="${c}" placeholder="${c}...">`
       ).join('')}</div>`;
     tbody.appendChild(block);
     block.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
