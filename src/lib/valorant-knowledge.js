@@ -1589,9 +1589,10 @@ export const GENERAL_KNOWLEDGE = {
     },
     round_summary_categorization: {
       execute_speed: "Treat any execute as fast unless the notes explicitly say otherwise (slow walk, contact, timed, etc.). 'All 5 A' with no speed note = fast A.",
-      mid_positioning: "Any mid variant (bottom mid, top mid, market, swinging market smoke) counts as 'starts mid' unless the notes describe it differently. Only split into sub-categories if the notes give specific detail.",
+      mid_positioning: "Bottom mid, top mid, market, and swinging market smoke are all sub-categories of 'starts mid' — group them together as one 'Mid' category by default. If the player explicitly asks to split them out, follow their instruction instead.",
       rotations: "Swinging market smoke is not a rotation — it is holding/swinging an angle from mid. Group it under 'starts mid' positioning. A rotation means moving from one site to another.",
-      grouping_rule: "Default to the broadest accurate category. Only create a sub-category if the notes explicitly provide detail that makes the broader label inaccurate."
+      grouping_rule: "Default to the broadest accurate category. Only create a sub-category if the notes explicitly provide detail that makes the broader label inaccurate.",
+      save_rounds: "Save rounds still have normal attack plays and executes — they just happen with weaker guns. Categorize save rounds the same as any other round (fast B, fast A, etc.) and simply note that the team was saving. Do not treat a save as its own play category. Teams often play faster or take riskier plays on save rounds to compensate for weaker guns — this is intentional and normal, not a mistake."
     },
     micro_positioning: {
       executes: "Pinch sites from multiple angles simultaneously. Time your entries so pressure comes from two directions at once — not one by one.",
