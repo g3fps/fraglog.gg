@@ -589,6 +589,8 @@ const TURNSTILE_SITE_KEY = import.meta.env.TURNSTILE_SITE_KEY || '';
   let vmStartingSide = null;
 
   function openVideo(videoId, title, player, opts = {}) {
+    clearTimeout(vmAutosaveTimer);
+    vmAutosaveTimer = null;
     vmVideoId = videoId;
     vmCoachMode = opts.mode || 'pro';
     vmOriginalMode = opts.mode || 'pro';
@@ -1120,8 +1122,17 @@ const TURNSTILE_SITE_KEY = import.meta.env.TURNSTILE_SITE_KEY || '';
   }
 
   async function vmSaveNote() {
+    if (!vmVideoId) return;
     const data = vmCollectNotes();
     if (!data) return;
+    // Don't wipe existing notes by saving a structurally empty object
+    if (typeof data === 'string' && data.startsWith('{')) {
+      try {
+        const parsed = JSON.parse(data);
+        const hasContent = parsed.general?.trim() || parsed.rounds?.some(r => Object.values(r.categories || {}).some(v => v?.trim()));
+        if (!hasContent) return;
+      } catch { /* fall through and save */ }
+    }
     await saveNote(vmVideoId, data);
     document.getElementById('vm-saved-msg').style.display = 'inline';
     if (typeof onNoteChange === 'function') onNoteChange(vmVideoId);
