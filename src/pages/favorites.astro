@@ -168,6 +168,7 @@ function renderGrid(vods) {
   container.onclick = e => {
     const unfavBtn = e.target.closest('[data-fav-btn]');
     if (unfavBtn) {
+      e.stopPropagation();
       const card = unfavBtn.closest('.video-card');
       if (card) card.remove();
       toggleFav(unfavBtn.dataset.favBtn);
