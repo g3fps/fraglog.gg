@@ -155,6 +155,13 @@ const TURNSTILE_SITE_KEY = import.meta.env.TURNSTILE_SITE_KEY || '';
 
   let currentUser = window.__initialUser || null;
   let authMode = "login";
+
+  // Track where the mouse was pressed so modals only close when a click both
+  // STARTS and ENDS on the backdrop. Prevents closing when a text selection
+  // that began inside the modal is released outside it.
+  window.__mouseDownTarget = null;
+  document.addEventListener('mousedown', e => { window.__mouseDownTarget = e.target; }, true);
+  window.__backdropClick = (e, modal) => e.target === modal && window.__mouseDownTarget === modal;
   let userFavorites = [];
   let userNotes = {};
   let userCoach = {};
@@ -469,7 +476,7 @@ const TURNSTILE_SITE_KEY = import.meta.env.TURNSTILE_SITE_KEY || '';
     document.getElementById("auth-confirm").value = "";
   }
   function closeAuthModal(e) {
-    if (e.target === document.getElementById("auth-modal")) closeAuthModalDirect();
+    if (window.__backdropClick(e, document.getElementById("auth-modal"))) closeAuthModalDirect();
   }
   function switchTab(mode) {
     authMode = mode;
@@ -504,7 +511,16 @@ const TURNSTILE_SITE_KEY = import.meta.env.TURNSTILE_SITE_KEY || '';
       if (pass.length < 6) { errEl.textContent = "Password must be at least 6 characters."; errEl.style.display = "block"; btn.textContent = "Create Account"; btn.disabled = false; return; }
       const { data, error: e } = await sb.auth.signUp({ email, password: pass, options: authOpts });
       error = e;
-      if (!e) currentUser = data.user;
+      if (!e) {
+        // Supabase returns a decoy user with an empty identities array when the
+        // email is already registered (anti-enumeration). Treat that as an error
+        // so the popup stays open and the user gets feedback.
+        if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+          error = { message: "An account with this email already exists. Try signing in instead." };
+        } else {
+          currentUser = data.user;
+        }
+      }
     } else {
       const { data, error: e } = await sb.auth.signInWithPassword({ email, password: pass, options: authOpts });
       error = e;
@@ -1259,7 +1275,7 @@ const TURNSTILE_SITE_KEY = import.meta.env.TURNSTILE_SITE_KEY || '';
   }
 
   function closeVideoModal(e) {
-    if (e.target === document.getElementById('video-modal')) closeVideoModalDirect();
+    if (window.__backdropClick(e, document.getElementById('video-modal'))) closeVideoModalDirect();
   }
 
   function openNotes(videoId, title, player, adminNote, mode = 'pro') {

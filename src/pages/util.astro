@@ -233,7 +233,7 @@ function openLineup(index) {
 }
 
 function closeModal(e) {
-  if (e && e.target !== document.getElementById('lineup-modal')) return;
+  if (e && !window.__backdropClick(e, document.getElementById('lineup-modal'))) return;
   document.getElementById('lineup-modal').classList.remove('open');
   document.getElementById('modal-video').src = '';
 }

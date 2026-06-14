@@ -82,9 +82,16 @@ const jsonLd = JSON.stringify({
         <input
           class="home-search-input"
           id="home-search-input"
-          type="text"
-          placeholder="Search players, maps, agents..."
+          type="search"
+          name="vod-search"
           autocomplete="off"
+          autocorrect="off"
+          autocapitalize="off"
+          spellcheck="false"
+          data-1p-ignore
+          data-lpignore="true"
+          data-form-type="other"
+          placeholder="Search players, maps, agents..."
           oninput="homeSearch(this.value)"
           onfocus="this.closest('.home-search-wrap').classList.add('focused')"
           onblur="setTimeout(()=>this.closest('.home-search-wrap').classList.remove('focused'),150)"

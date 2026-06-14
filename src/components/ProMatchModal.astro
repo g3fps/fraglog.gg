@@ -52,7 +52,7 @@ window.switchProMap = function(index) {
 };
 
 window.closeProModal = function(e) {
-  if (e && e.target !== document.getElementById('pro-match-modal')) return;
+  if (e && !window.__backdropClick(e, document.getElementById('pro-match-modal'))) return;
   document.getElementById('pro-match-modal').classList.remove('open');
   document.getElementById('pro-modal-video').src = '';
 };

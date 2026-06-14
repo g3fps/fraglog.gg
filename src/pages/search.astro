@@ -32,11 +32,18 @@ const agentRoles = Object.fromEntries(AGENTS.map((a: any) => [a.id, a.role]));
         </svg>
       </div>
       <input
-        type="text"
+        type="search"
+        name="vod-search"
         id="search-input"
         class="search-hero-input"
         placeholder="Search players, maps, agents..."
         autocomplete="off"
+        autocorrect="off"
+        autocapitalize="off"
+        spellcheck="false"
+        data-1p-ignore
+        data-lpignore="true"
+        data-form-type="other"
         />
     </div>
     <div class="search-meta" id="search-meta"></div>

@@ -690,7 +690,7 @@ function closeGoalModal() {
 }
 
 function closeGoalModalClick(e) {
-  if (e.target === document.getElementById('goal-modal')) closeGoalModal();
+  if (window.__backdropClick(e, document.getElementById('goal-modal'))) closeGoalModal();
 }
 
 function setGoalType(type) {
@@ -1066,7 +1066,7 @@ function closeTimeModal() {
 }
 
 function closeTimeModalClick(e) {
-  if (e.target === document.getElementById('time-modal')) closeTimeModal();
+  if (window.__backdropClick(e, document.getElementById('time-modal'))) closeTimeModal();
 }
 
 async function saveTimePerDay() {
