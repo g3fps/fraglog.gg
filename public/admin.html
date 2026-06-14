@@ -333,6 +333,26 @@ select option { background: var(--surface); }
     <div class="thumb-preview" id="pro-preview3"><img id="pro-thumb3" src="" alt=""><div class="video-id-display" id="pro-id3"></div></div>
   </div>
 
+  <div class="section-title">Map 4 (optional)</div>
+  <div class="card">
+    <div class="row">
+      <div class="field"><label>Map</label><select id="pro-map4"><option value="">Select map...</option><option value="ascent">Ascent</option><option value="bind">Bind</option><option value="haven">Haven</option><option value="split">Split</option><option value="fracture">Fracture</option><option value="pearl">Pearl</option><option value="icebox">Icebox</option><option value="breeze">Breeze</option><option value="lotus">Lotus</option><option value="sunset">Sunset</option><option value="abyss">Abyss</option><option value="corrode">Corrode</option></select></div>
+      <div class="field"><label>YouTube URL</label><input type="text" id="pro-yt4" placeholder="https://youtube.com/..." oninput="proHandleYT('4')"></div>
+    </div>
+    <div class="field" style="margin-top:10px"><label>Start Time (MM:SS or seconds)</label><input type="text" id="pro-ts4" placeholder="0:00 or 0"></div>
+    <div class="thumb-preview" id="pro-preview4"><img id="pro-thumb4" src="" alt=""><div class="video-id-display" id="pro-id4"></div></div>
+  </div>
+
+  <div class="section-title">Map 5 (optional)</div>
+  <div class="card">
+    <div class="row">
+      <div class="field"><label>Map</label><select id="pro-map5"><option value="">Select map...</option><option value="ascent">Ascent</option><option value="bind">Bind</option><option value="haven">Haven</option><option value="split">Split</option><option value="fracture">Fracture</option><option value="pearl">Pearl</option><option value="icebox">Icebox</option><option value="breeze">Breeze</option><option value="lotus">Lotus</option><option value="sunset">Sunset</option><option value="abyss">Abyss</option><option value="corrode">Corrode</option></select></div>
+      <div class="field"><label>YouTube URL</label><input type="text" id="pro-yt5" placeholder="https://youtube.com/..." oninput="proHandleYT('5')"></div>
+    </div>
+    <div class="field" style="margin-top:10px"><label>Start Time (MM:SS or seconds)</label><input type="text" id="pro-ts5" placeholder="0:00 or 0"></div>
+    <div class="thumb-preview" id="pro-preview5"><img id="pro-thumb5" src="" alt=""><div class="video-id-display" id="pro-id5"></div></div>
+  </div>
+
   <div class="section-title">Save</div>
   <div class="card">
     <button class="btn btn-primary" style="width:100%;padding:14px" onclick="saveProMatch()">Save Pro Match to Supabase</button>
@@ -591,7 +611,7 @@ async function adminSignIn() {
   errEl.textContent = '';
 }
 
-const proYtIds = { '1': null, '2': null, '3': null };
+const proYtIds = { '1': null, '2': null, '3': null, '4': null, '5': null };
 
 function proHandleYT(n) {
   const val = document.getElementById(`pro-yt${n}`).value.trim();
@@ -639,6 +659,8 @@ async function saveProMatch() {
   const map1 = document.getElementById('pro-map1').value;
   const map2 = document.getElementById('pro-map2').value;
   const map3 = document.getElementById('pro-map3').value;
+  const map4 = document.getElementById('pro-map4').value;
+  const map5 = document.getElementById('pro-map5').value;
 
   if (!team1 || !team2) { setProStatus('Enter both team names.', '#FF4655'); return; }
   if (!event) { setProStatus('Enter the event name.', '#FF4655'); return; }
@@ -653,12 +675,16 @@ async function saveProMatch() {
     map2_start_time: parseTimestamp(document.getElementById('pro-ts2').value),
     map3: map3 || null, map3_youtube_id: proYtIds['3'] || null,
     map3_start_time: parseTimestamp(document.getElementById('pro-ts3').value),
+    map4: map4 || null, map4_youtube_id: proYtIds['4'] || null,
+    map4_start_time: parseTimestamp(document.getElementById('pro-ts4').value),
+    map5: map5 || null, map5_youtube_id: proYtIds['5'] || null,
+    map5_start_time: parseTimestamp(document.getElementById('pro-ts5').value),
   });
 
   if (error) { setProStatus('Error: ' + error.message, '#FF4655'); return; }
   setProStatus('✓ Match saved!');
   ['team1','team2','event'].forEach(f => document.getElementById(`pro-${f}`).value = '');
-  ['1','2','3'].forEach(n => {
+  ['1','2','3','4','5'].forEach(n => {
     document.getElementById(`pro-yt${n}`).value = '';
     document.getElementById(`pro-preview${n}`).classList.remove('visible');
     document.getElementById(`pro-map${n}`).value = '';
@@ -676,7 +702,7 @@ async function loadProRecent() {
   count.textContent = data.length;
   list.innerHTML = data.map(m => `
     <div class="entry-item">
-      <div class="entry-text">${m.team1} vs ${m.team2} · ${m.event} · ${m.map1}${m.map2?', '+m.map2:''}${m.map3?', '+m.map3:''}</div>
+      <div class="entry-text">${m.team1} vs ${m.team2} · ${m.event} · ${m.map1}${m.map2?', '+m.map2:''}${m.map3?', '+m.map3:''}${m.map4?', '+m.map4:''}${m.map5?', '+m.map5:''}</div>
       <span class="entry-remove" onclick="deleteProMatch('${m.id}')">✕</span>
     </div>
   `).join('');

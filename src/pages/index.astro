@@ -2,7 +2,7 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Nav from '../components/Nav.astro';
 import Footer from '../components/Footer.astro';
-import { MAPS, AGENTS, vodCount, getAllVods } from '../data/data.js';
+import { MAPS, vodCount, getAllVods } from '../data/data.js';
 import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
@@ -102,7 +102,6 @@ const jsonLd = JSON.stringify({
     </div>
     <div class="home-recent-grid">
       {recentVods.map(vod => {
-        const agent = AGENTS.find(a => a.id === vod.agentId);
         return (
           <div
             class="hrc"
@@ -113,7 +112,6 @@ const jsonLd = JSON.stringify({
               <img src={`https://img.youtube.com/vi/${vod.id}/mqdefault.jpg`} alt={vod.title} loading="lazy" decoding="async" />
               <div class="hrc__thumb-overlay"></div>
               <div class="hrc__play">▶</div>
-              {agent?.portrait && <img class="hrc__agent" src={agent.portrait} alt={agent.name} />}
             </div>
             <div class="hrc__info">
               <div class="hrc__player">{vod.player}</div>

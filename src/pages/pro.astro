@@ -119,7 +119,7 @@ function renderMatches(matches) {
   }
 
   grid.innerHTML = matches.map(m => {
-    const maps = [m.map1, m.map2, m.map3].filter(Boolean);
+    const maps = [m.map1, m.map2, m.map3, m.map4, m.map5].filter(Boolean);
     const mapCount = maps.length;
     const thumbId = m.map1_youtube_id;
     const dateStr = m.date ? new Date(m.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '';

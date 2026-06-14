@@ -30,7 +30,9 @@ window.openProMatch = function(match) {
   const maps = [
     { map: m.map1, ytId: m.map1_youtube_id, start: m.map1_start_time || 0 },
     { map: m.map2, ytId: m.map2_youtube_id, start: m.map2_start_time || 0 },
-    m.map3 ? { map: m.map3, ytId: m.map3_youtube_id, start: m.map3_start_time || 0 } : null
+    m.map3 ? { map: m.map3, ytId: m.map3_youtube_id, start: m.map3_start_time || 0 } : null,
+    m.map4 ? { map: m.map4, ytId: m.map4_youtube_id, start: m.map4_start_time || 0 } : null,
+    m.map5 ? { map: m.map5, ytId: m.map5_youtube_id, start: m.map5_start_time || 0 } : null,
   ].filter(Boolean);
 
   document.getElementById('pro-map-tabs').innerHTML = maps.map((mp, i) => `
