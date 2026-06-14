@@ -30,9 +30,12 @@ if (accessToken && refreshToken) {
 
     <!-- Signed-out gate -->
     <div class="nb-gate" id="nb-gate" style="display:none;">
-      <strong>Not signed in</strong>
-      <span>Sign in to write notes and chat with the AI coach</span>
-      <button class="auth-btn primary empty-cta" onclick="openAuth()">Sign In</button>
+      <strong>Create a free account to start taking notes</strong>
+      <span>Save freeform Valorant notes and chat with the AI coach — synced to your account.</span>
+      <div class="nb-gate-actions">
+        <button class="auth-btn primary empty-cta" onclick="openAuth('register')">Create account</button>
+        <button class="auth-btn empty-cta" onclick="openAuth()">Sign in</button>
+      </div>
     </div>
 
     <div class="nb-app" id="nb-app" style="display:none;">
