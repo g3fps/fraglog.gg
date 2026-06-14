@@ -64,21 +64,23 @@ const TURNSTILE_SITE_KEY = import.meta.env.TURNSTILE_SITE_KEY || '';
         <button class="auth-tab active" onclick="switchTab('login')">Sign In</button>
         <button class="auth-tab" onclick="switchTab('register')">Create Account</button>
       </div>
+      <form id="auth-form" onsubmit="submitAuth(); return false;">
       <div class="auth-field">
         <label>Email</label>
-        <input type="email" id="auth-email" placeholder="you@example.com" autocomplete="email">
+        <input type="email" id="auth-email" name="username" placeholder="you@example.com" autocomplete="username">
       </div>
       <div class="auth-field">
         <label>Password</label>
-        <input type="password" id="auth-password" placeholder="••••••••" autocomplete="current-password">
+        <input type="password" id="auth-password" name="password" placeholder="••••••••" autocomplete="current-password">
       </div>
       <div class="auth-field" id="confirm-field" style="display:none">
         <label>Confirm Password</label>
-        <input type="password" id="auth-confirm" placeholder="••••••••" autocomplete="new-password">
+        <input type="password" id="auth-confirm" name="confirm-password" placeholder="••••••••" autocomplete="new-password">
       </div>
       <div class="auth-error" id="auth-error"></div>
       {TURNSTILE_SITE_KEY && <div id="auth-turnstile" data-sitekey={TURNSTILE_SITE_KEY} data-theme="dark" style="margin-bottom:12px"></div>}
-      <button class="auth-btn primary" style="width:100%;padding:10px" onclick="submitAuth()">Sign In</button>
+      <button type="submit" class="auth-btn primary" style="width:100%;padding:10px">Sign In</button>
+      </form>
     </div>
   </div>
 
