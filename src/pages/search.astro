@@ -129,9 +129,8 @@ function applyFilters() {
     if (map && v.mapId !== map) return false;
     if (q) {
       const s = [v.title, v.player, v.mapName, v.agentName].join(" ").toLowerCase();
-      // Match each typed word independently so word order doesn't matter
-      // (e.g. "oxy phoenix" and "phoenix oxy" both match)
-      if (!q.split(/\s+/).every(term => s.includes(term))) return false;
+      // Word-boundary match: "ion" won't match inside "precision"
+      if (!q.split(/\s+/).every(term => new RegExp('\\b' + term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).test(s))) return false;
     }
     return true;
   });

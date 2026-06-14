@@ -707,6 +707,8 @@ function setGoalType(type) {
   document.getElementById('goal-title-label').textContent = labels.title;
   document.getElementById('goal-title').placeholder = labels.titlePh;
   document.getElementById('goal-current-target-row').style.display = isRankType ? '' : 'none';
+  document.getElementById('goal-current-text').style.display = isRankType ? 'none' : '';
+  document.getElementById('goal-target-text').style.display = isRankType ? 'none' : '';
   document.getElementById('goal-current-rank').style.display = isRankType ? '' : 'none';
   document.getElementById('goal-target-rank').style.display = isRankType ? '' : 'none';
   document.getElementById('goal-rr-fields').style.display = isRankType ? '' : 'none';
