@@ -150,7 +150,7 @@ const MAX_HISTORY_MSGS = 10; // 5 turns
  * @returns {{ system, messages, userContent, safeQuestion }}
  */
 export function buildAskPrompt(body) {
-  const { question, history, playerNotesContext } = body || {};
+  const { question, history, playerNotesContext, openNote } = body || {};
   const safeQuestion = typeof question === 'string' ? question.slice(0, MAX_QUESTION) : '';
   const q = safeQuestion.toLowerCase();
 
@@ -176,11 +176,18 @@ export function buildAskPrompt(body) {
   knowledgeBlock += `\n\nECONOMY KNOWLEDGE:\n${JSON.stringify(ECONOMY_KNOWLEDGE, null, 2)}`;
 
   const playerContext = playerNotesContext?.trim()
-    ? `\n\nPLAYER'S NOTES HISTORY (their actual notes from VODs and notebook — use this to give personalized answers):\n${playerNotesContext.slice(0, 6000)}`
+    ? `\n\nPLAYER'S NOTES HISTORY (their actual notes from VODs and notebook — use this to give personalized answers):\n${playerNotesContext.slice(0, 16000)}`
+    : '';
+
+  // The note the player currently has open — included in full and prioritized,
+  // so questions about the open note aren't limited by the truncated bundle above.
+  const openNoteContent = openNote && typeof openNote.content === 'string' ? openNote.content.trim() : '';
+  const openNoteBlock = openNoteContent
+    ? `\n\nTHE NOTE THE PLAYER IS CURRENTLY VIEWING (full text — prioritize this when answering their question):\n${openNote.title ? `Title: ${String(openNote.title).slice(0, 200)}\n` : ''}${openNoteContent.slice(0, 8000)}`
     : '';
 
   const system = `You are an expert Valorant coach answering a player's question directly. You have deep knowledge of competitive mechanics, agents, maps, economy, and how players actually improve.
-${knowledgeBlock}${playerContext}
+${knowledgeBlock}${openNoteBlock}${playerContext}
 
 RULES:
 - If the player includes a formatting or style instruction in their message (e.g. "no commentary", "just the answer", "be brief", "bullet points only") — follow it immediately and for the rest of the conversation. Do not revert on the next turn.

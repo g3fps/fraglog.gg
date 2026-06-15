@@ -54,7 +54,7 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
 
   const [{ data: videoNotes }, { data: notebookNotes }, { data: userVods }] = await Promise.all([
     sb.from('notes').select('video_id, content').eq('user_id', verifiedUserId).limit(30),
-    sb.from('notebook').select('title, content').eq('user_id', verifiedUserId).order('updated_at', { ascending: false }).limit(15),
+    sb.from('notebook').select('title, content').eq('user_id', verifiedUserId).order('updated_at', { ascending: false }).limit(40),
     sb.from('user_vods').select('video_id, title, map_id, agent_id').eq('user_id', verifiedUserId),
   ]);
 
@@ -99,7 +99,7 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
 
   if (notebookNotes?.length) {
     const formatted = (notebookNotes as any[]).map(n =>
-      `${n.title ? `[${n.title}] ` : ''}${(n.content || '').trim().slice(0, 400)}`
+      `${n.title ? `[${n.title}] ` : ''}${(n.content || '').trim().slice(0, 1500)}`
     ).filter((t: string) => t.trim());
     if (formatted.length) playerNotesContext += `\n\nPlayer's notebook entries:\n${formatted.join('\n\n')}`;
   }

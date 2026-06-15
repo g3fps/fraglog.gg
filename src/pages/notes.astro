@@ -339,10 +339,15 @@ async function askAI() {
   try {
     const session = (await initSupabase().auth.getSession()).data.session;
     const historyToSend = history.slice(0, -1);
+    // When a note is open, send its live editor content in full so the AI sees
+    // the whole thing (not just the truncated bundle of all notes).
+    const openNote = activeNoteId
+      ? { title: document.getElementById('nb-title').value, content: document.getElementById('nb-body').value }
+      : null;
     const res = await fetch('/api/ask', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (session?.access_token || '') },
-      body: JSON.stringify({ question: q, history: historyToSend })
+      body: JSON.stringify({ question: q, history: historyToSend, openNote })
     });
 
     loadingEl.remove();
