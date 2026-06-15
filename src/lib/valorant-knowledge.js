@@ -1470,6 +1470,14 @@ export const GENERAL_KNOWLEDGE = {
       question_mark_positioning: "Take space across the map simultaneously with little util, then shift away and leave only the impression of control. Forces enemies to spend util or bodies reclaiming space that's already been abandoned.",
       discipline: "High level players know they can take a 50/50 and win, but instead play patiently and force a worse fight later. Having the discipline to NOT swing when you could is what stops you from throwing rounds you should win."
     },
+    attack_structure: {
+      not_exhaustive: "These are the common, foundational structures — NOT a fixed rulebook. Any distribution of the 5 players is possible and teams improvise constantly; the labels are just descriptive conventions. The only hard requirements: the bodies total 5, and the label matches what's actually being sent (don't call a 3-man hit 'fast'). Don't present these as the only legal options.",
+      hit_types: "The distribution of the 5 players defines the play. FAST HIT / RUSH = 4-5 players committing through ONE entry together to overwhelm the site before defenders set up or rotate (at most 1 true lurker). SPLIT = the same site hit from TWO directions whose timing converges, e.g. 3 through A main + 2 through mid into A — the mid players are part of the hit, not lurkers. INFO SETUP (e.g. 3-1-1) = group 3 in one area while 1 and 1 spread to mid / other sites to read where the defense is weak, then commit off that read — slower and more passive (less favored in ranked but a real structure, not the same as a split). DEFAULT / SLOW = spread out (roughly 1-1-1-1-1) to take neutral space and info, then commit.",
+      fast_hit_needs_bodies: "A play you call 'fast' or a 'rush' must send AT LEAST 4 to that one entry. If only 3 go to the site, it is NOT a fast hit — it's a split or a slower hit, and it should be labeled as such.",
+      lurkers_vs_split_prongs: "A true LURKER plays the opposite side of the map for flank/info and does NOT converge on the site — usually at most 1. Players who peel off the main entry but still attack the SAME site from another angle (e.g. 2 going mid-to-A) are a SPLIT PRONG, not lurkers. You CAN run more than one player off the main entry — it just turns a fast single-entry rush into a split or a slower hit, which is a legitimate choice.",
+      bodies_must_add_up: "Players always total 5 and the split of bodies must match the label. Don't call something 'Fast A' while sending only 3 to A — either send 4-5 (fast) or call it the split / slow hit it actually is.",
+      key_insight: "Match the name to the manpower. Fast = 4-5 one entry with ≤1 true lurker; Split = e.g. 3+2 converging on one site; Slow/default = spread for info then commit. The common scripting mistake is labeling a 3-man hit 'fast'."
+    },
     timing: {
       summary: "Swing when the enemy isn't looking at you — specifically on spaces where they have to clear multiple angles while moving. Works in solo queue, not team-dependent.",
       key_insight: "Peeking on timing is one of the most underused tools in ranked. Study where enemies have to look away from your angle to clear something else, and swing in that window."
@@ -1630,6 +1638,11 @@ export const RESOURCES = {
 };
 
 export const ECONOMY_KNOWLEDGE = {
+  match_structure: {
+    summary: "First team to 13 rounds wins. Up to 24 rounds in regulation, split into two halves of 12; teams swap attack/defense after round 12. A 12-12 tie goes to overtime.",
+    pistol_rounds: "ONLY round 1 and round 13 are pistol rounds — the first round of each half. Round 12 is the LAST round of the FIRST half, not a pistol. Round 24 (if reached) is the last round of the second half. Never label round 12 a pistol round.",
+    after_pistol: "Round 2 and round 14 are the rounds right after a pistol — bonus/anti-eco or save depending on the pistol result, but they are NOT pistols themselves."
+  },
   armor: {
     light_shield: "25 shield, costs 400. Buy when you can't afford heavy shield.",
     heavy_shield: "50 shield, costs 1000. Standard full buy armor."
@@ -1640,12 +1653,14 @@ export const ECONOMY_KNOWLEDGE = {
     save: "Full save — pistol only or buy nothing. Goal is to bank credits for next round."
   },
   round_flow: {
-    win_pistol: "Buy round 2. Expect a tough round 3 — enemy saved round 2 after losing pistol and will full buy round 3.",
-    lose_pistol: "Save round 2. Buy round 3 with stacked credits.",
+    win_pistol: "Buy round 2 (Outlaw/Spectre + light shield is common). Do NOT spread out and 'default' after WINNING the pistol — playing spread invites isolated 1v1s where an enemy on a save can win a free rifle off you and swing the economy. Play together / take map control as a group so every fight is traded. Expect a tough round 3 — enemy who saved round 2 will full buy.",
+    lose_pistol: "Save round 2, or run a default light buy. Defaulting and playing for info is fine here precisely because you're not risking expensive guns. Buy round 3 with stacked credits.",
     lose_pistol_and_round_2: "Still buy round 3 — you have banked enough from two save rounds.",
+    round_3_is_never_anti_eco: "Round 3's economy is fully determined by rounds 1-2, and none of the outcomes is an 'anti-eco': won both -> your bonus continues; lost both -> your first full buy (rifle + heavy/light shield); split 1-1 -> a light buy/force. Do not script round 3 as an anti-eco.",
     loss_bonus: "Lose round 1 = +500 next round. Loss bonus stacks up to +900 per round on consecutive losses. Win a round = loss bonus resets.",
     bonus_round: "Win a round with pistols = bonus round next. Should almost always full buy on bonus unless saving for a specific reason."
   },
+  playbook_caveat: "You CANNOT pre-assign a fixed economy state (eco / anti-eco / save / bonus / full buy) to a specific round NUMBER in an attack playbook. After round 1, every round's buy depends on who won the previous rounds — only rounds 1 and 13 are guaranteed pistols. Write a round-by-round playbook as CONDITIONAL plays keyed to the buy state ('on a full buy do X', 'on a force/eco do Y'), not as fixed labels like 'R3 anti-eco' or 'R10 eco'.",
   when_to_force: [
     "Match point against you — economy does not matter",
     "You have enough for a meaningful weapon but not a full buy — spectre or sheriff can win rounds",

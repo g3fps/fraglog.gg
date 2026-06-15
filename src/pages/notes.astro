@@ -76,7 +76,7 @@ if (accessToken && refreshToken) {
           </div>
           <div class="ask-bar-inner">
             <span class="ask-bar-icon">✦</span>
-            <input id="ask-input" class="ask-bar-input" placeholder="Ask AI anything…" autocomplete="off" maxlength="600">
+            <textarea id="ask-input" class="ask-bar-input" placeholder="Ask AI anything…  (Shift+Enter for a new line)" autocomplete="off" maxlength="600" rows="1"></textarea>
             <button class="ask-bar-send" id="ask-send" onclick="askAI()">Ask</button>
           </div>
         </div>
@@ -324,6 +324,7 @@ async function askAI() {
   const sendBtn = document.getElementById('ask-send');
   sendBtn.disabled = true;
   input.value = '';
+  if (typeof resizeAskInput === 'function') resizeAskInput();
 
   const history = [...getActiveHistory(), { role: 'user', content: q }];
   setActiveHistory(history);
@@ -393,8 +394,16 @@ async function clearChat() {
 }
 
 document.getElementById('ask-input').addEventListener('keydown', e => {
-  if (e.key === 'Enter') { e.preventDefault(); askAI(); }
+  // Enter submits; Shift+Enter inserts a newline
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); askAI(); }
 });
+// Auto-grow the textarea as lines are added, then reset after sending
+function resizeAskInput() {
+  const el = document.getElementById('ask-input');
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 140) + 'px';
+}
+document.getElementById('ask-input').addEventListener('input', resizeAskInput);
 document.getElementById('nb-title').addEventListener('input', scheduleSave);
 document.getElementById('nb-body').addEventListener('input', scheduleSave);
 
