@@ -2,20 +2,9 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Nav from '../components/Nav.astro';
 import Footer from '../components/Footer.astro';
+import { getSessionUser } from '../lib/auth.js';
 
-const sbAccess = Astro.cookies.get('sb-access-token')?.value;
-const sbRefresh = Astro.cookies.get('sb-refresh-token')?.value;
-
-let user = null;
-if (sbAccess && sbRefresh) {
-  const { createClient } = await import('@supabase/supabase-js');
-  const sb = createClient(
-    'https://cvdtykmkajmhlxydhzzl.supabase.co',
-    'sb_publishable_I16eAnYgsA9fd8ZMlmFQtA_RxepSaXi'
-  );
-  const { data: { user: u } } = await sb.auth.setSession({ access_token: sbAccess, refresh_token: sbRefresh });
-  user = u;
-}
+const { user } = await getSessionUser(Astro.cookies);
 ---
 
 <BaseLayout title="Contact — fraglog.gg" user={user}>

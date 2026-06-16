@@ -3,27 +3,10 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import Nav from '../components/Nav.astro';
 import Footer from '../components/Footer.astro';
 import { MAPS, AGENTS } from '../data/data.js';
-import { createClient } from '@supabase/supabase-js';
-import { PREMIUM_ENABLED, isPremiumActive, FREE_LIMITS } from '../lib/premium.js';
+import { PREMIUM_ENABLED, FREE_LIMITS } from '../lib/premium.js';
+import { getSessionPremium } from '../lib/auth.js';
 
-const supabase = createClient(
-  "https://cvdtykmkajmhlxydhzzl.supabase.co",
-  "sb_publishable_I16eAnYgsA9fd8ZMlmFQtA_RxepSaXi"
-);
-
-const accessToken = Astro.cookies.get('sb-access-token')?.value;
-const refreshToken = Astro.cookies.get('sb-refresh-token')?.value;
-
-let user = null;
-let isPremium = false;
-if (accessToken && refreshToken) {
-  const { data } = await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
-  user = data.session?.user ?? null;
-  if (user) {
-    const { data: sub } = await supabase.from('subscriptions').select('tier, status, current_period_end').eq('user_id', user.id).maybeSingle();
-    isPremium = isPremiumActive(sub);
-  }
-}
+const { user, isPremium } = await getSessionPremium(Astro.cookies);
 const premiumGate = { premiumEnabled: PREMIUM_ENABLED, isPremium, freeVodCap: FREE_LIMITS.vodUploads };
 ---
 <BaseLayout title="My VODs — fraglog.gg" description="Your personal Valorant VOD collection on FragLog.gg" user={user}>
@@ -92,6 +75,7 @@ const premiumGate = { premiumEnabled: PREMIUM_ENABLED, isPremium, freeVodCap: FR
 <script is:inline>
 let mvVideoId = "";
 let myVodCount = 0;
+let myVods = [];
 const mvGate = JSON.parse(document.getElementById('mv-premium-gate')?.textContent || '{}');
 
 function mvExtractId() {
@@ -166,6 +150,7 @@ async function renderMyVods() {
 
   if (error || !data) { grid.innerHTML = '<div class="empty"><strong>Error loading VODs</strong></div>'; return; }
   myVodCount = data.length;
+  myVods = data;
   if (!data.length) {
     grid.innerHTML = '<div class="empty"><strong>No VODs yet</strong>Paste a YouTube URL above to add your first one</div>';
     return;
@@ -196,7 +181,7 @@ async function renderMyVods() {
       ? `<div class="mv-twitch-thumb"><svg viewBox="0 0 24 24" fill="currentColor" width="32" height="32"><path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714z"/></svg><span>Twitch VOD</span></div>`
       : `<img src="https://img.youtube.com/vi/${v.video_id}/mqdefault.jpg" alt="${v.title}" loading="lazy">`;
     return `
-    <div class="video-card" data-vid="${v.video_id}" data-title="${v.title.replace(/"/g, '&quot;')}" style="cursor:pointer">
+    <div class="video-card" data-id="${v.id}" data-vid="${v.video_id}" data-title="${v.title.replace(/"/g, '&quot;')}" style="cursor:pointer">
       <div class="video-thumb">
         ${thumb}
         <div class="play-overlay"><div class="play-icon"><div class="play-tri"></div></div></div>
@@ -209,7 +194,10 @@ async function renderMyVods() {
         <div class="video-title">${v.title}</div>
         <div class="video-meta-row">
           <span class="video-date">${v.date ? new Date(v.date).toLocaleDateString('en-US',{month:'short',year:'numeric'}) : ''}</span>
-          <button class="mv-delete-btn" onclick="event.stopPropagation();deleteMyVod('${v.id}')">✕ Remove</button>
+          <div class="mv-card-actions">
+            <button class="mv-edit-btn" onclick="event.stopPropagation();editMyVod('${v.id}')">Edit</button>
+            <button class="mv-delete-btn" onclick="event.stopPropagation();deleteMyVod('${v.id}')">✕ Remove</button>
+          </div>
         </div>
       </div>
     </div>
@@ -217,7 +205,7 @@ async function renderMyVods() {
 
   grid.onclick = e => {
     const card = e.target.closest('.video-card[data-vid]');
-    if (!card || e.target.closest('button')) return;
+    if (!card || e.target.closest('button') || card.classList.contains('mv-editing') || e.target.closest('input,select,.mv-edit')) return;
     openVideo(card.dataset.vid, card.dataset.title, 'Me', { mode: 'own' });
   };
   if (window.applyWatchProgress) window.applyWatchProgress();
@@ -253,6 +241,55 @@ async function deleteMyVod(id) {
     delete userCoach[vod.video_id];
   }
   await sb.from("user_vods").delete().eq("id", id).eq("user_id", currentUser.id);
+  renderMyVods();
+}
+
+function editMyVod(id) {
+  const vod = myVods.find(v => String(v.id) === String(id));
+  const card = document.querySelector(`.video-card[data-id="${id}"]`);
+  if (!vod || !card) return;
+  const mapOptions = document.getElementById('mv-map').innerHTML;
+  const agentOptions = document.getElementById('mv-agent').innerHTML;
+  card.classList.add('mv-editing');
+  card.style.cursor = 'default';
+  card.innerHTML = `
+    <div class="mv-edit">
+      <label>Title</label>
+      <input type="text" class="mv-edit-title" value="${(vod.title || '').replace(/"/g, '&quot;')}">
+      <div class="mv-edit-row">
+        <div class="mv-edit-field">
+          <label>Map</label>
+          <select class="mv-edit-map">${mapOptions}</select>
+        </div>
+        <div class="mv-edit-field">
+          <label>Agent</label>
+          <select class="mv-edit-agent">${agentOptions}</select>
+        </div>
+      </div>
+      <div class="mv-edit-actions">
+        <button class="auth-btn primary" onclick="saveMyVodEdit('${id}')">Save</button>
+        <button class="auth-btn" onclick="renderMyVods()">Cancel</button>
+      </div>
+      <div class="mv-error mv-edit-err"></div>
+    </div>`;
+  card.querySelector('.mv-edit-map').value = vod.map_id || '';
+  card.querySelector('.mv-edit-agent').value = vod.agent_id || '';
+}
+
+async function saveMyVodEdit(id) {
+  const card = document.querySelector(`.video-card[data-id="${id}"]`);
+  if (!card) return;
+  const title = card.querySelector('.mv-edit-title').value.trim();
+  const mapId = card.querySelector('.mv-edit-map').value;
+  const agentId = card.querySelector('.mv-edit-agent').value;
+  const err = card.querySelector('.mv-edit-err');
+  err.textContent = '';
+  if (!title) { err.textContent = 'Enter a title.'; return; }
+  if (!mapId) { err.textContent = 'Select a map.'; return; }
+  if (!agentId) { err.textContent = 'Select an agent.'; return; }
+  const sb = initSupabase();
+  const { error } = await sb.from('user_vods').update({ title, map_id: mapId, agent_id: agentId }).eq('id', id).eq('user_id', currentUser.id);
+  if (error) { err.textContent = 'Error saving: ' + error.message; return; }
   renderMyVods();
 }
 

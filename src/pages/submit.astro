@@ -3,26 +3,14 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import Nav from '../components/Nav.astro';
 import Footer from '../components/Footer.astro';
 import { MAPS, AGENTS } from '../data/data.js';
-import { createClient } from '@supabase/supabase-js';
-
-const supabase = createClient(
-  "https://cvdtykmkajmhlxydhzzl.supabase.co",
-  "sb_publishable_I16eAnYgsA9fd8ZMlmFQtA_RxepSaXi"
-);
+import { getSessionUser } from '../lib/auth.js';
 
 const TURNSTILE_SITE_KEY = import.meta.env.TURNSTILE_SITE_KEY || '';
 
-const accessToken = Astro.cookies.get('sb-access-token')?.value;
-const refreshToken = Astro.cookies.get('sb-refresh-token')?.value;
-
-let user = null;
-if (accessToken && refreshToken) {
-  const { data } = await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
-  user = data.session?.user ?? null;
-}
+const { user } = await getSessionUser(Astro.cookies);
 ---
-<BaseLayout title="Submit a VOD — FragLog.gg" description="Submit a Radiant or pro player Valorant VOD for review on FragLog.gg">
-  <Nav crumbs={[{ label: 'ALL MAPS', href: '/' }, { label: 'SUBMIT A VOD' }]} />
+<BaseLayout title="Submit a VOD — FragLog.gg" description="Submit a Radiant or pro player Valorant VOD for review on FragLog.gg" user={user}>
+  <Nav crumbs={[{ label: 'ALL MAPS', href: '/' }, { label: 'SUBMIT A VOD' }]} user={user} />
   <div class="page-content">
     <div class="hero">
       <div class="hero-title">Submit a VOD</div>

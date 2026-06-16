@@ -4,7 +4,7 @@ const { crumbs = [], user = null } = Astro.props as { crumbs: { label: string; h
 
 <header class="site-header">
   <div class="nav-top">
-    <a class="logo" href="/">FragLog<span>.gg</span></a>
+    <a class="logo" href="/">FragLog<span>.gg</span></a><span class="nav-premium-badge" id="nav-premium-badge" style="display:none">✦</span>
     <div class="nav-top-right">
       <div class="nav-right" id="nav-right">
         {user ? (
@@ -73,6 +73,9 @@ function handleNavSearch(val) {
     document.getElementById('tab-favorites').style.display = '';
     document.getElementById('tab-myvods').style.display = '';
     document.getElementById('tab-playlists').style.display = '';
+
+    // Premium badge next to logo
+    if (window.__isPremium) document.getElementById('nav-premium-badge').style.display = '';
 
     // Load profile
     if (!document.getElementById('nav-avatar-wrap')) return;

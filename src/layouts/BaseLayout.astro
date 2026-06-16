@@ -90,7 +90,7 @@ const TURNSTILE_SITE_KEY = import.meta.env.TURNSTILE_SITE_KEY || '';
   <div class="pp-backdrop" id="playlist-picker" onclick="closePlaylistPicker(event)">
     <div class="pp-modal">
       <div class="pp-head">
-        <span>Add to playlist</span>
+        <span>Save to playlist</span>
         <button class="pp-close" onclick="closePlaylistPicker()">✕</button>
       </div>
       <div class="pp-list" id="pp-list"></div>
@@ -718,9 +718,9 @@ const TURNSTILE_SITE_KEY = import.meta.env.TURNSTILE_SITE_KEY || '';
     if (!ppPlaylists.length) { list.innerHTML = '<div class="pp-empty">No playlists yet — create one below.</div>'; return; }
     list.innerHTML = ppPlaylists.map((p, i) => {
       const has = (p.items || []).some(it => it.video_id === vmVideoId);
-      return `<button class="pp-item" onclick="addToPlaylistByIndex(${i})" ${has ? 'disabled' : ''}>
+      return `<button class="pp-item${has ? ' pp-item--added' : ''}" onclick="${has ? 'removeFromPlaylistByIndex' : 'addToPlaylistByIndex'}(${i})">
         <span>${ppEsc(p.title || 'Untitled playlist')}</span>
-        <span class="pp-item-count">${has ? 'added' : (p.items || []).length}</span>
+        <span class="pp-item-count">${has ? '✓' : (p.items || []).length}</span>
       </button>`;
     }).join('');
   }
@@ -749,6 +749,18 @@ const TURNSTILE_SITE_KEY = import.meta.env.TURNSTILE_SITE_KEY || '';
     renderPickerList();
   }
 
+  async function removeFromPlaylistByIndex(i) {
+    const p = ppPlaylists[i];
+    if (!p || !vmVideoId) return;
+    p.items = (p.items || []).filter(it => it.video_id !== vmVideoId);
+    const sb = initSupabase();
+    const { error } = await sb.from('playlists').update({ items: p.items, updated_at: new Date().toISOString() }).eq('id', p.id).eq('user_id', currentUser.id);
+    const status = document.getElementById('pp-status');
+    if (error) { status.textContent = 'Could not remove. Try again.'; return; }
+    status.textContent = 'Removed from ' + (p.title || 'playlist');
+    renderPickerList();
+  }
+
   async function createPlaylistAndAdd() {
     if (!vmVideoId || !currentUser) return;
     const name = document.getElementById('pp-new-input').value.trim() || 'New playlist';
@@ -769,6 +781,7 @@ const TURNSTILE_SITE_KEY = import.meta.env.TURNSTILE_SITE_KEY || '';
 
   window.openPlaylistPicker = openPlaylistPicker;
   window.addToPlaylistByIndex = addToPlaylistByIndex;
+  window.removeFromPlaylistByIndex = removeFromPlaylistByIndex;
   window.createPlaylistAndAdd = createPlaylistAndAdd;
   window.closePlaylistPicker = closePlaylistPicker;
 

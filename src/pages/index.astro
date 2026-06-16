@@ -3,21 +3,9 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import Nav from '../components/Nav.astro';
 import Footer from '../components/Footer.astro';
 import { MAPS, vodCount, getAllVods } from '../data/data.js';
-import { createClient } from '@supabase/supabase-js';
+import { getSessionUser } from '../lib/auth.js';
 
-const supabase = createClient(
-  "https://cvdtykmkajmhlxydhzzl.supabase.co",
-  "sb_publishable_I16eAnYgsA9fd8ZMlmFQtA_RxepSaXi"
-);
-
-const accessToken = Astro.cookies.get('sb-access-token')?.value;
-const refreshToken = Astro.cookies.get('sb-refresh-token')?.value;
-
-let user = null;
-if (accessToken && refreshToken) {
-  const { data } = await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
-  user = data.session?.user ?? null;
-}
+const { user } = await getSessionUser(Astro.cookies);
 
 const totalVods = MAPS.reduce((sum, map) => sum + vodCount(map.id), 0);
 const displayVods = Math.floor(totalVods / 100) * 100;
