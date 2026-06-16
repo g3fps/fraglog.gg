@@ -36,8 +36,10 @@ const { crumbs = [], user = null } = Astro.props as { crumbs: { label: string; h
       <a class="feature-tab" href="/notes" id="tab-notes">Notes</a>
     </div>
     <div class="nav-bottom-right">
+      <a class="feature-tab feature-tab--premium" href="/premium" id="tab-premium">✦ Premium</a>
       <a class="feature-tab" href="/favorites" id="tab-favorites" style="display:none"><span class="fav-heart">♥ </span>Favorites</a>
       <a class="feature-tab" href="/my-vods" id="tab-myvods" style="display:none">My VODs</a>
+      <a class="feature-tab" href="/playlists" id="tab-playlists" style="display:none">Playlists</a>
     </div>
   </div>
 </header>
@@ -51,7 +53,7 @@ function handleNavSearch(val) {
 // Active tab
 (function() {
   const path = window.location.pathname;
-  const map = { '/pro': 'tab-pro', '/gameplan': 'tab-gameplan', '/favorites': 'tab-favorites', '/notes': 'tab-notes', '/my-vods': 'tab-myvods' };
+  const map = { '/pro': 'tab-pro', '/gameplan': 'tab-gameplan', '/favorites': 'tab-favorites', '/notes': 'tab-notes', '/my-vods': 'tab-myvods', '/playlists': 'tab-playlists', '/premium': 'tab-premium' };
   const matched = Object.entries(map).find(([p]) => path.startsWith(p));
   document.getElementById(matched ? matched[1] : 'tab-vods')?.classList.add('active');
 })();
@@ -67,9 +69,10 @@ function handleNavSearch(val) {
     const { data: { session } } = await sb.auth.getSession();
     if (!session) return;
 
-    // Show favorites/my vods tabs (notes is always visible, gated on its own page)
+    // Show favorites/my vods/playlists tabs (notes is always visible, gated on its own page)
     document.getElementById('tab-favorites').style.display = '';
     document.getElementById('tab-myvods').style.display = '';
+    document.getElementById('tab-playlists').style.display = '';
 
     // Load profile
     if (!document.getElementById('nav-avatar-wrap')) return;
