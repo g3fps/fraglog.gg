@@ -5,10 +5,7 @@ import { isAdminEmail } from '../../lib/admin.js';
 import { checkRateLimit, getClientIp } from '../../lib/ratelimit.js';
 import { buildAskPrompt } from '../../lib/coaching-prompt.js';
 import { getAllVods } from '../../data/data.js';
-
-// ── Daily Ask AI limit ────────────────────────────────────────
-// Flat cap for now; premium tiers (higher cap) can come later.
-const DAILY_ASK_LIMIT = 5;
+import { getPremium, getLimits, featureLocked } from '../../lib/premium.js';
 
 export const POST: APIRoute = async ({ request, clientAddress }) => {
   // Require auth — verify session server-side, never trust a client-supplied id
@@ -37,6 +34,8 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
   }
 
   const isAdmin = isAdminEmail(verifiedUserEmail);
+  const { isPremium } = await getPremium(sb, verifiedUserId, isAdmin);
+  const DAILY_ASK_LIMIT = getLimits(isPremium).ask;
 
   // ── Burst rate limit (serverless-safe, Postgres-backed) ──────
   if (!isAdmin) {
@@ -105,7 +104,10 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
   }
 
   const body = await request.json().catch(() => ({}));
-  const { system, messages, safeQuestion } = buildAskPrompt({ ...body, playerNotesContext });
+  // Cross-note referencing (the AI reading across the player's OTHER notes) is a
+  // premium-only feature. The currently-open note (body.openNote) is always sent.
+  const crossNoteContext = featureLocked(isPremium) ? '' : playerNotesContext;
+  const { system, messages, safeQuestion } = buildAskPrompt({ ...body, playerNotesContext: crossNoteContext });
 
   if (!safeQuestion.trim()) {
     return new Response(JSON.stringify({ error: 'No question provided' }), { status: 400 });
@@ -123,9 +125,11 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
   const askCount = usage?.ask_count ?? 0;
 
   if (!isAdmin && askCount >= DAILY_ASK_LIMIT) {
+    const upsell = featureLocked(isPremium);
     return new Response(JSON.stringify({
-      error: `You've used all ${DAILY_ASK_LIMIT} Ask AI questions for today. Resets at midnight UTC.`,
+      error: `You've used all ${DAILY_ASK_LIMIT} Ask AI questions for today. Resets at midnight UTC.${upsell ? ' Go Premium for 20/day.' : ''}`,
       limitReached: true,
+      upsell,
     }), { status: 429 });
   }
 

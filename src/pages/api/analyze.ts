@@ -4,10 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 import { isAdminEmail } from '../../lib/admin.js';
 import { checkRateLimit, getClientIp } from '../../lib/ratelimit.js';
 import { buildCoachingPrompt } from '../../lib/coaching-prompt.js';
-
-// ── Daily limits ──────────────────────────────────────────
-const DAILY_COACHING_LIMIT = 3;
-const DAILY_FOLLOWUP_LIMIT = 5;
+import { getPremium, getLimits, featureLocked } from '../../lib/premium.js';
 
 export const POST: APIRoute = async ({ request, clientAddress }) => {
   // Require auth — verify session server-side, don't trust client-supplied userId
@@ -36,6 +33,7 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
   }
 
   const isAdmin = isAdminEmail(verifiedUserEmail);
+  const { isPremium } = await getPremium(sb, verifiedUserId, isAdmin);
 
   // ── Burst rate limit (serverless-safe, Postgres-backed) ──────
   if (!isAdmin) {
@@ -53,8 +51,8 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
   // ── Per-user daily rate limit ─────────────────────────────
   const today = new Date().toISOString().slice(0, 10);
   const isFollowup = mode === 'followup';
-  const coachingLimit = DAILY_COACHING_LIMIT;
-  const followupLimit = DAILY_FOLLOWUP_LIMIT;
+  const coachingLimit = getLimits(isPremium).coaching;
+  const followupLimit = getLimits(isPremium).followup;
 
   const { data: usage } = await sb
     .from('coaching_usage')
@@ -67,11 +65,13 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
   const followupCount = usage?.followup_count ?? 0;
 
   if (!isAdmin) {
+    const upsell = featureLocked(isPremium);
+    const upsellMsg = upsell ? ' Go Premium for higher daily limits.' : '';
     if (isFollowup && followupCount >= followupLimit) {
-      return new Response(JSON.stringify({ error: `You've used all ${followupLimit} follow-up questions for today. Resets at midnight UTC.` }), { status: 429 });
+      return new Response(JSON.stringify({ error: `You've used all ${followupLimit} follow-up questions for today. Resets at midnight UTC.${upsellMsg}`, upsell }), { status: 429 });
     }
     if (!isFollowup && coachingCount >= coachingLimit) {
-      return new Response(JSON.stringify({ error: `You've used all ${coachingLimit} coaching sessions for today. Resets at midnight UTC.` }), { status: 429 });
+      return new Response(JSON.stringify({ error: `You've used all ${coachingLimit} coaching sessions for today. Resets at midnight UTC.${upsellMsg}`, upsell }), { status: 429 });
     }
   }
 

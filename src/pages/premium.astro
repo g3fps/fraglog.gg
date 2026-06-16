@@ -1,0 +1,143 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Nav from '../components/Nav.astro';
+import Footer from '../components/Footer.astro';
+import { isPremiumActive } from '../lib/premium.js';
+
+const sbAccess = Astro.cookies.get('sb-access-token')?.value;
+const sbRefresh = Astro.cookies.get('sb-refresh-token')?.value;
+
+let user = null;
+let alreadyPremium = false;
+if (sbAccess && sbRefresh) {
+  const { createClient } = await import('@supabase/supabase-js');
+  const sb = createClient(
+    'https://cvdtykmkajmhlxydhzzl.supabase.co',
+    'sb_publishable_I16eAnYgsA9fd8ZMlmFQtA_RxepSaXi'
+  );
+  const { data: { user: u } } = await sb.auth.setSession({ access_token: sbAccess, refresh_token: sbRefresh });
+  user = u;
+  if (u) {
+    const { data: sub } = await sb.from('subscriptions').select('tier, status, current_period_end').eq('user_id', u.id).maybeSingle();
+    alreadyPremium = isPremiumActive(sub);
+  }
+}
+
+// Displayed prices — edit to match the prices you create in Stripe.
+const PRICES = { monthly: '$6.99', yearly: '$59.99', lifetime: '$129.99' };
+---
+
+<BaseLayout
+  title="Premium — fraglog.gg"
+  description="Go Premium on fraglog.gg — higher AI coaching limits, cross-note AI, unlimited VOD uploads, and VOD playlists."
+  canonical="https://fraglog.gg/premium/"
+  user={user}>
+  <Nav crumbs={[{ label: 'Premium' }]} user={user} />
+
+  <main class="premium-main">
+    <div class="page-content">
+
+      <div class="premium-hero">
+        <div class="header-eyebrow">fraglog Premium</div>
+        <h1 class="header-title">Train without limits</h1>
+        <p class="header-sub">More AI coaching, cross-note insights, unlimited VODs, and playlists — built for players who are serious about climbing.</p>
+      </div>
+
+      <div class="premium-status-banner" id="premium-banner" style="display:none"></div>
+
+      {alreadyPremium ? (
+        <div class="premium-active-card">
+          <div class="premium-active-title">✦ You're Premium</div>
+          <p>Thanks for supporting fraglog. You have full access to every feature.</p>
+          <button class="premium-btn" onclick="manageBilling()">Manage subscription</button>
+        </div>
+      ) : (
+        <div class="premium-plans">
+          <div class="plan-card">
+            <div class="plan-name">Monthly</div>
+            <div class="plan-price">{PRICES.monthly}<span>/mo</span></div>
+            <div class="plan-sub">Billed monthly. Cancel anytime.</div>
+            <button class="premium-btn" onclick="checkout('monthly')">Go Premium</button>
+          </div>
+          <div class="plan-card plan-card--featured">
+            <div class="plan-badge">Best value</div>
+            <div class="plan-name">Yearly</div>
+            <div class="plan-price">{PRICES.yearly}<span>/yr</span></div>
+            <div class="plan-sub">Billed yearly — save ~$24 vs monthly.</div>
+            <button class="premium-btn premium-btn--primary" onclick="checkout('yearly')">Go Premium</button>
+          </div>
+          <div class="plan-card">
+            <div class="plan-name">Lifetime</div>
+            <div class="plan-price">{PRICES.lifetime}<span> once</span></div>
+            <div class="plan-sub">One payment. Premium forever.</div>
+            <button class="premium-btn" onclick="checkout('lifetime')">Buy Lifetime</button>
+          </div>
+        </div>
+      )}
+
+      <div class="premium-features">
+        <div class="premium-features-title">What Premium unlocks</div>
+        <ul class="premium-feature-list">
+          <li><strong>Higher AI limits</strong> — 10 coaching sessions, 25 follow-ups, and 20 Ask AI questions per day, plus 3 gameplan generations.</li>
+          <li><strong>Cross-note AI</strong> — the AI reads across all your notes to spot patterns and give answers grounded in your history.</li>
+          <li><strong>Unlimited VOD uploads</strong> — build out your whole personal library, no cap.</li>
+          <li><strong>VOD playlists</strong> — organize VODs into study sets (e.g. "Jett fundamentals").</li>
+        </ul>
+        <p class="premium-fineprint">Free always includes the core VOD library, notes, gameplan, and daily AI coaching.</p>
+      </div>
+
+    </div>
+  </main>
+
+  <Footer />
+</BaseLayout>
+
+<script is:inline>
+async function getToken() {
+  const sb = initSupabase();
+  const { data: { session } } = await sb.auth.getSession();
+  return session?.access_token || null;
+}
+
+async function checkout(plan) {
+  const token = await getToken();
+  if (!token) { openAuth(); return; }
+  const res = await fetch('/api/create-checkout', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+    body: JSON.stringify({ plan })
+  });
+  const data = await res.json().catch(() => ({}));
+  if (res.ok && data.url) { window.location.href = data.url; return; }
+  alert(data.error || 'Could not start checkout. Try again.');
+}
+
+async function manageBilling() {
+  const token = await getToken();
+  if (!token) { openAuth(); return; }
+  const res = await fetch('/api/billing-portal', {
+    method: 'POST',
+    headers: { 'Authorization': 'Bearer ' + token }
+  });
+  const data = await res.json().catch(() => ({}));
+  if (res.ok && data.url) { window.location.href = data.url; return; }
+  alert(data.error || 'Could not open billing.');
+}
+window.checkout = checkout;
+window.manageBilling = manageBilling;
+
+// Post-checkout banner
+(function () {
+  const status = new URLSearchParams(window.location.search).get('status');
+  const banner = document.getElementById('premium-banner');
+  if (!banner || !status) return;
+  if (status === 'success') {
+    banner.textContent = '✓ Payment received — your Premium access is active. It may take a few seconds to show.';
+    banner.style.display = 'block';
+    banner.classList.add('success');
+  } else if (status === 'cancel') {
+    banner.textContent = 'Checkout canceled — no charge was made.';
+    banner.style.display = 'block';
+  }
+})();
+</script>

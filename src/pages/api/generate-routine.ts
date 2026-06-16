@@ -5,6 +5,7 @@ import { AGENT_KNOWLEDGE } from '../../lib/valorant-knowledge.js';
 import { isAdminEmail } from '../../lib/admin.js';
 import { checkRateLimit, getClientIp } from '../../lib/ratelimit.js';
 import { buildRoutinePrompt } from '../../lib/routine-prompt.js';
+import { getPremium, getLimits, featureLocked } from '../../lib/premium.js';
 
 export const POST: APIRoute = async ({ request, clientAddress }) => {
   const authHeader = request.headers.get('authorization');
@@ -29,6 +30,10 @@ let verifiedUserId: string | null = null;
     return new Response(JSON.stringify({ error: 'Sign in to generate a gameplan.' }), { status: 401 });
   }
 
+  const { isPremium } = await getPremium(sb, verifiedUserId, isAdmin);
+  const generateLimit = getLimits(isPremium).routineGenerate;
+  const finetuneLimit = getLimits(isPremium).routineFinetune;
+
   // ── Burst rate limit (serverless-safe, Postgres-backed) ──────
   if (!isAdmin) {
     const ip = getClientIp(request, clientAddress);
@@ -52,7 +57,7 @@ let verifiedUserId: string | null = null;
   // ── Daily limits ──────────────────────────────────────────────
   const { data: routineRecord } = await sb
     .from('routine')
-    .select('daily_generate_date, daily_finetune_count, daily_finetune_date')
+    .select('daily_generate_date, daily_generate_count, daily_finetune_count, daily_finetune_date')
     .eq('user_id', verifiedUserId)
     .maybeSingle();
 
@@ -60,12 +65,22 @@ let verifiedUserId: string | null = null;
     if (isFineTune) {
       const sameDay = routineRecord?.daily_finetune_date === today;
       const used = sameDay ? (routineRecord?.daily_finetune_count || 0) : 0;
-      if (used >= 3) {
-        return new Response(JSON.stringify({ error: 'Fine tune limit reached for today (3/3). Resets at midnight UTC.' }), { status: 429 });
+      if (used >= finetuneLimit) {
+        return new Response(JSON.stringify({ error: `Fine tune limit reached for today (${used}/${finetuneLimit}). Resets at midnight UTC.` }), { status: 429 });
       }
     } else {
-      if (routineRecord?.daily_generate_date === today) {
-        return new Response(JSON.stringify({ error: 'Already generated today. Use fine tune to make adjustments (3x available).' }), { status: 429 });
+      const sameDayGen = routineRecord?.daily_generate_date === today;
+      const usedGen = sameDayGen ? (routineRecord?.daily_generate_count || 0) : 0;
+      if (usedGen >= generateLimit) {
+        const upsell = featureLocked(isPremium);
+        return new Response(JSON.stringify({
+          error: (generateLimit === 1
+            ? 'Already generated today. Use fine tune to make adjustments.'
+            : `Daily generate limit reached (${usedGen}/${generateLimit}). Use fine tune to adjust.`)
+            + (upsell ? ' Go Premium for 3 generates/day.' : ''),
+          limitReached: true,
+          upsell,
+        }), { status: 429 });
       }
     }
   }
@@ -143,7 +158,9 @@ let verifiedUserId: string | null = null;
     const newCount = prevCount + 1;
     updatedCounts = { daily_finetune_count: newCount, daily_finetune_date: today };
   } else {
-    updatedCounts = { daily_generate_date: today, daily_finetune_count: 0, daily_finetune_date: today };
+    const sameDayGen = routineRecord?.daily_generate_date === today;
+    const prevGen = sameDayGen ? (routineRecord?.daily_generate_count || 0) : 0;
+    updatedCounts = { daily_generate_date: today, daily_generate_count: prevGen + 1, daily_finetune_count: 0, daily_finetune_date: today };
   }
 
   const { error: saveErr } = await sb.from('routine').upsert(

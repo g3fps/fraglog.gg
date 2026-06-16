@@ -1,0 +1,268 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Nav from '../components/Nav.astro';
+import Footer from '../components/Footer.astro';
+import { getAllVods } from '../data/data.js';
+import { PREMIUM_ENABLED, isPremiumActive } from '../lib/premium.js';
+
+const sbAccess = Astro.cookies.get('sb-access-token')?.value;
+const sbRefresh = Astro.cookies.get('sb-refresh-token')?.value;
+
+let user = null;
+let isPremium = false;
+if (sbAccess && sbRefresh) {
+  const { createClient } = await import('@supabase/supabase-js');
+  const sb = createClient(
+    'https://cvdtykmkajmhlxydhzzl.supabase.co',
+    'sb_publishable_I16eAnYgsA9fd8ZMlmFQtA_RxepSaXi'
+  );
+  const { data: { user: u } } = await sb.auth.setSession({ access_token: sbAccess, refresh_token: sbRefresh });
+  user = u;
+  if (u) {
+    const { data: sub } = await sb.from('subscriptions').select('tier, status, current_period_end').eq('user_id', u.id).maybeSingle();
+    isPremium = isPremiumActive(sub);
+  }
+}
+
+const locked = PREMIUM_ENABLED && !isPremium;
+const libVods = getAllVods().map((v: any) => ({
+  id: v.id, title: v.title, player: v.player, mapId: v.mapId, agentId: v.agentId, mapName: v.mapName, agentName: v.agentName,
+}));
+---
+
+<BaseLayout title="VOD Playlists — fraglog.gg" description="Curate Valorant VODs into study playlists on fraglog.gg." user={user}>
+  <Nav crumbs={[{ label: 'ALL MAPS', href: '/' }, { label: 'PLAYLISTS' }]} user={user} />
+  <div class="page-content">
+    <div class="hero">
+      <div class="hero-eyebrow">Premium</div>
+      <div class="hero-title">VOD Playlists</div>
+      <div class="hero-sub">Curate VODs into study sets — like "Jett fundamentals" — in the order you want to watch them.</div>
+    </div>
+
+    {locked ? (
+      <div class="pl-gate">
+        <strong>Playlists are a Premium feature</strong>
+        <span>Organize VODs into study sets and work through them in order.</span>
+        <a class="premium-btn premium-btn--primary" href="/premium">Go Premium</a>
+      </div>
+    ) : (
+      <div class="pl-app" id="pl-app">
+        <aside class="pl-sidebar">
+          <button class="nb-new-btn" onclick="createPlaylist()">+ New playlist</button>
+          <div class="pl-list" id="pl-list"></div>
+        </aside>
+        <section class="pl-workspace" id="pl-workspace">
+          <div class="pl-empty" id="pl-empty">Select or create a playlist to get started.</div>
+
+          <div class="pl-detail" id="pl-detail" style="display:none">
+            <div class="pl-detail-head">
+              <input id="pl-title" class="nb-editor-title" placeholder="Playlist title" maxlength="100" autocomplete="off">
+              <button class="nb-del-btn" onclick="deletePlaylist()">Delete</button>
+            </div>
+
+            <div class="pl-add">
+              <input type="text" id="pl-search" class="pl-search-input" placeholder="Search VODs to add (player, map, agent)..." autocomplete="off">
+              <div class="pl-search-results" id="pl-search-results"></div>
+            </div>
+
+            <div class="pl-items" id="pl-items"></div>
+          </div>
+        </section>
+      </div>
+    )}
+  </div>
+  <Footer />
+</BaseLayout>
+
+{!locked && (
+  <script type="application/json" id="pl-lib" is:inline set:html={JSON.stringify(libVods)}></script>
+)}
+
+<script is:inline>
+const LIB_VODS = JSON.parse(document.getElementById('pl-lib')?.textContent || '[]');
+let searchPool = LIB_VODS.slice();
+let playlists = [];
+let activeId = null;
+let plSaveTimer = null;
+let lastMatches = [];
+
+function esc(s) { return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+function activePlaylist() { return playlists.find(p => p.id === activeId); }
+
+async function loadPlaylists() {
+  if (!currentUser) return;
+  const sb = initSupabase();
+  // Merge the user's own VODs into the searchable pool
+  const { data: uv } = await sb.from('user_vods').select('video_id, title, player, map_id, agent_id');
+  searchPool = LIB_VODS.concat((uv || []).map(v => ({
+    id: v.video_id, title: v.title, player: v.player || '', mapId: v.map_id, agentId: v.agent_id, mapName: v.map_id, agentName: v.agent_id,
+  })));
+
+  const { data } = await sb.from('playlists').select('*').eq('user_id', currentUser.id).order('updated_at', { ascending: false });
+  playlists = data || [];
+  renderSidebar();
+  if (activeId && activePlaylist()) renderDetail(); else { activeId = null; showEmpty(); }
+}
+
+function renderSidebar() {
+  const list = document.getElementById('pl-list');
+  if (!list) return;
+  if (!playlists.length) { list.innerHTML = '<div class="pl-side-empty">No playlists yet.</div>'; return; }
+  list.innerHTML = playlists.map(p => `
+    <button class="pl-side-item${p.id === activeId ? ' active' : ''}" onclick="selectPlaylist('${p.id}')">
+      <span class="pl-side-name">${esc(p.title || 'Untitled playlist')}</span>
+      <span class="pl-side-count">${(p.items || []).length}</span>
+    </button>`).join('');
+}
+
+function showEmpty() {
+  document.getElementById('pl-empty').style.display = '';
+  document.getElementById('pl-detail').style.display = 'none';
+}
+
+async function createPlaylist() {
+  if (!currentUser) { openAuth(); return; }
+  const sb = initSupabase();
+  const { data, error } = await sb.from('playlists').insert({ user_id: currentUser.id, title: 'New playlist', items: [] }).select().single();
+  if (error) { alert('Could not create playlist.'); return; }
+  playlists.unshift(data);
+  activeId = data.id;
+  renderSidebar();
+  renderDetail();
+  setTimeout(() => document.getElementById('pl-title')?.focus(), 20);
+}
+
+function selectPlaylist(id) {
+  activeId = id;
+  renderSidebar();
+  renderDetail();
+}
+
+function renderDetail() {
+  const p = activePlaylist();
+  if (!p) { showEmpty(); return; }
+  document.getElementById('pl-empty').style.display = 'none';
+  document.getElementById('pl-detail').style.display = '';
+  document.getElementById('pl-title').value = p.title || '';
+  document.getElementById('pl-search').value = '';
+  document.getElementById('pl-search-results').innerHTML = '';
+  renderItems();
+}
+
+function renderItems() {
+  const p = activePlaylist();
+  const wrap = document.getElementById('pl-items');
+  const items = p.items || [];
+  if (!items.length) { wrap.innerHTML = '<div class="pl-side-empty">No VODs yet — search above to add some.</div>'; return; }
+  wrap.innerHTML = items.map((it, i) => `
+    <div class="pl-item">
+      <img class="pl-item-thumb" src="https://img.youtube.com/vi/${esc(it.video_id)}/mqdefault.jpg" alt="" onclick="playItem(${i})">
+      <div class="pl-item-info" onclick="playItem(${i})">
+        <div class="pl-item-title">${esc(it.title)}</div>
+        <div class="pl-item-meta">${esc(it.player || '')}${it.map_id ? ' · ' + esc(it.map_id) : ''}${it.agent_id ? ' · ' + esc(it.agent_id) : ''}</div>
+      </div>
+      <div class="pl-item-actions">
+        <button title="Move up" onclick="moveItem(${i},-1)" ${i === 0 ? 'disabled' : ''}>▲</button>
+        <button title="Move down" onclick="moveItem(${i},1)" ${i === items.length - 1 ? 'disabled' : ''}>▼</button>
+        <button title="Remove" onclick="removeItem(${i})">✕</button>
+      </div>
+    </div>`).join('');
+}
+
+function playItem(i) {
+  const it = (activePlaylist().items || [])[i];
+  if (!it) return;
+  openVideo(it.video_id, it.title, it.player || '', { agent: it.agent_id, map: it.map_id, agentId: it.agent_id, mapId: it.map_id });
+}
+
+function searchVods(q) {
+  q = q.toLowerCase().trim();
+  const results = document.getElementById('pl-search-results');
+  if (!q) { results.innerHTML = ''; return; }
+  const terms = q.split(/\s+/);
+  const existing = new Set((activePlaylist().items || []).map(it => it.video_id));
+  lastMatches = searchPool.filter(v => {
+    const s = [v.title, v.player, v.mapName, v.agentName].join(' ').toLowerCase();
+    return terms.every(t => s.includes(t));
+  }).slice(0, 8);
+  if (!lastMatches.length) { results.innerHTML = '<div class="pl-side-empty">No matches.</div>'; return; }
+  results.innerHTML = lastMatches.map((v, i) => `
+    <button class="pl-result" onclick="addItemByIndex(${i})" ${existing.has(v.id) ? 'disabled' : ''}>
+      <span class="pl-result-title">${esc(v.title)}</span>
+      <span class="pl-result-meta">${esc(v.player || '')}${v.mapId ? ' · ' + esc(v.mapId) : ''}${existing.has(v.id) ? ' · added' : ''}</span>
+    </button>`).join('');
+}
+
+async function addItemByIndex(i) {
+  const v = lastMatches[i];
+  const p = activePlaylist();
+  if (!v || !p) return;
+  p.items = p.items || [];
+  if (p.items.some(it => it.video_id === v.id)) return;
+  p.items.push({ video_id: v.id, title: v.title, player: v.player || '', map_id: v.mapId || null, agent_id: v.agentId || null });
+  renderItems();
+  renderSidebar();
+  document.getElementById('pl-search').value = '';
+  document.getElementById('pl-search-results').innerHTML = '';
+  await savePlaylist();
+}
+
+async function removeItem(i) {
+  const p = activePlaylist();
+  p.items.splice(i, 1);
+  renderItems(); renderSidebar();
+  await savePlaylist();
+}
+
+async function moveItem(i, dir) {
+  const p = activePlaylist();
+  const j = i + dir;
+  if (j < 0 || j >= p.items.length) return;
+  [p.items[i], p.items[j]] = [p.items[j], p.items[i]];
+  renderItems();
+  await savePlaylist();
+}
+
+async function deletePlaylist() {
+  const p = activePlaylist();
+  if (!p) return;
+  if (!confirm('Delete this playlist?')) return;
+  const sb = initSupabase();
+  await sb.from('playlists').delete().eq('id', p.id).eq('user_id', currentUser.id);
+  playlists = playlists.filter(x => x.id !== p.id);
+  activeId = null;
+  renderSidebar();
+  showEmpty();
+}
+
+async function savePlaylist() {
+  const p = activePlaylist();
+  if (!p) return;
+  const sb = initSupabase();
+  await sb.from('playlists').update({ title: p.title, items: p.items, updated_at: new Date().toISOString() }).eq('id', p.id).eq('user_id', currentUser.id);
+}
+
+// Title editing (debounced)
+document.getElementById('pl-title')?.addEventListener('input', e => {
+  const p = activePlaylist();
+  if (!p) return;
+  p.title = e.target.value;
+  renderSidebar();
+  clearTimeout(plSaveTimer);
+  plSaveTimer = setTimeout(savePlaylist, 600);
+});
+document.getElementById('pl-search')?.addEventListener('input', e => searchVods(e.target.value));
+
+window.createPlaylist = createPlaylist;
+window.selectPlaylist = selectPlaylist;
+window.deletePlaylist = deletePlaylist;
+window.addItemByIndex = addItemByIndex;
+window.removeItem = removeItem;
+window.moveItem = moveItem;
+window.playItem = playItem;
+
+if (document.getElementById('pl-app')) {
+  if (window.__authReady) loadPlaylists();
+  else window.__onAuthReady = loadPlaylists;
+}
+</script>

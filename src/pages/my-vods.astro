@@ -4,6 +4,7 @@ import Nav from '../components/Nav.astro';
 import Footer from '../components/Footer.astro';
 import { MAPS, AGENTS } from '../data/data.js';
 import { createClient } from '@supabase/supabase-js';
+import { PREMIUM_ENABLED, isPremiumActive, FREE_LIMITS } from '../lib/premium.js';
 
 const supabase = createClient(
   "https://cvdtykmkajmhlxydhzzl.supabase.co",
@@ -14,10 +15,16 @@ const accessToken = Astro.cookies.get('sb-access-token')?.value;
 const refreshToken = Astro.cookies.get('sb-refresh-token')?.value;
 
 let user = null;
+let isPremium = false;
 if (accessToken && refreshToken) {
   const { data } = await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
   user = data.session?.user ?? null;
+  if (user) {
+    const { data: sub } = await supabase.from('subscriptions').select('tier, status, current_period_end').eq('user_id', user.id).maybeSingle();
+    isPremium = isPremiumActive(sub);
+  }
 }
+const premiumGate = { premiumEnabled: PREMIUM_ENABLED, isPremium, freeVodCap: FREE_LIMITS.vodUploads };
 ---
 <BaseLayout title="My VODs — fraglog.gg" description="Your personal Valorant VOD collection on FragLog.gg" user={user}>
   <Nav crumbs={[{ label: 'ALL MAPS', href: '/' }, { label: 'MY VODS' }]} user={user} />
@@ -80,8 +87,12 @@ if (accessToken && refreshToken) {
   <Footer />
 </BaseLayout>
 
+<script type="application/json" id="mv-premium-gate" is:inline set:html={JSON.stringify(premiumGate)}></script>
+
 <script is:inline>
 let mvVideoId = "";
+let myVodCount = 0;
+const mvGate = JSON.parse(document.getElementById('mv-premium-gate')?.textContent || '{}');
 
 function mvExtractId() {
   const url = document.getElementById("mv-url").value.trim();
@@ -113,6 +124,12 @@ async function submitMyVod() {
   if (!mapId) { errEl.textContent = "Select a map."; return; }
   if (!agentId) { errEl.textContent = "Select an agent."; return; }
   if (!title) { errEl.textContent = "Enter a title."; return; }
+
+  // Free accounts are capped on VOD uploads (premium = unlimited)
+  if (mvGate.premiumEnabled && !mvGate.isPremium && myVodCount >= (mvGate.freeVodCap || 10)) {
+    errEl.innerHTML = `Free accounts can store up to ${mvGate.freeVodCap} VODs. <a href="/premium" style="color:var(--red);text-decoration:underline">Go Premium</a> for unlimited uploads.`;
+    return;
+  }
 
   btn.textContent = "Saving..."; btn.disabled = true;
 
@@ -148,6 +165,7 @@ async function renderMyVods() {
   const { data, error } = await sb.from("user_vods").select("*").eq("user_id", currentUser.id).order("created_at", { ascending: false });
 
   if (error || !data) { grid.innerHTML = '<div class="empty"><strong>Error loading VODs</strong></div>'; return; }
+  myVodCount = data.length;
   if (!data.length) {
     grid.innerHTML = '<div class="empty"><strong>No VODs yet</strong>Paste a YouTube URL above to add your first one</div>';
     return;

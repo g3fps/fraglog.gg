@@ -1,5 +1,6 @@
 ---
 import '../styles/global.css';
+import { PREMIUM_ENABLED } from '../lib/premium.js';
 
 const { title = 'fraglog.gg — Valorant VOD Library', description = 'Watch Radiant and pro player Valorant gameplay VODs filtered by map and agent. Study the best players in the world on fraglog.gg', ogImage = 'https://media.valorant-api.com/maps/7eaecc1b-4337-bbf6-6ab9-04b8f06b3319/splash.png', canonical = 'https://fraglog.gg', user = null, noindex = false, jsonLd = null, preloadImage = null } = Astro.props;
 const resolvedOgImage = ogImage?.startsWith('/') ? `https://fraglog.gg${ogImage}` : ogImage;
@@ -40,6 +41,7 @@ const TURNSTILE_SITE_KEY = import.meta.env.TURNSTILE_SITE_KEY || '';
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" is:inline></script>
 </head>
 <body>
+  <script define:vars={{ premiumEnabled: PREMIUM_ENABLED }}>window.__premiumEnabled = premiumEnabled; window.__isPremium = false;</script>
   <div id="map-bg-layer"></div>
   <slot />
 
@@ -81,6 +83,22 @@ const TURNSTILE_SITE_KEY = import.meta.env.TURNSTILE_SITE_KEY || '';
       {TURNSTILE_SITE_KEY && <div id="auth-turnstile" data-sitekey={TURNSTILE_SITE_KEY} data-theme="dark" style="margin-bottom:12px"></div>}
       <button type="submit" class="auth-btn primary" style="width:100%;padding:10px">Sign In</button>
       </form>
+    </div>
+  </div>
+
+  <!-- Playlist picker (premium add-to-playlist) -->
+  <div class="pp-backdrop" id="playlist-picker" onclick="closePlaylistPicker(event)">
+    <div class="pp-modal">
+      <div class="pp-head">
+        <span>Add to playlist</span>
+        <button class="pp-close" onclick="closePlaylistPicker()">✕</button>
+      </div>
+      <div class="pp-list" id="pp-list"></div>
+      <div class="pp-new">
+        <input type="text" id="pp-new-input" placeholder="New playlist name..." maxlength="100" autocomplete="off">
+        <button onclick="createPlaylistAndAdd()">Create</button>
+      </div>
+      <div class="pp-status" id="pp-status"></div>
     </div>
   </div>
 
@@ -410,6 +428,14 @@ const TURNSTILE_SITE_KEY = import.meta.env.TURNSTILE_SITE_KEY || '';
     const { data: profile } = await sb.from('profiles').select('share_coaching').eq('id', currentUser.id).maybeSingle();
     userShareCoaching = profile?.share_coaching ?? null;
 
+    // Premium status (for gating premium-only UI like add-to-playlist)
+    try {
+      const { data: sub } = await sb.from('subscriptions').select('tier, status, current_period_end').eq('user_id', currentUser.id).maybeSingle();
+      window.__isPremium = !!(sub && (sub.tier === 'lifetime'
+        || ((sub.tier === 'monthly' || sub.tier === 'yearly') && sub.status === 'active'
+            && (!sub.current_period_end || new Date(sub.current_period_end) > new Date()))));
+    } catch { window.__isPremium = false; }
+
     // Load today's coaching usage
     const today = new Date().toISOString().slice(0, 10);
     const { data: usage } = await sb.from('coaching_usage').select('coaching_count, followup_count').eq('user_id', currentUser.id).eq('date', today).maybeSingle();
@@ -660,8 +686,91 @@ const TURNSTILE_SITE_KEY = import.meta.env.TURNSTILE_SITE_KEY || '';
   function renderVmActions(videoId) {
     const actions = document.getElementById('vm-actions');
     const fav = isFav(videoId);
-    actions.innerHTML = `<button class="vm-fav-btn${fav ? ' active' : ''}" data-fav-btn="${videoId}">${fav ? '♥' : '♡'}</button>`;
+    let html = `<button class="vm-fav-btn${fav ? ' active' : ''}" data-fav-btn="${videoId}">${fav ? '♥' : '♡'}</button>`;
+    if (currentUser) {
+      html += `<button class="vm-playlist-btn" onclick="openPlaylistPicker()" title="Add to playlist">+ Playlist</button>`;
+    }
+    actions.innerHTML = html;
   }
+
+  // ── Add-to-playlist picker (premium) ─────────────────────────
+  let ppPlaylists = [];
+  function ppEsc(s) { return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  async function openPlaylistPicker() {
+    if (!currentUser) { openAuth(); return; }
+    // Premium gate: locked only once premium is live and the user isn't premium
+    if (window.__premiumEnabled && !window.__isPremium) { window.location.href = '/premium'; return; }
+    if (!vmVideoId) return;
+    document.getElementById('pp-status').textContent = '';
+    document.getElementById('pp-new-input').value = '';
+    document.getElementById('playlist-picker').classList.add('open');
+    const list = document.getElementById('pp-list');
+    list.innerHTML = '<div class="pp-empty">Loading...</div>';
+    const sb = initSupabase();
+    const { data } = await sb.from('playlists').select('id, title, items').eq('user_id', currentUser.id).order('updated_at', { ascending: false });
+    ppPlaylists = data || [];
+    renderPickerList();
+  }
+
+  function renderPickerList() {
+    const list = document.getElementById('pp-list');
+    if (!ppPlaylists.length) { list.innerHTML = '<div class="pp-empty">No playlists yet — create one below.</div>'; return; }
+    list.innerHTML = ppPlaylists.map((p, i) => {
+      const has = (p.items || []).some(it => it.video_id === vmVideoId);
+      return `<button class="pp-item" onclick="addToPlaylistByIndex(${i})" ${has ? 'disabled' : ''}>
+        <span>${ppEsc(p.title || 'Untitled playlist')}</span>
+        <span class="pp-item-count">${has ? 'added' : (p.items || []).length}</span>
+      </button>`;
+    }).join('');
+  }
+
+  function ppCurrentItem() {
+    return {
+      video_id: vmVideoId,
+      title: document.getElementById('vm-title').textContent || '',
+      player: document.getElementById('vm-player').textContent || '',
+      map_id: vmMap || null,
+      agent_id: vmAgent || null,
+    };
+  }
+
+  async function addToPlaylistByIndex(i) {
+    const p = ppPlaylists[i];
+    if (!p || !vmVideoId) return;
+    p.items = p.items || [];
+    if (p.items.some(it => it.video_id === vmVideoId)) return;
+    p.items.push(ppCurrentItem());
+    const sb = initSupabase();
+    const { error } = await sb.from('playlists').update({ items: p.items, updated_at: new Date().toISOString() }).eq('id', p.id).eq('user_id', currentUser.id);
+    const status = document.getElementById('pp-status');
+    if (error) { status.textContent = 'Could not add. Try again.'; return; }
+    status.textContent = '✓ Added to ' + (p.title || 'playlist');
+    renderPickerList();
+  }
+
+  async function createPlaylistAndAdd() {
+    if (!vmVideoId || !currentUser) return;
+    const name = document.getElementById('pp-new-input').value.trim() || 'New playlist';
+    const sb = initSupabase();
+    const { data, error } = await sb.from('playlists').insert({ user_id: currentUser.id, title: name, items: [ppCurrentItem()] }).select().single();
+    const status = document.getElementById('pp-status');
+    if (error) { status.textContent = 'Could not create playlist.'; return; }
+    ppPlaylists.unshift(data);
+    document.getElementById('pp-new-input').value = '';
+    status.textContent = '✓ Created "' + name + '" and added';
+    renderPickerList();
+  }
+
+  function closePlaylistPicker(e) {
+    if (e && !window.__backdropClick(e, document.getElementById('playlist-picker'))) return;
+    document.getElementById('playlist-picker').classList.remove('open');
+  }
+
+  window.openPlaylistPicker = openPlaylistPicker;
+  window.addToPlaylistByIndex = addToPlaylistByIndex;
+  window.createPlaylistAndAdd = createPlaylistAndAdd;
+  window.closePlaylistPicker = closePlaylistPicker;
 
   function renderVmNotes(videoId, adminNote, mode) {
     const body = document.getElementById('vm-body');

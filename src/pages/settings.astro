@@ -105,6 +105,20 @@ if (!user) return Astro.redirect('/');
         </div>
       </div>
 
+      <!-- Premium -->
+      <div class="settings-section">
+        <div class="settings-section-title">Premium</div>
+        <div class="settings-card">
+          <div class="toggle-row">
+            <div class="toggle-info">
+              <div class="toggle-label" id="premium-plan-label">Free plan</div>
+              <div class="toggle-desc" id="premium-plan-desc">Upgrade for higher AI limits, cross-note AI, unlimited VOD uploads, and playlists.</div>
+            </div>
+            <a class="btn-save" id="premium-action" href="/premium">Upgrade</a>
+          </div>
+        </div>
+      </div>
+
       <!-- Danger zone -->
       <div class="settings-section">
         <div class="settings-section-title danger">Danger Zone</div>
@@ -171,6 +185,38 @@ async function init() {
   } else {
     document.getElementById('avatar-initials').textContent = username[0].toUpperCase();
   }
+
+  // Premium status
+  try {
+    const { data: sub } = await sb.from('subscriptions').select('tier, status, current_period_end').eq('user_id', settingsUser.id).maybeSingle();
+    const active = sub && (sub.tier === 'lifetime'
+      || ((sub.tier === 'monthly' || sub.tier === 'yearly') && sub.status === 'active'
+          && (!sub.current_period_end || new Date(sub.current_period_end) > new Date())));
+    if (active) {
+      const label = document.getElementById('premium-plan-label');
+      const desc = document.getElementById('premium-plan-desc');
+      const action = document.getElementById('premium-action');
+      const tierName = sub.tier === 'lifetime' ? 'Lifetime' : sub.tier === 'yearly' ? 'Yearly' : 'Monthly';
+      label.textContent = `Premium — ${tierName}`;
+      desc.textContent = sub.tier === 'lifetime'
+        ? 'You have lifetime access. Thank you for supporting fraglog!'
+        : (sub.current_period_end ? 'Renews ' + new Date(sub.current_period_end).toLocaleDateString() : 'Active.');
+      action.textContent = 'Manage';
+      action.removeAttribute('href');
+      action.style.cursor = 'pointer';
+      action.onclick = manageBilling;
+    }
+  } catch {}
+}
+
+async function manageBilling() {
+  const sb = getSb();
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) return;
+  const res = await fetch('/api/billing-portal', { method: 'POST', headers: { 'Authorization': 'Bearer ' + session.access_token } });
+  const data = await res.json().catch(() => ({}));
+  if (res.ok && data.url) window.location.href = data.url;
+  else alert(data.error || 'Could not open billing portal.');
 }
 
 async function saveProfile() {
