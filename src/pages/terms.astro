@@ -1,0 +1,72 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Nav from '../components/Nav.astro';
+import Footer from '../components/Footer.astro';
+import { getSessionUser } from '../lib/auth.js';
+
+const { user } = await getSessionUser(Astro.cookies);
+---
+
+<BaseLayout
+  title="Terms of Service — fraglog.gg"
+  description="Terms of Service for fraglog.gg."
+  canonical="https://fraglog.gg/terms/"
+  user={user}>
+  <Nav crumbs={[{ label: 'Terms of Service' }]} user={user} />
+
+  <main class="page-content legal">
+    <div class="header-eyebrow">Legal</div>
+    <h1 class="header-title">Terms of Service</h1>
+    <p class="legal-updated">Last updated: June 2026</p>
+
+    <p>These Terms of Service ("Terms") govern your use of fraglog.gg ("fraglog", "we", "us", "the site"). By using fraglog.gg you agree to these Terms. If you don't agree, do not use the site.</p>
+
+    <h2>Use of the site</h2>
+    <p>fraglog.gg is a Valorant improvement tool — a VOD library, coaching assistant, and study platform. You may use it for personal, non-commercial purposes. You agree not to:</p>
+    <ul>
+      <li>Abuse or attempt to circumvent rate limits, authentication, or access controls.</li>
+      <li>Submit false, harmful, or infringing content.</li>
+      <li>Use automated scraping or bots without prior written permission.</li>
+      <li>Use the site in any way that violates applicable laws or Riot Games' terms of service.</li>
+    </ul>
+
+    <h2>Accounts</h2>
+    <p>You are responsible for your account and for keeping your login credentials secure. We reserve the right to suspend or terminate accounts that violate these Terms.</p>
+
+    <h2>User content</h2>
+    <p>Content you submit (notes, VOD links, goals, etc.) remains yours. By submitting it you grant us a limited licence to store and display it as needed to operate the service. We do not claim ownership of your content.</p>
+
+    <h2>AI features</h2>
+    <p>AI-generated coaching and suggestions are for informational and improvement purposes only. They are not guaranteed to be accurate and do not constitute professional advice. We are not liable for decisions made based on AI output.</p>
+
+    <h2>Premium subscriptions</h2>
+    <p>Premium features are available through a paid subscription. Subscriptions renew automatically unless cancelled. Billing is handled by Stripe — see our <a href="/refund">Refund Policy</a> for cancellation and refund terms.</p>
+
+    <h2>Intellectual property</h2>
+    <p>Valorant, all agent names, map names, and related assets are trademarks of Riot Games, Inc. fraglog.gg is not affiliated with, endorsed by, or sponsored by Riot Games. VODs embedded on the site are hosted by YouTube or Twitch and remain the property of their respective creators.</p>
+    <p>The fraglog.gg name, logo, and original site content are owned by us and may not be reproduced without permission.</p>
+
+    <h2>Disclaimers and limitation of liability</h2>
+    <p>The site is provided "as is" without warranties of any kind, express or implied. To the fullest extent permitted by law, we disclaim all warranties including merchantability and fitness for a particular purpose. We are not liable for any indirect, incidental, special, or consequential damages arising from your use of fraglog.gg. Our total liability to you will not exceed the greater of (a) the amount you paid us in the 12 months prior to the claim or (b) $10.</p>
+
+    <h2>Dispute resolution</h2>
+    <p>Before filing any formal claim, you agree to contact us via the <a href="/contact">Contact</a> page and give us 30 days to attempt to resolve the dispute informally. If the dispute is not resolved, either party may bring a claim exclusively in the state or federal courts located in Texas, or in small claims court if the claim qualifies. You waive any objection to jurisdiction or venue in those courts.</p>
+
+    <h2>Severability</h2>
+    <p>If any provision of these Terms is found to be unenforceable, that provision will be limited or eliminated to the minimum extent necessary, and the remaining provisions will remain in full force and effect.</p>
+
+    <h2>Changes to the service</h2>
+    <p>We may modify, suspend, or discontinue any part of the site at any time. We'll make reasonable efforts to notify users of significant changes.</p>
+
+    <h2>Changes to these Terms</h2>
+    <p>We may update these Terms from time to time. Continued use of the site after changes constitutes acceptance of the updated Terms.</p>
+
+    <h2>Governing law</h2>
+    <p>These Terms are governed by the laws of the State of Texas, without regard to its conflict of law principles.</p>
+
+    <h2>Contact</h2>
+    <p>Questions about these Terms? Reach us via the <a href="/contact">Contact</a> page.</p>
+  </main>
+
+  <Footer />
+</BaseLayout>

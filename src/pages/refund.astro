@@ -1,0 +1,49 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Nav from '../components/Nav.astro';
+import Footer from '../components/Footer.astro';
+import { getSessionUser } from '../lib/auth.js';
+
+const { user } = await getSessionUser(Astro.cookies);
+---
+
+<BaseLayout
+  title="Refund Policy — fraglog.gg"
+  description="Refund and cancellation policy for fraglog.gg Premium."
+  canonical="https://fraglog.gg/refund/"
+  user={user}>
+  <Nav crumbs={[{ label: 'Refund Policy' }]} user={user} />
+
+  <main class="page-content legal">
+    <div class="header-eyebrow">Legal</div>
+    <h1 class="header-title">Refund Policy</h1>
+    <p class="legal-updated">Last updated: June 2026</p>
+
+    <p>This policy covers cancellations and refunds for fraglog.gg Premium subscriptions and one-time purchases.</p>
+
+    <h2>Subscriptions (Monthly &amp; Yearly)</h2>
+    <p>Monthly and yearly Premium subscriptions renew automatically at the end of each billing period.</p>
+    <ul>
+      <li><strong>Cancellation:</strong> You can cancel at any time from the <a href="/settings">Settings</a> page. Your Premium access continues until the end of the current billing period — no partial-period refunds are issued.</li>
+      <li><strong>Refunds:</strong> Refunds are available within <strong>3 days</strong> of your initial purchase or renewal, provided you have not made substantial use of Premium features. Contact us via the <a href="/contact">Contact</a> page with your account email and purchase date.</li>
+      <li>No refunds are issued after the 3-day window.</li>
+    </ul>
+
+    <h2>Lifetime access</h2>
+    <p>Lifetime access is a one-time purchase. Refunds are available within <strong>7 days</strong> of purchase, provided you have not made substantial use of Premium features. No refunds are issued after the 7-day window.</p>
+
+    <h2>EU &amp; UK consumers</h2>
+    <p>EU and UK consumers ordinarily have a 14-day right of withdrawal for digital services. By completing checkout you confirm consent to immediate access to Premium and acknowledge that this waives your statutory withdrawal right, in accordance with Article 16(m) of the EU Consumer Rights Directive.</p>
+
+    <h2>How refunds are processed</h2>
+    <p>Approved refunds are returned to your original payment method via Stripe. Processing typically takes 5–10 business days depending on your bank or card issuer.</p>
+
+    <h2>Exceptions</h2>
+    <p>We reserve the right to decline refund requests if we determine the policy is being abused (e.g., repeated purchase-and-refund cycles).</p>
+
+    <h2>Contact</h2>
+    <p>To request a refund or ask about your subscription, reach us via the <a href="/contact">Contact</a> page.</p>
+  </main>
+
+  <Footer />
+</BaseLayout>

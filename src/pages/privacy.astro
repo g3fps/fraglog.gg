@@ -1,0 +1,88 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Nav from '../components/Nav.astro';
+import Footer from '../components/Footer.astro';
+import { getSessionUser } from '../lib/auth.js';
+
+const { user } = await getSessionUser(Astro.cookies);
+---
+
+<BaseLayout
+  title="Privacy Policy — fraglog.gg"
+  description="How fraglog.gg collects, uses, and protects your data."
+  canonical="https://fraglog.gg/privacy/"
+  user={user}>
+  <Nav crumbs={[{ label: 'Privacy Policy' }]} user={user} />
+
+  <main class="page-content legal">
+    <div class="header-eyebrow">Legal</div>
+    <h1 class="header-title">Privacy Policy</h1>
+    <p class="legal-updated">Last updated: June 2026</p>
+
+    <p>This Privacy Policy explains how fraglog.gg ("fraglog", "we", "us") collects, uses, and protects your information when you use the site. By using fraglog.gg you agree to this policy.</p>
+
+    <h2>Information we collect</h2>
+    <ul>
+      <li><strong>Account information</strong> — your email address, handled through our authentication provider (Supabase) when you sign up or log in.</li>
+      <li><strong>Content you create</strong> — notes, uploaded VOD links, goals and practice routines, playlists, and clip timestamps you save.</li>
+      <li><strong>Usage data</strong> — watch progress and basic activity needed to make features work (e.g. resuming a VOD).</li>
+      <li><strong>Payment information</strong> — if you subscribe, payments are processed by Stripe. We do <strong>not</strong> see or store your card details; we receive only your subscription status and a Stripe customer identifier.</li>
+      <li><strong>Technical data</strong> — cookies/local storage used to keep you signed in, and standard server logs.</li>
+    </ul>
+
+    <h2>How we use your information</h2>
+    <p>We process your data on the following legal bases:</p>
+    <ul>
+      <li><strong>Contract performance</strong> — to provide the service you signed up for: saving your notes, VODs, goals, playlists, and timestamps; managing your account; processing your subscription.</li>
+      <li><strong>Legitimate interests</strong> — to secure the site, prevent abuse, and improve the service in ways that don't override your privacy rights.</li>
+      <li><strong>AI features</strong> — when you request coaching or use AI features, the text you submit is sent to Anthropic to generate a response. You initiate this each time; no content is sent without your action.</li>
+    </ul>
+
+    <h2>Service providers</h2>
+    <p>We share data only with providers that help us run fraglog.gg:</p>
+    <ul>
+      <li><strong>Supabase</strong> — database, authentication, and storage.</li>
+      <li><strong>Stripe</strong> — payment processing and subscription management.</li>
+      <li><strong>Anthropic</strong> — AI used to generate coaching from text you submit.</li>
+      <li><strong>Vercel</strong> — hosting and serverless functions.</li>
+      <li><strong>YouTube &amp; Twitch</strong> — video playback is embedded from these platforms, which may set their own cookies.</li>
+    </ul>
+    <p>We do not sell your personal information.</p>
+
+    <h2>International data transfers</h2>
+    <p>fraglog.gg is operated from the United States. Our service providers (Supabase, Stripe, Anthropic, Vercel) are also US-based. If you access the site from outside the US, your data will be transferred to and processed in the United States, which may not have the same data protection laws as your country. By using the site you consent to this transfer.</p>
+
+    <h2>Cookies</h2>
+    <p>We use cookies and local storage to keep you signed in (authentication tokens). Embedded video players from YouTube and Twitch may set additional cookies governed by their own privacy policies.</p>
+
+    <h2>Data retention &amp; deletion</h2>
+    <p>We keep your data while your account is active. You can request deletion of your account and associated data at any time by contacting us — see <a href="/contact">Contact</a>.</p>
+
+    <h2>Your rights</h2>
+    <p>Depending on your location you may have the following rights regarding your personal data:</p>
+    <ul>
+      <li><strong>Access</strong> — request a copy of the data we hold about you.</li>
+      <li><strong>Correction</strong> — request that inaccurate data be corrected.</li>
+      <li><strong>Erasure</strong> — request deletion of your data ("right to be forgotten").</li>
+      <li><strong>Portability</strong> — request your data in a machine-readable format.</li>
+      <li><strong>Restriction</strong> — request that we limit how we use your data.</li>
+      <li><strong>Objection</strong> — object to processing based on legitimate interests.</li>
+      <li><strong>Complaint</strong> — EU/UK users may lodge a complaint with their local data protection authority.</li>
+    </ul>
+    <p>To exercise any of these rights, contact us via the <a href="/contact">Contact</a> page.</p>
+
+    <h2>California residents (CCPA)</h2>
+    <p>California residents have the right to know what personal information we collect, to request deletion, and to opt out of sale. We do not sell personal information. To exercise your rights, contact us via the <a href="/contact">Contact</a> page.</p>
+
+    <h2>Children</h2>
+    <p>fraglog.gg is not directed to children under 13, and we do not knowingly collect data from them.</p>
+
+    <h2>Changes</h2>
+    <p>We may update this policy from time to time. Material changes will be reflected by updating the "Last updated" date above.</p>
+
+    <h2>Contact</h2>
+    <p>Questions about this policy? Reach us via the <a href="/contact">Contact</a> page.</p>
+  </main>
+
+  <Footer />
+</BaseLayout>

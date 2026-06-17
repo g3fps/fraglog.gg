@@ -83,7 +83,6 @@ header {
   object-fit: contain;
   display: block;
   pointer-events: none;
-  padding: 1rem;
 }
 
 #minimap-svg {
@@ -408,6 +407,7 @@ header {
     </div>
 
     <button class="submit-btn" id="submit-btn" onclick="submitLineup()">Save Lineup</button>
+    <button id="cancel-edit-btn" onclick="cancelEdit()" style="display:none;width:100%;margin-top:8px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;padding:9px;background:none;border:1px solid var(--border);color:var(--muted);border-radius:8px;cursor:pointer">Cancel edit</button>
     <div class="submit-status" id="submit-status"></div>
 
     <!-- Recent lineups -->
@@ -439,6 +439,8 @@ let selectedThrow = 'stand';
 let ytId = null;
 let selectedSide = 'attack';
 let isWallUtil = false;
+let editingId = null;
+let recentLineups = [];
 
 // Init
 (async () => {
@@ -748,75 +750,53 @@ function renderMarkers() {
   const sw = imgRect.width;
   const sh = imgRect.height;
 
-  const size = 36; // px
-  const radius = 4;
-
   function toX(x) { return ox + x * sw; }
   function toY(y) { return oy + y * sh; }
 
-  function roundedRect(x, y, w, h, r) {
-    ctx.beginPath();
-    ctx.moveTo(x + r, y);
-    ctx.lineTo(x + w - r, y);
-    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
-    ctx.lineTo(x + w, y + h - r);
-    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-    ctx.lineTo(x + r, y + h);
-    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
-    ctx.lineTo(x, y + r);
-    ctx.quadraticCurveTo(x, y, x + r, y);
-    ctx.closePath();
+  const GREEN = '#43E07A';
+
+  // matches the /util page marker style (drawMarkers)
+  function line(x1, y1, x2, y2, color, w) {
+    ctx.save(); ctx.lineCap = 'round';
+    ctx.strokeStyle = 'rgba(0,0,0,0.55)'; ctx.lineWidth = w + 3;
+    ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+    ctx.strokeStyle = color; ctx.lineWidth = w;
+    ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+    ctx.restore();
   }
 
-  function drawStandMarker(x, y, src) {
+  function disc(x, y, r, src, bg, pad) {
+    ctx.save();
+    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.fillStyle = bg || '#0e131c';
+    ctx.shadowColor = 'rgba(0,0,0,0.8)'; ctx.shadowBlur = 10; ctx.shadowOffsetY = 2;
+    ctx.fill(); ctx.restore();
     const image = new Image();
     image.onload = () => {
       ctx.save();
-      roundedRect(x - size/2, y - size/2, size, size, radius);
-      ctx.clip();
-      ctx.fillStyle = '#00c8c8';
-      ctx.fillRect(x - size/2, y - size/2, size, size);
-      ctx.drawImage(image, x - size/2, y - size/2, size, size);
+      ctx.beginPath(); ctx.arc(x, y, r - 1, 0, Math.PI * 2); ctx.clip();
+      const d = (r - 1 - (pad || 0)) * 2;
+      ctx.drawImage(image, x - d / 2, y - d / 2, d, d);
       ctx.restore();
     };
     image.src = src;
   }
 
-  function drawLandMarker(x, y, src) {
-    const image = new Image();
-    image.onload = () => {
-      ctx.save();
-      roundedRect(x - size/2, y - size/2, size, size, radius);
-      ctx.clip();
-      ctx.drawImage(image, x - size/2, y - size/2, size, size);
-      ctx.restore();
-    };
-    image.src = src;
-  }
+  // throw line: stand -> land
+  if (standPos && landPos)
+    line(toX(standPos.x), toY(standPos.y), toX(landPos.x), toY(landPos.y), 'rgba(255,255,255,0.9)', 2.6);
 
+  // wall line: land -> wallEnd (green)
+  if (isWallUtil && landPos && wallEndPos)
+    line(toX(landPos.x), toY(landPos.y), toX(wallEndPos.x), toY(wallEndPos.y), GREEN, 5);
+
+  // ability icon at the landing spot (skipped for walls — the wall line is the util)
+  if (landPos && selectedAgent && selectedAbility && !isWallUtil)
+    disc(toX(landPos.x), toY(landPos.y), 15, `/abilities/${selectedAgent}/${selectedAbility.slot}.png`, '#15171f', 3);
+
+  // agent portrait at the stand spot — drawn last, on top
   if (standPos && selectedAgent)
-    drawStandMarker(toX(standPos.x), toY(standPos.y), `/agents/busts/${selectedAgent}.png`);
-
-  if (isWallUtil && landPos && wallEndPos) {
-    // Draw wall line
-    ctx.beginPath();
-    ctx.moveTo(toX(landPos.x), toY(landPos.y));
-    ctx.lineTo(toX(wallEndPos.x), toY(wallEndPos.y));
-    ctx.strokeStyle = '#A855F7';
-    ctx.lineWidth = 3;
-    ctx.lineCap = 'round';
-    ctx.stroke();
-    // End point dot
-    ctx.beginPath();
-    ctx.arc(toX(wallEndPos.x), toY(wallEndPos.y), 5, 0, Math.PI * 2);
-    ctx.fillStyle = '#A855F7';
-    ctx.fill();
-    // Start point marker with ability icon
-    if (selectedAgent && selectedAbility)
-      drawLandMarker(toX(landPos.x), toY(landPos.y), `/abilities/${selectedAgent}/${selectedAbility.slot}.png`);
-  } else if (landPos && selectedAgent && selectedAbility) {
-    drawLandMarker(toX(landPos.x), toY(landPos.y), `/abilities/${selectedAgent}/${selectedAbility.slot}.png`);
-  }
+    disc(toX(standPos.x), toY(standPos.y), 19, `/agents/busts/${selectedAgent}.png`);
 }
 function clearMarkers() {
   standPos = null; landPos = null; wallEndPos = null;
@@ -879,7 +859,7 @@ async function submitLineup() {
   const btn = document.getElementById('submit-btn');
   btn.disabled = true; btn.textContent = 'Saving...';
 
-  const { error } = await sb.from('lineups').insert({
+  const payload = {
     map,
     agent: selectedAgent,
     util_type: util,
@@ -896,13 +876,21 @@ async function submitLineup() {
     title,
     tags,
     ability_slot: selectedAbility?.slot || null
-  });
+  };
 
-  btn.disabled = false; btn.textContent = 'Save Lineup';
+  const { error } = editingId
+    ? await sb.from('lineups').update(payload).eq('id', editingId)
+    : await sb.from('lineups').insert(payload);
+
+  btn.disabled = false;
+  btn.textContent = editingId ? 'Update Lineup' : 'Save Lineup';
 
   if (error) { setStatus('Error: ' + error.message, 'var(--red)'); return; }
 
-  setStatus('✓ Lineup saved!');
+  setStatus(editingId ? '✓ Lineup updated!' : '✓ Lineup saved!');
+  editingId = null;
+  document.getElementById('submit-btn').textContent = 'Save Lineup';
+  document.getElementById('cancel-edit-btn').style.display = 'none';
   clearMarkers();
   document.getElementById('inp-desc').value = '';
   document.getElementById('inp-title').value = '';
@@ -914,7 +902,8 @@ async function submitLineup() {
 }
 
 async function loadRecent() {
-  const { data } = await sb.from('lineups').select('*').order('created_at', { ascending: false }).limit(10);
+  const { data } = await sb.from('lineups').select('*').order('created_at', { ascending: false }).limit(200);
+  recentLineups = data || [];
   const list = document.getElementById('recent-list');
   const count = document.getElementById('recent-count');
   if (!data || !data.length) {
@@ -924,12 +913,13 @@ async function loadRecent() {
   }
   count.textContent = data.length;
   list.innerHTML = data.map(l => `
-    <div class="recent-item">
+    <div class="recent-item" style="${editingId === l.id ? 'outline:1px solid var(--red);outline-offset:-1px' : ''}">
       <img src="/agents/${l.agent}.png" style="width:32px;height:32px;border-radius:50%;object-fit:cover;object-position:top;border:1px solid var(--border)">
       <div class="recent-item-info">
         <div class="recent-item-name">${l.agent} · ${l.map} · ${l.util_type}</div>
-        <div class="recent-item-meta">${l.description.substring(0, 60)}${l.description.length > 60 ? '...' : ''}</div>
+        <div class="recent-item-meta">${(l.description || '').substring(0, 60)}${(l.description || '').length > 60 ? '...' : ''}</div>
       </div>
+      <button class="recent-edit" onclick="editLineup('${l.id}')" style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:4px 8px;background:none;border:1px solid var(--border);color:var(--muted);border-radius:6px;cursor:pointer;flex-shrink:0">Edit</button>
       <button class="recent-delete" onclick="deleteLineup('${l.id}')">✕</button>
     </div>
   `).join('');
@@ -938,6 +928,63 @@ async function loadRecent() {
 async function deleteLineup(id) {
   if (!confirm('Delete this lineup?')) return;
   await sb.from('lineups').delete().eq('id', id);
+  if (editingId === id) cancelEdit();
+  loadRecent();
+}
+
+function editLineup(id) {
+  const l = recentLineups.find(x => String(x.id) === String(id));
+  if (!l) return;
+  editingId = l.id;
+  selectedSide = l.side || 'attack';
+  document.getElementById('side-attack').className = 'mode-btn' + (selectedSide === 'attack' ? ' active-stand' : '');
+  document.getElementById('side-defense').className = 'mode-btn' + (selectedSide === 'defense' ? ' active-land' : '');
+  document.getElementById('sel-map').value = l.map;
+  selectAgent(l.agent);
+  if (l.ability_slot) selectAbility(l.ability_slot);
+  if (l.throw_type) selectThrow(l.throw_type);
+
+  // load the map image, then drop the saved markers onto it
+  const img = document.getElementById('minimap-img');
+  document.getElementById('minimap-placeholder').style.display = 'none';
+  img.style.display = 'block';
+  const place = () => {
+    standPos = l.stand_x != null ? { x: l.stand_x, y: l.stand_y } : null;
+    landPos = l.land_x != null ? { x: l.land_x, y: l.land_y } : null;
+    wallEndPos = l.wall_end_x != null ? { x: l.wall_end_x, y: l.wall_end_y } : null;
+    if (standPos) updateCoords('stand', standPos);
+    if (landPos) updateCoords('land', landPos);
+    if (wallEndPos) { const w = document.getElementById('wall-end-coords'); w.textContent = `${wallEndPos.x}, ${wallEndPos.y}`; w.classList.add('set'); }
+    renderMarkers();
+  };
+  img.onload = place;
+  img.src = `/maps/${l.map}-${selectedSide}.png`;
+  setTimeout(place, 250);
+
+  document.getElementById('inp-title').value = l.title || '';
+  document.getElementById('inp-desc').value = l.description || '';
+  document.getElementById('inp-yt').value = l.youtube_id || '';
+  handleYT();
+  document.querySelectorAll('.tag').forEach(t => t.classList.toggle('active', (l.tags || []).includes(t.dataset.tag)));
+
+  document.getElementById('submit-btn').textContent = 'Update Lineup';
+  document.getElementById('cancel-edit-btn').style.display = 'block';
+  setStatus('Editing — adjust and click Update Lineup.', 'var(--green)');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  loadRecent();
+}
+
+function cancelEdit() {
+  editingId = null;
+  document.getElementById('submit-btn').textContent = 'Save Lineup';
+  document.getElementById('cancel-edit-btn').style.display = 'none';
+  clearMarkers();
+  document.getElementById('inp-desc').value = '';
+  document.getElementById('inp-title').value = '';
+  document.getElementById('inp-yt').value = '';
+  document.getElementById('yt-preview').classList.remove('visible');
+  document.querySelectorAll('.tag.active').forEach(t => t.classList.remove('active'));
+  ytId = null;
   loadRecent();
 }
 

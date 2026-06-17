@@ -76,6 +76,13 @@ export const POST: APIRoute = async ({ request }) => {
     ...(mode === 'subscription'
       ? { subscription_data: { metadata: { user_id: userId, tier: plan } } }
       : {}),
+    // EU withdrawal waiver: records consent to immediate access at checkout
+    consent_collection: { terms_of_service: 'required' },
+    custom_text: {
+      terms_of_service_acceptance: {
+        message: 'I agree to the [Terms of Service](https://fraglog.gg/terms) and [Refund Policy](https://fraglog.gg/refund), and consent to immediate access to Premium — waiving my 14-day EU/UK right of withdrawal.',
+      },
+    },
     allow_promotion_codes: true,
     success_url: `${origin}/premium?status=success`,
     cancel_url: `${origin}/premium?status=cancel`,

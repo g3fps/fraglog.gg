@@ -141,7 +141,7 @@ function showResults(lineups, query) {
   grid.innerHTML = lineups.map((l, i) => `
     <div class="lineup-card" onclick="openLineup(${allLineups.indexOf(l)})">
       <div class="card-minimap-wrap" id="wrap-${i}">
-        <img class="card-minimap-img" src="/maps/${l.map}-${l.side||'attack'}.png" alt="${l.map}" data-sx="${l.stand_x}" data-sy="${l.stand_y}" data-lx="${l.land_x}" data-ly="${l.land_y}" data-agent="${l.agent}" data-slot="${l.ability_slot||''}" data-wall-end-x="${l.wall_end_x||''}" data-wall-end-y="${l.wall_end_y||''}" data-idx="${i}" onload="onCardImgLoad(this)">
+        <img class="card-minimap-img" src="/maps/${l.map}-${l.side||'attack'}.png" alt="${l.map}" data-sx="${l.stand_x}" data-sy="${l.stand_y}" data-lx="${l.land_x}" data-ly="${l.land_y}" data-agent="${l.agent}" data-slot="${l.ability_slot||''}" data-wall-end-x="${l.wall_end_x||''}" data-wall-end-y="${l.wall_end_y||''}" data-util="${(l.util_type||'').replace(/"/g,'&quot;')}" data-idx="${i}" onload="onCardImgLoad(this)">
         <canvas class="card-canvas" id="card-canvas-${i}"></canvas>
       </div>
       <div class="card-info">
@@ -161,47 +161,81 @@ function onCardImgLoad(imgEl) {
   const i = imgEl.dataset.idx;
   setTimeout(() => {
     const canvas = document.getElementById(`card-canvas-${i}`);
-    if (canvas) drawMarkers(canvas, imgEl, imgEl.dataset.sx, imgEl.dataset.sy, imgEl.dataset.lx, imgEl.dataset.ly, imgEl.dataset.agent, imgEl.dataset.slot, 22, imgEl.dataset.wallEndX || null, imgEl.dataset.wallEndY || null);
+    if (canvas) drawMarkers(canvas, imgEl, imgEl.dataset.sx, imgEl.dataset.sy, imgEl.dataset.lx, imgEl.dataset.ly, imgEl.dataset.agent, imgEl.dataset.slot, 30, imgEl.dataset.wallEndX || null, imgEl.dataset.wallEndY || null, imgEl.dataset.util);
   }, 100);
 }
 
-function drawMarkers(canvas, imgEl, sx, sy, lx, ly, agent, slot, size, wallEndX, wallEndY) {
+function drawMarkers(canvas, imgEl, sx, sy, lx, ly, agent, slot, size, wallEndX, wallEndY, utilType) {
   const wrap = canvas.parentElement;
   const wrapW = wrap.offsetWidth;
-  const wrapH = size === 22 ? 200 : wrap.offsetHeight;
-  canvas.width = wrapW; canvas.height = wrapH;
+  const wrapH = wrap.offsetHeight;
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = wrapW * dpr; canvas.height = wrapH * dpr;
   const ctx = canvas.getContext('2d');
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  const padding = size === 22 ? 8 : 16;
-  const imgNaturalW = imgEl.naturalWidth; const imgNaturalH = imgEl.naturalHeight;
-  const availW = wrapW - padding * 2; const availH = wrapH - padding * 2;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, wrapW, wrapH);
+  const padding = 0; // map coords are a clean fraction of the contain-fit image (must match lineup-admin)
+  const imgNaturalW = imgEl.naturalWidth, imgNaturalH = imgEl.naturalHeight;
+  const availW = wrapW - padding * 2, availH = wrapH - padding * 2;
   const scale = Math.min(availW / imgNaturalW, availH / imgNaturalH);
-  const renderedW = imgNaturalW * scale; const renderedH = imgNaturalH * scale;
-  const ox = (wrapW - renderedW) / 2; const oy = (wrapH - renderedH) / 2;
-  const r = Math.round(size * 0.12);
-  function toX(x){return ox+x*renderedW;} function toY(y){return oy+y*renderedH;}
-  function drawImg(x,y,src,bg){
-    const img=new Image();
-    img.onload=()=>{
+  const renderedW = imgNaturalW * scale, renderedH = imgNaturalH * scale;
+  const ox = (wrapW - renderedW) / 2, oy = (wrapH - renderedH) / 2;
+  const toX = x => ox + x * renderedW, toY = y => oy + y * renderedH;
+
+  const big = size >= 40;
+  const sX = toX(sx), sY = toY(sy);
+  const hasLand = lx != null && ly != null && !(Number(lx) === Number(sx) && Number(ly) === Number(sy));
+  const lX = toX(lx), lY = toY(ly);
+  const isWall = wallEndX != null && wallEndY != null;
+  const RED = '#FF4655', GREEN = '#43E07A';
+
+  // connecting line with a dark halo for legibility on the map
+  function line(x1, y1, x2, y2, color, w) {
+    ctx.save(); ctx.lineCap = 'round';
+    ctx.strokeStyle = 'rgba(0,0,0,0.55)'; ctx.lineWidth = w + 3;
+    ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+    ctx.strokeStyle = color; ctx.lineWidth = w;
+    ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+    ctx.restore();
+  }
+
+  // circular image marker: dark disc + soft drop-shadow, image clipped inside
+  function disc(x, y, radius, src, bg, pad) {
+    ctx.save();
+    ctx.beginPath(); ctx.arc(x, y, radius, 0, Math.PI * 2);
+    ctx.fillStyle = bg || '#0e131c';
+    ctx.shadowColor = 'rgba(0,0,0,0.8)'; ctx.shadowBlur = big ? 10 : 7; ctx.shadowOffsetY = 2;
+    ctx.fill();
+    ctx.restore();
+    const img = new Image();
+    img.onload = () => {
       ctx.save();
-      ctx.beginPath();
-      ctx.moveTo(x-size/2+r,y-size/2);ctx.lineTo(x+size/2-r,y-size/2);ctx.quadraticCurveTo(x+size/2,y-size/2,x+size/2,y-size/2+r);ctx.lineTo(x+size/2,y+size/2-r);ctx.quadraticCurveTo(x+size/2,y+size/2,x+size/2-r,y+size/2);ctx.lineTo(x-size/2+r,y+size/2);ctx.quadraticCurveTo(x-size/2,y+size/2,x-size/2,y+size/2-r);ctx.lineTo(x-size/2,y-size/2+r);ctx.quadraticCurveTo(x-size/2,y-size/2,x-size/2+r,y-size/2);ctx.closePath();ctx.clip();
-      if(bg){ctx.fillStyle=bg;ctx.fillStyle=bg;ctx.fillRect(x-size/2,y-size/2,size,size);}
-      ctx.drawImage(img,x-size/2,y-size/2,size,size);
+      ctx.beginPath(); ctx.arc(x, y, radius - 1, 0, Math.PI * 2); ctx.clip();
+      const d = (radius - 1 - (pad || 0)) * 2;
+      ctx.drawImage(img, x - d / 2, y - d / 2, d, d);
       ctx.restore();
-    };img.src=src;
+    };
+    img.src = src;
   }
-  drawImg(toX(sx),toY(sy),`/agents/busts/${agent}.png`,'#00c8c8');
-  if(wallEndX != null && wallEndY != null) {
-    ctx.beginPath();
-    ctx.moveTo(toX(lx), toY(ly));
-    ctx.lineTo(toX(wallEndX), toY(wallEndY));
-    ctx.strokeStyle = '#A855F7'; ctx.lineWidth = size === 36 ? 3 : 2; ctx.lineCap = 'round'; ctx.stroke();
-    ctx.beginPath();
-    ctx.arc(toX(wallEndX), toY(wallEndY), size === 36 ? 5 : 3, 0, Math.PI * 2);
-    ctx.fillStyle = '#A855F7'; ctx.fill();
+
+  // 1) throw line: stand -> land
+  if (hasLand) line(sX, sY, lX, lY, 'rgba(255,255,255,0.9)', big ? 2.6 : 1.8);
+
+  // 2) wall line: land -> wallEnd
+  if (isWall) line(lX, lY, toX(wallEndX), toY(wallEndY), GREEN, big ? 5 : 3.5);
+
+  // 3) ability icon at the landing spot (real ability image) — skipped for walls
+  if (slot && lx != null && ly != null && !isWall) {
+    disc(lX, lY, big ? 15 : 11, `/abilities/${agent}/${slot}.png`, '#15171f', big ? 3 : 2);
+  } else if (hasLand && !isWall) {
+    ctx.save();
+    ctx.beginPath(); ctx.arc(lX, lY, big ? 5 : 3.5, 0, Math.PI * 2);
+    ctx.fillStyle = RED; ctx.shadowColor = 'rgba(0,0,0,0.7)'; ctx.shadowBlur = 4; ctx.fill();
+    ctx.restore();
   }
-  if(slot) drawImg(toX(lx),toY(ly),`/abilities/${agent}/${slot}.png`,null);
+
+  // 4) agent portrait at the stand spot (real agent image) — drawn last, on top
+  disc(sX, sY, big ? 19 : 14, `/agents/busts/${agent}.png`);
 }
 
 function openLineup(index) {
@@ -214,7 +248,7 @@ function openLineup(index) {
   const minimapImg = document.getElementById('modal-minimap');
   minimapImg.onload = () => {
     const canvas = document.getElementById('modal-canvas');
-    drawMarkers(canvas, minimapImg, l.stand_x, l.stand_y, l.land_x, l.land_y, l.agent, l.ability_slot||'', 36, l.wall_end_x||null, l.wall_end_y||null);
+    drawMarkers(canvas, minimapImg, l.stand_x, l.stand_y, l.land_x, l.land_y, l.agent, l.ability_slot||'', 46, l.wall_end_x||null, l.wall_end_y||null, l.util_type);
   };
   minimapImg.src = `/maps/${l.map}-${l.side||'attack'}.png`;
   document.getElementById('modal-video').src = `https://www.youtube.com/embed/${l.youtube_id}?autoplay=1`;

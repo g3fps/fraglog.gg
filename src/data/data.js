@@ -621,6 +621,7 @@ export const VODS = {
       { id:"ahKT51P_kys", title:"ENVY Eggsterr Yoru Split RADIANT MVP", player:"Eggsterr", date:"2026-05-06" },
     ],
     iso: [
+      { id:"rXG4_mGFdtI", title:"MIBR aspas Iso Split 25 KILL SHARPSHOOTER", player:"aspas", date:"2025-06-17" },
     ],
     waylay: [
     ],

@@ -127,6 +127,7 @@ const TURNSTILE_SITE_KEY = import.meta.env.TURNSTILE_SITE_KEY || '';
             <span class="video-modal-stat" id="vm-date" style="display:none"></span>
           </div>
         </div>
+        <div class="vm-marks" id="vm-marks"></div>
       </div>
 
       <!-- Right: notes -->
@@ -188,6 +189,7 @@ const TURNSTILE_SITE_KEY = import.meta.env.TURNSTILE_SITE_KEY || '';
   let userWatched = [];
   let userTimestamps = {};
   let userDurations = {};
+  let userMarks = {}; // { video_id: [{id, seconds, label}] } — VOD clip marks
   let userShareCoaching = null; // null = never asked, true/false = preference set
   let todayCoachingUsed = 0;
   let todayFollowupUsed = 0;
@@ -423,6 +425,9 @@ const TURNSTILE_SITE_KEY = import.meta.env.TURNSTILE_SITE_KEY || '';
       if (w.resume_at) userTimestamps[w.video_id] = w.resume_at;
       if (w.duration) userDurations[w.video_id] = w.duration;
     });
+    const { data: marks } = await sb.from("vod_marks").select("id, video_id, seconds, label").eq("user_id", currentUser.id);
+    userMarks = {};
+    (marks||[]).forEach(m => { (userMarks[m.video_id] = userMarks[m.video_id] || []).push(m); });
 
     // Load share_coaching preference
     const { data: profile } = await sb.from('profiles').select('share_coaching').eq('id', currentUser.id).maybeSingle();
@@ -677,6 +682,7 @@ const TURNSTILE_SITE_KEY = import.meta.env.TURNSTILE_SITE_KEY || '';
     else { dateEl.style.display = 'none'; }
 
     renderVmActions(videoId);
+    renderVmMarks(videoId);
     renderVmNotes(videoId, opts.adminNote, vmCoachMode);
 
     document.getElementById('video-modal').classList.add('open');
@@ -692,6 +698,79 @@ const TURNSTILE_SITE_KEY = import.meta.env.TURNSTILE_SITE_KEY || '';
     }
     actions.innerHTML = html;
   }
+
+  // ── VOD clip marks (timestamps) ──────────────────────────────
+  function fmtMarkTime(s) {
+    s = Math.max(0, Math.floor(s || 0));
+    const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
+    return (h ? h + ':' + String(m).padStart(2, '0') : m) + ':' + String(sec).padStart(2, '0');
+  }
+  function getPlaybackSeconds() {
+    try {
+      if (vmVideoId && vmVideoId.startsWith('twitch:')) return Math.floor(_twitchEmbed.getPlayer().getCurrentTime());
+      if (ytPlayer && ytPlayer.getCurrentTime) return Math.floor(ytPlayer.getCurrentTime());
+    } catch (e) {}
+    return 0;
+  }
+  function seekToMark(s) {
+    s = Number(s) || 0;
+    try {
+      if (vmVideoId && vmVideoId.startsWith('twitch:')) { _twitchEmbed.getPlayer().seek(s); }
+      else if (ytPlayer && ytPlayer.seekTo) { ytPlayer.seekTo(s, true); if (ytPlayer.playVideo) ytPlayer.playVideo(); }
+    } catch (e) {}
+  }
+  function renderVmMarks(videoId) {
+    const el = document.getElementById('vm-marks');
+    if (!el) return;
+    if (!currentUser) { el.innerHTML = ''; return; }
+    const marks = (userMarks[videoId] || []).slice().sort((a, b) => a.seconds - b.seconds);
+    const rows = marks.map(m => `
+      <div class="vm-mark-row">
+        <button class="vm-mark-jump" onclick="seekToMark(${m.seconds})" title="Jump to ${fmtMarkTime(m.seconds)}">▶ ${fmtMarkTime(m.seconds)}</button>
+        <input class="vm-mark-label" data-mark-id="${m.id}" value="${ppEsc(m.label || '')}" placeholder="add a label…" maxlength="80"
+          onkeydown="if(event.key==='Enter')this.blur()" onblur="updateMarkLabel('${m.id}', this.value)">
+        <button class="vm-mark-del" onclick="deleteMark('${m.id}')" title="Remove">✕</button>
+      </div>`).join('');
+    el.innerHTML = `
+      <div class="vm-marks-head">
+        <span class="vm-marks-title">Timestamps</span>
+        <button class="vm-mark-add" onclick="addMark()" title="Save the current moment">⊕ Mark this moment</button>
+      </div>
+      ${rows ? `<div class="vm-marks-list">${rows}</div>`
+             : `<div class="vm-marks-empty">No timestamps yet — pause on a moment and hit “Mark this moment”.</div>`}`;
+  }
+  async function addMark() {
+    if (!currentUser) { openAuth(); return; }
+    if (!vmVideoId) return;
+    const seconds = getPlaybackSeconds();
+    const sb = initSupabase();
+    const { data, error } = await sb.from('vod_marks')
+      .insert({ user_id: currentUser.id, video_id: vmVideoId, seconds, label: '' })
+      .select('id, video_id, seconds, label').single();
+    if (error || !data) return;
+    (userMarks[vmVideoId] = userMarks[vmVideoId] || []).push(data);
+    renderVmMarks(vmVideoId);
+    const input = document.querySelector(`.vm-mark-label[data-mark-id="${data.id}"]`);
+    if (input) input.focus();
+  }
+  async function updateMarkLabel(id, label) {
+    if (!currentUser) return;
+    label = (label || '').trim();
+    const sb = initSupabase();
+    await sb.from('vod_marks').update({ label }).eq('id', id).eq('user_id', currentUser.id);
+    for (const vid in userMarks) { const mk = (userMarks[vid] || []).find(m => String(m.id) === String(id)); if (mk) mk.label = label; }
+  }
+  async function deleteMark(id) {
+    if (!currentUser) return;
+    const sb = initSupabase();
+    await sb.from('vod_marks').delete().eq('id', id).eq('user_id', currentUser.id);
+    for (const vid in userMarks) userMarks[vid] = userMarks[vid].filter(m => String(m.id) !== String(id));
+    renderVmMarks(vmVideoId);
+  }
+  window.addMark = addMark;
+  window.deleteMark = deleteMark;
+  window.seekToMark = seekToMark;
+  window.updateMarkLabel = updateMarkLabel;
 
   // ── Add-to-playlist picker (premium) ─────────────────────────
   let ppPlaylists = [];
