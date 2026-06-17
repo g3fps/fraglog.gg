@@ -133,8 +133,25 @@ const TURNSTILE_SITE_KEY = import.meta.env.TURNSTILE_SITE_KEY || '';
       <!-- Right: notes -->
       <div class="video-modal-right">
         <div class="video-modal-right-header">
-          <div class="video-modal-right-title">Notes</div>
+          <div class="video-modal-right-title" id="vm-right-title">Notes</div>
+          <div class="vm-panel-tabs" id="vm-panel-tabs" style="display:none">
+            <button class="vm-panel-tab active" id="vm-panel-tab-own" onclick="vmSwitchPanelTab('own')">Your Notes</button>
+            <button class="vm-panel-tab" id="vm-panel-tab-shared" onclick="vmSwitchPanelTab('shared')">Shared Notes</button>
+          </div>
           <div style="display:flex;align-items:center;gap:8px">
+            <div class="vm-share-wrap" id="vm-share-wrap" style="display:none">
+              <button class="vm-share-toggle" id="vm-share-btn" onclick="vmShareNote()">
+                <span class="vm-share-toggle-track"><span class="vm-share-toggle-thumb"></span></span>
+                <span class="vm-share-toggle-lbl" id="vm-share-lbl">Private</span>
+              </button>
+              <div class="vm-share-popup" id="vm-share-popup" style="display:none">
+                <div class="vm-share-popup-label">Share link</div>
+                <div class="vm-share-popup-row">
+                  <span class="vm-share-popup-url" id="vm-share-popup-url"></span>
+                  <button class="vm-share-popup-copy" id="vm-share-popup-copy" onclick="vmCopyShareLink()">Copy</button>
+                </div>
+              </div>
+            </div>
             <button class="vm-collapse-btn" id="vm-collapse-btn" onclick="vmToggleVideo()" title="Toggle video">▾</button>
             <button class="video-modal-close" onclick="closeVideoModalDirect()">✕</button>
           </div>
@@ -186,6 +203,8 @@ const TURNSTILE_SITE_KEY = import.meta.env.TURNSTILE_SITE_KEY || '';
   let userFavorites = [];
   let userNotes = {};
   let userCoach = {};
+  let userNoteShareIds = {};
+  let userNoteVisibility = {};
   let userWatched = [];
   let userTimestamps = {};
   let userDurations = {};
@@ -410,12 +429,16 @@ const TURNSTILE_SITE_KEY = import.meta.env.TURNSTILE_SITE_KEY || '';
     const sb = initSupabase();
     const { data: favs } = await sb.from("favorites").select("video_id").eq("user_id", currentUser.id);
     userFavorites = (favs||[]).map(f => f.video_id);
-    const { data: notes } = await sb.from("notes").select("video_id, content, coach_text, coach_mode").eq("user_id", currentUser.id);
+    const { data: notes } = await sb.from("notes").select("video_id, content, coach_text, coach_mode, share_id, visibility").eq("user_id", currentUser.id);
     userNotes = {};
     userCoach = {};
+    userNoteShareIds = {};
+    userNoteVisibility = {};
     (notes||[]).forEach(n => {
       userNotes[n.video_id] = n.content;
       if (n.coach_text) userCoach[n.video_id] = { text: n.coach_text, mode: n.coach_mode || 'pro' };
+      if (n.share_id) userNoteShareIds[n.video_id] = n.share_id;
+      userNoteVisibility[n.video_id] = n.visibility || 'private';
     });
     const { data: watched } = await sb.from("watched").select("*").eq("user_id", currentUser.id);
     userWatched = (watched||[]).map(w => w.video_id);
@@ -578,7 +601,7 @@ const TURNSTILE_SITE_KEY = import.meta.env.TURNSTILE_SITE_KEY || '';
   async function signOut() {
     const sb = initSupabase();
     await sb.auth.signOut();
-    currentUser = null; userFavorites = []; userNotes = {}; userCoach = {}; userWatched = []; userTimestamps = {};
+    currentUser = null; userFavorites = []; userNotes = {}; userCoach = {}; userNoteShareIds = {}; userNoteVisibility = {}; userWatched = []; userTimestamps = {};
     renderNav();
     document.cookie = 'sb-access-token=; path=/; max-age=0';
     document.cookie = 'sb-refresh-token=; path=/; max-age=0';
@@ -636,6 +659,7 @@ const TURNSTILE_SITE_KEY = import.meta.env.TURNSTILE_SITE_KEY || '';
   let vmCurrentNotes = '';
   let vmAutosaveTimer = null;
   let vmStartingSide = null;
+  let vmSharedNote = null;
 
   function openVideo(videoId, title, player, opts = {}) {
     clearTimeout(vmAutosaveTimer);
@@ -684,7 +708,11 @@ const TURNSTILE_SITE_KEY = import.meta.env.TURNSTILE_SITE_KEY || '';
     renderVmActions(videoId);
     renderVmMarks(videoId);
     renderVmNotes(videoId, opts.adminNote, vmCoachMode);
+    renderVmShareState(videoId);
 
+    const _vu = new URL(location.href);
+    _vu.searchParams.set('v', videoId);
+    history.replaceState(null, '', _vu);
     document.getElementById('video-modal').classList.add('open');
     document.body.style.overflow = 'hidden';
   }
@@ -697,6 +725,144 @@ const TURNSTILE_SITE_KEY = import.meta.env.TURNSTILE_SITE_KEY || '';
       html += `<button class="vm-playlist-btn" onclick="openPlaylistPicker()" title="Add to playlist">+ Playlist</button>`;
     }
     actions.innerHTML = html;
+  }
+
+  // ── VOD note sharing ─────────────────────────────────────────
+  let vmSharePopupTimer = null;
+
+  function vmHideSharePopup() {
+    const popup = document.getElementById('vm-share-popup');
+    if (popup) popup.style.display = 'none';
+    clearTimeout(vmSharePopupTimer);
+  }
+
+  function renderVmShareState(videoId) {
+    const vid = videoId || vmVideoId;
+    const wrap = document.getElementById('vm-share-wrap');
+    const btn = document.getElementById('vm-share-btn');
+    if (!wrap || !btn) return;
+    if (!currentUser) { wrap.style.display = 'none'; return; }
+    wrap.style.display = '';
+    const isUnlisted = (userNoteVisibility[vid] || 'private') === 'unlisted';
+    btn.classList.toggle('active', isUnlisted);
+    const lbl = document.getElementById('vm-share-lbl');
+    if (lbl) lbl.textContent = isUnlisted ? 'Share' : 'Private';
+    const popup = document.getElementById('vm-share-popup');
+    const urlEl = document.getElementById('vm-share-popup-url');
+    clearTimeout(vmSharePopupTimer);
+    if (popup && urlEl) {
+      if (isUnlisted && userNoteShareIds[vid]) {
+        urlEl.textContent = `fraglog.gg/watch?v=${vid}&note=${userNoteShareIds[vid]}`;
+        popup.style.display = '';
+        vmSharePopupTimer = setTimeout(vmHideSharePopup, 4000);
+      } else {
+        popup.style.display = 'none';
+      }
+    }
+  }
+
+  function vmCopyShareLink() {
+    const vid = vmVideoId;
+    const shareId = userNoteShareIds[vid];
+    if (!shareId) return;
+    const url = `https://fraglog.gg/watch?v=${vid}&note=${shareId}`;
+    navigator.clipboard.writeText(url).then(() => {
+      const btn = document.getElementById('vm-share-popup-copy');
+      if (!btn) return;
+      btn.textContent = 'Copied!';
+      clearTimeout(vmSharePopupTimer);
+      vmSharePopupTimer = setTimeout(vmHideSharePopup, 1500);
+    });
+  }
+
+  async function vmShareNote() {
+    if (!currentUser || !vmVideoId) return;
+    const currentVis = userNoteVisibility[vmVideoId] || 'private';
+    const newVis = currentVis === 'private' ? 'unlisted' : 'private';
+    let shareId = userNoteShareIds[vmVideoId];
+    if (!shareId && newVis === 'unlisted') shareId = crypto.randomUUID();
+    const sb = initSupabase();
+    const { error } = await sb.from('notes').upsert(
+      { user_id: currentUser.id, video_id: vmVideoId, share_id: shareId, visibility: newVis },
+      { onConflict: 'user_id,video_id' }
+    );
+    if (error) { console.error('note share update failed:', error.message); return; }
+    userNoteShareIds[vmVideoId] = shareId;
+    userNoteVisibility[vmVideoId] = newVis;
+    renderVmShareState(vmVideoId);
+    const _vu = new URL(location.href);
+    if (newVis === 'unlisted') {
+      _vu.searchParams.set('note', shareId);
+    } else {
+      _vu.searchParams.delete('note');
+    }
+    history.replaceState(null, '', _vu);
+  }
+
+  // ── Shared note tab ──────────────────────────────────────────
+  function vmInjectSharedNote(noteData) {
+    vmSharedNote = noteData;
+    const title = document.getElementById('vm-right-title');
+    const tabs = document.getElementById('vm-panel-tabs');
+    if (title) title.style.display = 'none';
+    if (tabs) tabs.style.display = 'flex';
+    vmSwitchPanelTab('shared');
+  }
+
+  function vmSwitchPanelTab(tab) {
+    const ownBtn = document.getElementById('vm-panel-tab-own');
+    const sharedBtn = document.getElementById('vm-panel-tab-shared');
+    if (ownBtn) ownBtn.classList.toggle('active', tab === 'own');
+    if (sharedBtn) sharedBtn.classList.toggle('active', tab === 'shared');
+    if (tab === 'own') {
+      renderVmNotes(vmVideoId, null, vmCoachMode);
+    } else {
+      renderVmSharedNote();
+    }
+  }
+
+  function renderVmSharedNote() {
+    const body = document.getElementById('vm-body');
+    const footer = document.getElementById('vm-footer');
+    if (!body) return;
+    footer.style.display = 'none';
+    if (!vmSharedNote) { body.innerHTML = '<div class="vm-login-prompt">Shared note not found.</div>'; return; }
+
+    const _esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    let generalNotes = '';
+    let rounds = [];
+    try {
+      const parsed = JSON.parse(vmSharedNote.content || '{}');
+      generalNotes = parsed.general || '';
+      rounds = (parsed.rounds || []).filter(r => Object.values(r.categories||{}).some(v => String(v).trim()));
+    } catch(e) {
+      if (vmSharedNote.content && !vmSharedNote.content.startsWith('{')) generalNotes = vmSharedNote.content;
+    }
+    const coachText = vmSharedNote.coach_text || '';
+    const CATS = ['Positioning & Decision Making','Economy','Utility'];
+
+    let html = '<div class="vm-shared-content">';
+    if (generalNotes.trim()) {
+      html += `<div class="vm-shared-section"><div class="vm-notes-label">General Notes</div><div class="vm-shared-text">${_esc(generalNotes)}</div></div>`;
+    }
+    if (rounds.length) {
+      html += `<div class="vm-shared-section"><div class="vm-notes-label">Round by Round</div>`;
+      rounds.forEach(r => {
+        const entries = CATS.filter(c => r.categories[c]?.trim()).map(c =>
+          `<div class="vm-shared-round-entry"><span class="vm-shared-round-cat">${_esc(c)}</span><span>${_esc(r.categories[c])}</span></div>`
+        ).join('');
+        html += `<div class="vm-shared-round"><span class="vm-shared-round-num">R${r.round}</span><div class="vm-shared-round-entries">${entries}</div></div>`;
+      });
+      html += '</div>';
+    }
+    if (coachText.trim()) {
+      html += `<div class="vm-shared-section"><div class="vm-notes-label">AI Coaching</div><div class="vm-shared-coach">${renderCoachHtml(coachText)}</div></div>`;
+    }
+    if (!generalNotes.trim() && !rounds.length && !coachText.trim()) {
+      html += '<div class="vm-login-prompt">No notes content in this share.</div>';
+    }
+    html += '</div>';
+    body.innerHTML = html;
   }
 
   // ── VOD clip marks (timestamps) ──────────────────────────────
@@ -1470,11 +1636,24 @@ const TURNSTILE_SITE_KEY = import.meta.env.TURNSTILE_SITE_KEY || '';
     clearInterval(ytTimestampSaveInterval);
     document.getElementById('video-modal').classList.remove('open');
     document.body.style.overflow = '';
+    const _vu = new URL(location.href);
+    _vu.searchParams.delete('v');
+    _vu.searchParams.delete('note');
+    history.replaceState(null, '', _vu);
     clearTimeout(vmAutosaveTimer);
     vmVideoId = null;
     vmAgent = null;
     vmMap = null;
     vmCurrentNotes = '';
+    vmSharedNote = null;
+    const _rt = document.getElementById('vm-right-title');
+    const _pt = document.getElementById('vm-panel-tabs');
+    if (_rt) _rt.style.display = '';
+    if (_pt) _pt.style.display = 'none';
+    const _to = document.getElementById('vm-panel-tab-own');
+    if (_to) _to.classList.add('active');
+    const _ts = document.getElementById('vm-panel-tab-shared');
+    if (_ts) _ts.classList.remove('active');
   }
 
   function closeVideoModal(e) {
@@ -1485,9 +1664,31 @@ const TURNSTILE_SITE_KEY = import.meta.env.TURNSTILE_SITE_KEY || '';
     openVideo(videoId, title, player, { adminNote, mode });
   }
 
+  document.addEventListener('click', e => {
+    const wrap = document.getElementById('vm-share-wrap');
+    const popup = document.getElementById('vm-share-popup');
+    if (popup && popup.style.display !== 'none' && wrap && !wrap.contains(e.target)) {
+      vmHideSharePopup();
+    }
+  });
+
   document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("footer-year").textContent = `© ${new Date().getFullYear()} fraglog.gg — All rights reserved`;
     initAuth().catch(e => console.warn("Auth init failed", e));
+    const _vp = new URLSearchParams(location.search).get('v');
+    if (_vp) {
+      const _vc = document.querySelector(`[data-vid="${CSS.escape(_vp)}"]`);
+      if (_vc) _vc.click();
+    }
+    const _np = new URLSearchParams(location.search).get('note');
+    if (_np) {
+      initSupabase().from('notes')
+        .select('video_id,content,coach_text,coach_mode')
+        .eq('share_id', _np)
+        .eq('visibility', 'unlisted')
+        .maybeSingle()
+        .then(({ data }) => { if (data) vmInjectSharedNote(data); });
+    }
   });
 
   document.addEventListener("keydown", e => {

@@ -227,7 +227,7 @@ async function saveCurrent() {
     activeNoteId = data.id;
     localChats[data.id] = [];
     notebook.unshift(data);
-    updateAskContext();
+      updateAskContext();
   }
 
   document.getElementById('nb-status').textContent = 'Saved';
@@ -245,6 +245,7 @@ async function deleteCurrent() {
   if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; }
   selectGeneral();
 }
+
 
 // ── Ask AI chat ───────────────────────────────────────────────
 function getActiveHistory() {

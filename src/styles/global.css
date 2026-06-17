@@ -1613,6 +1613,54 @@ select:focus-visible,
   .nb-chat { flex: none !important; height: 460px !important; }
 }
 
+
+
+/* Public shared note page */
+.pub-note-wrap { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; min-height: 100vh; }
+.pub-note-brand { display: inline-block; font-family: 'Barlow Condensed', sans-serif; font-size: 18px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: var(--red); text-decoration: none; margin-bottom: 48px; }
+.pub-note-article { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 32px 36px; }
+.pub-note-title { font-family: 'Barlow Condensed', sans-serif; font-size: 34px; font-weight: 800; line-height: 1.1; text-transform: uppercase; margin: 0 0 8px; }
+.pub-note-date { font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.5px; color: var(--muted); margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
+.pub-note-body { font-family: 'Barlow', sans-serif; font-size: 15px; line-height: 1.7; color: var(--text); white-space: pre-wrap; word-break: break-word; }
+.pub-note-footer { margin-top: 20px; text-align: center; }
+.pub-note-footer-link { font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.5px; color: var(--muted); text-decoration: none; opacity: 0.6; }
+.pub-note-footer-link:hover { opacity: 1; color: var(--red); }
+
+/* Video modal panel tabs (Your Notes / Shared Notes) */
+.vm-panel-tabs { display: flex; gap: 2px; background: var(--bg); border-radius: 7px; padding: 3px; }
+.vm-panel-tab { background: none; border: none; color: var(--muted); cursor: pointer; font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.8px; text-transform: uppercase; padding: 5px 10px; border-radius: 5px; transition: color 0.12s, background 0.12s; white-space: nowrap; }
+.vm-panel-tab:hover { color: var(--text); }
+.vm-panel-tab.active { background: var(--surface); color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,0.15); }
+
+/* Shared note content inside the modal */
+.vm-shared-content { display: flex; flex-direction: column; gap: 18px; overflow-y: auto; flex: 1; min-height: 0; }
+.vm-shared-section { display: flex; flex-direction: column; gap: 8px; }
+.vm-shared-text { font-family: 'Barlow', sans-serif; font-size: 14px; line-height: 1.6; color: var(--text); white-space: pre-wrap; word-break: break-word; }
+.vm-shared-coach { font-family: 'Barlow', sans-serif; font-size: 14px; line-height: 1.6; color: var(--text); }
+.vm-shared-round { display: flex; gap: 10px; align-items: flex-start; padding: 6px 0; border-bottom: 1px solid var(--border); }
+.vm-shared-round:last-child { border-bottom: none; }
+.vm-shared-round-num { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); flex-shrink: 0; width: 22px; padding-top: 2px; }
+.vm-shared-round-entries { display: flex; flex-direction: column; gap: 3px; flex: 1; min-width: 0; }
+.vm-shared-round-entry { display: flex; gap: 8px; font-family: 'Barlow', sans-serif; font-size: 13px; line-height: 1.5; color: var(--text); }
+.vm-shared-round-cat { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--muted); flex-shrink: 0; min-width: 70px; padding-top: 3px; letter-spacing: 0.3px; }
+
+/* Video modal share toggle + popup */
+.vm-share-wrap { position: relative; flex-shrink: 0; }
+.vm-share-toggle { display: flex; align-items: center; gap: 6px; background: none; border: none; cursor: pointer; padding: 2px 0; }
+.vm-share-toggle-track { position: relative; width: 28px; height: 16px; border-radius: 8px; background: var(--border); transition: background 0.2s; flex-shrink: 0; }
+.vm-share-toggle-thumb { position: absolute; top: 2px; left: 2px; width: 12px; height: 12px; border-radius: 50%; background: var(--muted); transition: transform 0.2s, background 0.2s; }
+.vm-share-toggle.active .vm-share-toggle-track { background: rgba(255,70,85,0.25); }
+.vm-share-toggle.active .vm-share-toggle-thumb { transform: translateX(12px); background: var(--red); }
+.vm-share-toggle-lbl { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.8px; text-transform: uppercase; color: var(--muted); transition: color 0.2s; }
+.vm-share-toggle.active .vm-share-toggle-lbl { color: var(--red); }
+.vm-share-popup { position: absolute; top: calc(100% + 10px); right: 0; width: 280px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; z-index: 50; box-shadow: 0 8px 24px rgba(0,0,0,0.5); }
+.vm-share-popup-label { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); margin-bottom: 7px; }
+.vm-share-popup-row { display: flex; align-items: center; gap: 6px; }
+.vm-share-popup-url { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--text); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; opacity: 0.7; }
+.vm-share-popup-copy { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.5px; background: var(--red); color: #fff; border: none; border-radius: 4px; padding: 4px 10px; cursor: pointer; flex-shrink: 0; transition: opacity 0.15s; }
+.vm-share-popup-copy:hover { opacity: 0.85; }
+
+
 /* Stats bar */
 .routine-stats-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; background: var(--border); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-bottom: 28px; }
 .routine-stat-box { background: var(--surface); padding: 14px 16px; text-align: center; }
