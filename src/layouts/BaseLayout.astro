@@ -660,6 +660,7 @@ const TURNSTILE_SITE_KEY = import.meta.env.TURNSTILE_SITE_KEY || '';
   let vmAutosaveTimer = null;
   let vmStartingSide = null;
   let vmSharedNote = null;
+  let vmPreOpenUrl = null;
 
   function openVideo(videoId, title, player, opts = {}) {
     clearTimeout(vmAutosaveTimer);
@@ -710,9 +711,8 @@ const TURNSTILE_SITE_KEY = import.meta.env.TURNSTILE_SITE_KEY || '';
     renderVmNotes(videoId, opts.adminNote, vmCoachMode);
     renderVmShareState(videoId);
 
-    const _vu = new URL(location.href);
-    _vu.searchParams.set('v', videoId);
-    history.replaceState(null, '', _vu);
+    vmPreOpenUrl = location.href;
+    history.replaceState(null, '', `/watch?v=${videoId}`);
     document.getElementById('video-modal').classList.add('open');
     document.body.style.overflow = 'hidden';
   }
@@ -790,13 +790,10 @@ const TURNSTILE_SITE_KEY = import.meta.env.TURNSTILE_SITE_KEY || '';
     userNoteShareIds[vmVideoId] = shareId;
     userNoteVisibility[vmVideoId] = newVis;
     renderVmShareState(vmVideoId);
-    const _vu = new URL(location.href);
-    if (newVis === 'unlisted') {
-      _vu.searchParams.set('note', shareId);
-    } else {
-      _vu.searchParams.delete('note');
-    }
-    history.replaceState(null, '', _vu);
+    const shareUrl = newVis === 'unlisted'
+      ? `/watch?v=${vmVideoId}&note=${shareId}`
+      : `/watch?v=${vmVideoId}`;
+    history.replaceState(null, '', shareUrl);
   }
 
   // ── Shared note tab ──────────────────────────────────────────
@@ -1636,10 +1633,7 @@ const TURNSTILE_SITE_KEY = import.meta.env.TURNSTILE_SITE_KEY || '';
     clearInterval(ytTimestampSaveInterval);
     document.getElementById('video-modal').classList.remove('open');
     document.body.style.overflow = '';
-    const _vu = new URL(location.href);
-    _vu.searchParams.delete('v');
-    _vu.searchParams.delete('note');
-    history.replaceState(null, '', _vu);
+    history.replaceState(null, '', vmPreOpenUrl || '/');
     clearTimeout(vmAutosaveTimer);
     vmVideoId = null;
     vmAgent = null;
