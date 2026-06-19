@@ -82,20 +82,23 @@ export async function POST({ request }: { request: Request }) {
   const buildPrompt = (banned: string[]) => `Generate a Valorant VOD title matching this exact style:
 
 Examples:
-"ENVY demon1 Jett Ascent RADIANT RANKED"
-"C9 OXY Jett Ascent RADIANT ENTRY"
-"NRG s0m Omen Ascent RADIANT MVP"
-"aspas Jett Ascent RADIANT DOMINATION"
-"NAVI hiro Phoenix Ascent RADIANT RANKED"
-"Tarik Jett Ascent RADIANT ENTRY"
+"demon1 Jett Ascent RADIANT OPERATOR"
+"C9 OXY Jett Icebox RADIANT CLUTCH"
+"NRG s0m Omen Haven RADIANT LURK"
+"aspas Jett Split RADIANT ACE"
+"NAVI hiro Phoenix Bind RADIANT PISTOL ROUND"
+"TenZ Jett Fracture RADIANT ECO FRAGS"
+"Tarik Skye Pearl RADIANT RETAKE"
+"PRX f0rsakeN Chamber Lotus RADIANT POST PLANT"
 
 Format: [TEAM] Player Agent Map RANK DESCRIPTOR
 - TEAM prefix (org abbreviation like ENVY, C9, NRG, PRX, TL) only if confirmed in YouTube title — omit if unknown
 - Player name as-is (preserve casing like TenZ, s0m, OXY)
 - Agent and Map in Title Case
-- End with 1-3 ALL CAPS words that describe the VOD — invent whatever fits best, no fixed list
-- Draw from the YouTube title if it has something interesting (kill count, game mode, matchup); otherwise make something up
-- If a tag combo is already used for this player/agent/map, pick something different — there are unlimited options
+- End with 1-3 ALL CAPS words drawn from real Valorant gameplay vocabulary:
+  ACE, CLUTCH, OPERATOR, RIFLE, PISTOL ROUND, ECO, ECO FRAGS, THRIFTY, RETAKE, LURK, FLANK, ANCHOR, POST PLANT, SPIKE RUSH, DEFUSE, DUEL, PEEK, ENTRY, ORB, ROUND WIN, SITE HOLD, ROTATE, COMEBACK, OVERTIME, TOURNAMENT
+- Pick the descriptor that best matches what the YouTube title or player/agent combo suggests — a Jett + OPERATOR title makes sense, a Skye entry makes sense, etc.
+- If a tag combo is already used for this player/agent/map, pick a different descriptor
 - Max 65 chars, no quotes
 
 VOD info:
