@@ -1297,6 +1297,28 @@ footer { border-top: 1px solid var(--border); padding: 3rem 2.5rem; margin-top: 
 .btn-danger:hover { background: rgba(255,70,85,0.1); }
 .save-status { font-size: 12px; font-family: 'DM Mono', monospace; margin-top: 8px; min-height: 16px; }
 .danger-description { font-size: 13px; color: var(--muted); margin-bottom: 1rem; line-height: 1.5; }
+
+/* Delete account modal */
+.da-backdrop { display: none; position: fixed; inset: 0; z-index: 1200; background: rgba(0,0,0,0.85); align-items: center; justify-content: center; padding: 1rem; backdrop-filter: blur(8px); }
+.da-backdrop.open { display: flex; animation: fadeIn 0.15s ease; }
+.da-modal { background: var(--surface); border: 1px solid rgba(255,70,85,0.3); border-radius: 12px; width: 100%; max-width: 420px; animation: scaleIn 0.15s ease; }
+.da-header { display: flex; align-items: center; justify-content: space-between; padding: 18px 20px 14px; border-bottom: 1px solid var(--border); }
+.da-title { font-family: 'Barlow Condensed', sans-serif; font-size: 22px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--red); }
+.da-close { background: none; border: 1px solid var(--border); color: var(--muted); width: 28px; height: 28px; border-radius: 6px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+.da-close:hover { color: var(--text); border-color: rgba(255,255,255,0.3); }
+.da-body { padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+.da-warn { font-size: 13px; color: var(--muted); line-height: 1.6; margin: 0; }
+.da-label { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); }
+.da-input { background: var(--darker); border: 1px solid var(--border); color: var(--text); font-family: 'DM Mono', monospace; font-size: 13px; padding: 10px 12px; border-radius: 8px; width: 100%; outline: none; transition: border-color 0.15s; }
+.da-input:focus { border-color: rgba(255,70,85,0.5); }
+.da-error { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--red); min-height: 16px; }
+.da-footer { display: flex; gap: 10px; padding: 14px 20px 18px; justify-content: flex-end; }
+.da-cancel { font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; padding: 9px 18px; background: transparent; color: var(--muted); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; transition: all 0.15s; }
+.da-cancel:hover { color: var(--text); border-color: rgba(255,255,255,0.3); }
+.da-confirm { font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; padding: 9px 18px; background: var(--red); color: #fff; border: none; border-radius: 8px; cursor: pointer; transition: all 0.15s; }
+.da-confirm:hover:not(:disabled) { background: #e03040; }
+.da-confirm:disabled { opacity: 0.35; cursor: not-allowed; }
+
 .toggle-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 1.5rem; }
 .toggle-info { flex: 1; }
 .toggle-label { font-size: 14px; font-weight: 500; color: var(--text); margin-bottom: 4px; }

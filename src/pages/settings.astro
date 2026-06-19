@@ -113,11 +113,37 @@ if (!user) return Astro.redirect('/');
         <div class="settings-section-title danger">Danger Zone</div>
         <div class="settings-card danger-card">
           <div class="danger-description">Permanently delete your account and all associated data. This cannot be undone.</div>
-          <button class="btn-danger" onclick="confirmDelete()">Delete Account</button>
+          <button class="btn-danger" onclick="openDeleteModal()">Delete Account</button>
         </div>
       </div>
     </div>
   </main>
+
+  <!-- Delete account confirmation modal -->
+  <div class="da-backdrop" id="da-backdrop">
+    <div class="da-modal">
+      <div class="da-header">
+        <span class="da-title">Delete Account</span>
+        <button class="da-close" onclick="closeDeleteModal()">✕</button>
+      </div>
+      <div class="da-body">
+        <p class="da-warn">This will permanently erase your account, notes, VODs, goals, and all other data. There is no recovery.</p>
+        <div>
+          <label class="da-label">Password</label>
+          <input class="da-input" id="da-password-input" type="password" placeholder="••••••••" autocomplete="current-password" oninput="onDeleteInput()">
+        </div>
+        <div>
+          <label class="da-label">Type DELETE to confirm</label>
+          <input class="da-input" id="da-confirm-input" type="text" placeholder="DELETE" autocomplete="off" oninput="onDeleteInput()">
+        </div>
+        <div class="da-error" id="da-error"></div>
+      </div>
+      <div class="da-footer">
+        <button class="da-cancel" onclick="closeDeleteModal()">Cancel</button>
+        <button class="da-confirm" id="da-confirm-btn" disabled onclick="submitDelete()">Delete My Account</button>
+      </div>
+    </div>
+  </div>
 
   <Footer />
 </BaseLayout>
@@ -279,11 +305,66 @@ async function toggleShareCoaching() {
   }
 }
 
-async function confirmDelete() {
-  if (!confirm('Are you sure? This permanently deletes your account and cannot be undone.')) return;
-  if (!confirm('Last chance — delete everything?')) return;
-  // Supabase doesn't allow client-side user deletion — direct to support
-  alert('To delete your account, email support@fraglog.gg and we\'ll take care of it within 24 hours.');
+function openDeleteModal() {
+  document.getElementById('da-password-input').value = '';
+  document.getElementById('da-confirm-input').value = '';
+  document.getElementById('da-confirm-btn').disabled = true;
+  document.getElementById('da-error').textContent = '';
+  document.getElementById('da-backdrop').classList.add('open');
+  setTimeout(() => document.getElementById('da-password-input').focus(), 50);
+}
+
+function closeDeleteModal() {
+  document.getElementById('da-backdrop').classList.remove('open');
+}
+
+document.getElementById('da-backdrop').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('da-backdrop')) closeDeleteModal();
+});
+
+function onDeleteInput() {
+  const pwd = document.getElementById('da-password-input').value;
+  const confirm = document.getElementById('da-confirm-input').value;
+  document.getElementById('da-confirm-btn').disabled = !(pwd.length > 0 && confirm === 'DELETE');
+}
+
+async function submitDelete() {
+  const btn = document.getElementById('da-confirm-btn');
+  const errEl = document.getElementById('da-error');
+  const password = document.getElementById('da-password-input').value;
+  btn.disabled = true;
+  btn.textContent = 'Verifying...';
+  errEl.textContent = '';
+
+  const sb = getSb();
+
+  // Re-authenticate to verify the password before destroying the account
+  const { error: authErr } = await sb.auth.signInWithPassword({ email: settingsUser.email, password });
+  if (authErr) {
+    errEl.textContent = 'Incorrect password.';
+    btn.disabled = false;
+    btn.textContent = 'Delete My Account';
+    return;
+  }
+
+  btn.textContent = 'Deleting...';
+  const { data: { session } } = await sb.auth.getSession();
+
+  const res = await fetch('/api/delete-account', {
+    method: 'POST',
+    headers: { 'Authorization': 'Bearer ' + session.access_token },
+  });
+  const data = await res.json().catch(() => ({}));
+
+  if (!res.ok) {
+    errEl.textContent = data.error || 'Something went wrong. Try again.';
+    btn.disabled = false;
+    btn.textContent = 'Delete My Account';
+    return;
+  }
+
+  await sb.auth.signOut();
+  window.location.href = '/?deleted=1';
 }
 
 // Avatar upload
