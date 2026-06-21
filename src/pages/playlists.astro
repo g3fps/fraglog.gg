@@ -69,6 +69,7 @@ let playlists = [];
 let activeId = null;
 let plSaveTimer = null;
 let lastMatches = [];
+let focusedResultIdx = -1;
 
 function esc(s) { return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 function activePlaylist() { return playlists.find(p => p.id === activeId); }
@@ -130,6 +131,8 @@ function renderDetail() {
   document.getElementById('pl-title').value = p.title || '';
   document.getElementById('pl-search').value = '';
   document.getElementById('pl-search-results').innerHTML = '';
+  lastMatches = [];
+  focusedResultIdx = -1;
   renderItems();
 }
 
@@ -138,9 +141,19 @@ function renderItems() {
   const wrap = document.getElementById('pl-items');
   const items = p.items || [];
   if (!items.length) { wrap.innerHTML = '<div class="pl-side-empty">No VODs yet — search above to add some.</div>'; return; }
-  wrap.innerHTML = items.map((it, i) => `
+  wrap.innerHTML = items.map((it, i) => {
+    const t = (userTimestamps || {})[it.video_id];
+    const d = (userDurations || {})[it.video_id];
+    const frac = (t && d && d > 0) ? Math.max(0, Math.min(1, t / d)) : 0;
+    const progressHtml = frac > 0
+      ? `<div class="video-progress${frac >= 0.9 ? ' is-finished' : ''}"><span style="width:${Math.round(frac * 100)}%"></span></div>`
+      : '';
+    return `
     <div class="pl-item">
-      <img class="pl-item-thumb" src="https://img.youtube.com/vi/${esc(it.video_id)}/mqdefault.jpg" alt="" onclick="playItem(${i})">
+      <div class="pl-item-thumb-wrap" onclick="playItem(${i})">
+        <img src="https://img.youtube.com/vi/${esc(it.video_id)}/mqdefault.jpg" alt="">
+        ${progressHtml}
+      </div>
       <div class="pl-item-info" onclick="playItem(${i})">
         <div class="pl-item-title">${esc(it.title)}</div>
         <div class="pl-item-meta">${esc(it.player || '')}${it.map_id ? ' · ' + esc(it.map_id) : ''}${it.agent_id ? ' · ' + esc(it.agent_id) : ''}</div>
@@ -150,7 +163,8 @@ function renderItems() {
         <button title="Move down" onclick="moveItem(${i},1)" ${i === items.length - 1 ? 'disabled' : ''}>▼</button>
         <button title="Remove" onclick="removeItem(${i})">✕</button>
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
 function playItem(i) {
@@ -159,22 +173,37 @@ function playItem(i) {
   openVideo(it.video_id, it.title, it.player || '', { agent: it.agent_id, map: it.map_id, agentId: it.agent_id, mapId: it.map_id });
 }
 
+function renderSearchResults(existing) {
+  if (!existing) existing = new Set((activePlaylist()?.items || []).map(it => it.video_id));
+  const results = document.getElementById('pl-search-results');
+  if (!lastMatches.length) { results.innerHTML = '<div class="pl-side-empty">No matches.</div>'; return; }
+  results.innerHTML = lastMatches.map((v, i) => {
+    const added = existing.has(v.id);
+    return `
+    <button class="pl-result${added ? ' is-added' : ''}${i === focusedResultIdx ? ' focused' : ''}"
+            onclick="addItemByIndex(${i})" ${added ? 'disabled' : ''}>
+      <img class="pl-result-thumb" src="https://img.youtube.com/vi/${esc(v.id)}/default.jpg" alt="">
+      <div class="pl-result-body">
+        <span class="pl-result-title">${esc(v.title)}</span>
+        <span class="pl-result-meta">${[v.player, v.mapName, v.agentName].filter(Boolean).join(' · ')}</span>
+      </div>
+      ${added ? '<span class="pl-result-check">✓</span>' : ''}
+    </button>`;
+  }).join('');
+}
+
 function searchVods(q) {
+  focusedResultIdx = -1;
   q = q.toLowerCase().trim();
   const results = document.getElementById('pl-search-results');
-  if (!q) { results.innerHTML = ''; return; }
+  if (!q) { results.innerHTML = ''; lastMatches = []; return; }
   const terms = q.split(/\s+/);
   const existing = new Set((activePlaylist().items || []).map(it => it.video_id));
   lastMatches = searchPool.filter(v => {
     const s = [v.title, v.player, v.mapName, v.agentName].join(' ').toLowerCase();
     return terms.every(t => s.includes(t));
-  }).slice(0, 8);
-  if (!lastMatches.length) { results.innerHTML = '<div class="pl-side-empty">No matches.</div>'; return; }
-  results.innerHTML = lastMatches.map((v, i) => `
-    <button class="pl-result" onclick="addItemByIndex(${i})" ${existing.has(v.id) ? 'disabled' : ''}>
-      <span class="pl-result-title">${esc(v.title)}</span>
-      <span class="pl-result-meta">${esc(v.player || '')}${v.mapId ? ' · ' + esc(v.mapId) : ''}${existing.has(v.id) ? ' · added' : ''}</span>
-    </button>`).join('');
+  }).slice(0, 10);
+  renderSearchResults(existing);
 }
 
 async function addItemByIndex(i) {
@@ -186,8 +215,7 @@ async function addItemByIndex(i) {
   p.items.push({ video_id: v.id, title: v.title, player: v.player || '', map_id: v.mapId || null, agent_id: v.agentId || null });
   renderItems();
   renderSidebar();
-  document.getElementById('pl-search').value = '';
-  document.getElementById('pl-search-results').innerHTML = '';
+  renderSearchResults(); // re-render with ✓ on the added item — don't clear
   await savePlaylist();
 }
 
@@ -235,7 +263,29 @@ document.getElementById('pl-title')?.addEventListener('input', e => {
   clearTimeout(plSaveTimer);
   plSaveTimer = setTimeout(savePlaylist, 600);
 });
+
 document.getElementById('pl-search')?.addEventListener('input', e => searchVods(e.target.value));
+
+document.getElementById('pl-search')?.addEventListener('keydown', e => {
+  if (!lastMatches.length) return;
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    focusedResultIdx = Math.min(focusedResultIdx + 1, lastMatches.length - 1);
+    renderSearchResults();
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    focusedResultIdx = Math.max(focusedResultIdx - 1, -1);
+    renderSearchResults();
+  } else if (e.key === 'Enter' && focusedResultIdx >= 0) {
+    e.preventDefault();
+    addItemByIndex(focusedResultIdx);
+  } else if (e.key === 'Escape') {
+    document.getElementById('pl-search').value = '';
+    document.getElementById('pl-search-results').innerHTML = '';
+    lastMatches = [];
+    focusedResultIdx = -1;
+  }
+});
 
 window.createPlaylist = createPlaylist;
 window.selectPlaylist = selectPlaylist;
