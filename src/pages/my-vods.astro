@@ -81,7 +81,7 @@ const mvGate = JSON.parse(document.getElementById('mv-premium-gate')?.textConten
 function mvExtractId() {
   const url = document.getElementById("mv-url").value.trim();
   const display = document.getElementById("mv-id-display");
-  const ytMatch = url.match(/(?:v=|youtu\.be\/|embed\/)([a-zA-Z0-9_-]{11})/);
+  const ytMatch = url.match(/(?:v=|youtu\.be\/|embed\/|live\/)([a-zA-Z0-9_-]{11})/);
   const twitchMatch = url.match(/twitch\.tv\/videos\/(\d+)/);
   if (ytMatch) {
     mvVideoId = ytMatch[1];
