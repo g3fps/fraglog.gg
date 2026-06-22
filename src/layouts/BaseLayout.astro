@@ -158,7 +158,10 @@ const TURNSTILE_SITE_KEY = import.meta.env.TURNSTILE_SITE_KEY || '';
         </div>
         <div class="video-modal-right-body" id="vm-body"></div>
         <div class="video-modal-right-footer" id="vm-footer" style="display:none">
-          <span class="vm-char-count" id="vm-char-count">0 characters</span>
+          <div style="display:flex;align-items:center;gap:10px">
+            <span class="vm-char-count" id="vm-char-count">0 characters</span>
+            <button class="vm-clear-btn" id="vm-clear-btn" onclick="vmClearNotes()">Clear notes</button>
+          </div>
           <div class="vm-footer-right">
             <span class="vm-saved-msg" id="vm-saved-msg">✓ Saved</span>
             <div class="vm-coach-toggle" id="vm-coach-toggle">
@@ -648,6 +651,20 @@ const TURNSTILE_SITE_KEY = import.meta.env.TURNSTILE_SITE_KEY || '';
       { user_id: currentUser.id, video_id: videoId, content: text, updated_at: new Date().toISOString() },
       { onConflict: "user_id,video_id" }
     );
+  }
+
+  async function vmClearNotes() {
+    if (!vmVideoId || !currentUser) return;
+    if (!confirm('Clear all notes for this video?')) return;
+    clearTimeout(vmAutosaveTimer);
+    vmAutosaveTimer = null;
+    vmCurrentNotes = '';
+    // Clear every textarea in the notes panel
+    document.getElementById('vm-body')?.querySelectorAll('textarea').forEach(t => { t.value = ''; });
+    document.getElementById('vm-char-count').textContent = '0 characters';
+    await saveNote(vmVideoId, '');
+    const msg = document.getElementById('vm-saved-msg');
+    if (msg) { msg.style.display = 'inline'; setTimeout(() => { msg.style.display = 'none'; }, 2000); }
   }
 
   // ── Video Modal ──────────────────────────────────────────────

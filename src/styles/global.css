@@ -726,6 +726,8 @@ footer { border-top: 1px solid var(--border); padding: 3rem 2.5rem; margin-top: 
 .vm-login-prompt { font-size: 14px; color: var(--muted); padding: 1rem 0; text-align: center; }
 .video-modal-right-footer { padding: 12px 16px; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; flex-shrink: 0; }
 .vm-char-count { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); }
+.vm-clear-btn { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; background: none; border: none; color: var(--muted); cursor: pointer; padding: 0; transition: color 0.15s; }
+.vm-clear-btn:hover { color: var(--red); }
 .vm-footer-right { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .vm-saved-msg { font-family: 'DM Mono', monospace; font-size: 10px; color: #6BCF6B; display: none; }
 .vm-coach-toggle { display: none; align-items: center; border: 1px solid var(--border); border-radius: 4px; overflow: hidden; font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 1px; }
