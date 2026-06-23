@@ -11,6 +11,7 @@
   { id:"sunset",   name:"Sunset",   img:"/maps/sunset.webp" },
   { id:"abyss",    name:"Abyss",    img:"/maps/abyss.webp" },
   { id:"corrode",  name:"Corrode",  img:"/maps/corrode.webp" },
+  { id:"summit",   name:"Summit",   img:"/maps/summit.webp" },
 ];
 
 export const AGENTS = [
