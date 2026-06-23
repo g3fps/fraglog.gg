@@ -1,27 +1,29 @@
 import { defineConfig } from 'astro/config';
 import vercel from '@astrojs/vercel';
 import sitemap from '@astrojs/sitemap';
-import { VODS, getAllVods } from './src/data/data.js';
+import { createClient } from '@supabase/supabase-js';
+
+const SUPABASE_URL = 'https://cvdtykmkajmhlxydhzzl.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_I16eAnYgsA9fd8ZMlmFQtA_RxepSaXi';
 
 const MAPS = ['ascent', 'bind', 'haven', 'split', 'fracture', 'pearl', 'icebox', 'breeze', 'lotus', 'sunset', 'abyss', 'corrode'];
-const AGENTS = ['jett', 'reyna', 'raze', 'neon', 'phoenix', 'yoru', 'iso', 'waylay', 'omen', 'viper', 'brimstone', 'astra', 'harbor', 'clove', 'miks', 'sage', 'cypher', 'killjoy', 'chamber', 'deadlock', 'vyse', 'veto', 'sova', 'breach', 'skye', 'kayo', 'fade', 'gekko', 'tejo'];
 
-// Private / auth-only pages — excluded from sitemap
 const EXCLUDED = ['/favorites', '/my-vods', '/settings', '/gameplan', '/notes'];
 
-// /[map]/[agent] pages that have VODs
-const vodPages = MAPS.flatMap(m =>
-  AGENTS.filter(a => VODS[m]?.[a]?.length > 0)
-        .map(a => `https://fraglog.gg/${m}/${a}/`)
-);
+const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const { data: vods } = await sb.from('vods').select('map_id,agent_id,player');
 
-// /agent/[agent] pages — one per agent that has any VOD
-const agentsWithVods = AGENTS.filter(a => MAPS.some(m => VODS[m]?.[a]?.length > 0));
+const vodSet = new Set((vods || []).map(v => `${v.map_id}/${v.agent_id}`));
+const vodPages = [...vodSet]
+  .filter(k => MAPS.includes(k.split('/')[0]))
+  .map(k => `https://fraglog.gg/${k}/`);
+
+const agentsWithVods = [...new Set((vods || []).map(v => v.agent_id))];
 const agentPages = agentsWithVods.map(a => `https://fraglog.gg/agent/${a}/`);
 
-// /player/[player] pages — one per unique player
-const allVods = getAllVods();
-const playerSlugs = [...new Set(allVods.map(v => v.player.toLowerCase().replace(/\//g, '').replace(/ /g, '-')))];
+const playerSlugs = [...new Set((vods || []).map(v =>
+  v.player.toLowerCase().replace(/\//g, '').replace(/ /g, '-')
+))];
 const playerPages = playerSlugs.map(p => `https://fraglog.gg/player/${p}/`);
 
 const customPages = [
