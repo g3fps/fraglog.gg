@@ -583,6 +583,7 @@ export const VODS = {
       { id:"g76ZZ3ppUDY", title:"C9 OXY Reyna Split HEADSHOT PRECISION", player:"OXY", date:"2026-06-02" },
       { id:"FjIdi4HSWpg", title:"C9 OXY Reyna Split RADIANT DUELIST", player:"OXY", date:"2026-06-11" },
       { id:"5YhW9td2nZg", title:"C9 OXY Reyna Split RADIANT KING", player:"OXY", date:"2026-06-14" },
+      { id:"3hA7b-NpxtI", title:"C9 OXY Reyna Split RADIANT DUEL", player:"OXY", date:"2026-06-22" },
     ],
     raze: [
       { id:"s6F10O6wAuc", title:"100T Asuna Raze Split RADIANT RANKED", player:"Asuna", date:"2026-04-21" },
@@ -670,6 +671,7 @@ export const VODS = {
       { id:"mrz5LetQOw0", title:"NAVI hiro Clove Split RADIANT 25 KILLS", player:"hiro", date:"2026-05-28" },
       { id:"wBqKvu2TQKw", title:"C9 OXY Clove Split 30 KILLS RADIANT", player:"OXY", date:"2026-05-31" },
       { id:"aiOrxbYvIt4", title:"NRG s0m Clove Split RADIANT CONTROL", player:"s0m", date:"2026-06-18" },
+      { id:"hdqU1QfwAzg", title:"C9 OXY Clove Split RADIANT MVP", player:"OXY", date:"2026-06-23" },
     ],
     miks: [
       { id:"fTS3wO4dswI", title:"ENVY demon1 Miks Split MASTER", player:"demon1", date:"2026-03-22" },
@@ -866,6 +868,7 @@ export const VODS = {
       { id:"zhFujInT4yU", title:"Dasnerth Cypher Fracture RADIANT LOCKDOWN", player:"Dasnerth", date:"2026-06-04" },
       { id:"CPvLpYiZ8so", title:"nAts Cypher Fracture RADIANT LOCKDOWN", player:"nAts", date:"2026-06-11" },
       { id:"ZMWFg1C7288", title:"C9 OXY Cypher Fracture RADIANT LOCKDOWN", player:"OXY", date:"2026-06-18" },
+      { id:"vf0mJ9ZGE-U", title:"TL nAts Cypher Fracture RADIANT ANCHOR", player:"nAts", date:"2026-06-23" },
     ],
     killjoy: [
       { id:"9v9iD-WvQ6s", title:"Inspire Killjoy Fracture RADIANT SETUPS", player:"Inspire", date:"2026-04-05" },
@@ -1470,6 +1473,7 @@ export const VODS = {
       { id:"4Vl6VMhKhOM", title:"TL nAts Viper Lotus WALL CONTROL", player:"nAts", date:"2026-06-02" },
       { id:"JW1XEG7CtbA", title:"C9 FireBallOps Viper Lotus CONTROLLER EXCELLENCE", player:"FireBallOps", date:"2026-06-04" },
       { id:"CQ9hpSZAD7k", title:"nAts Viper Lotus CONTROLLER MASTERY", player:"nAts", date:"2026-06-09" },
+      { id:"fmZndXZzitQ", title:"TL nAts Viper Lotus RADIANT ANCHOR", player:"nAts", date:"2026-06-22" },
     ],
     brimstone: [
       { id:"bP9oUDBsOew", title:"TL nAts Brimstone Lotus RADIANT SMOKES", player:"nAts", date:"2026-06-11" },

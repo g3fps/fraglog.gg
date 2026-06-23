@@ -14,6 +14,7 @@ function loadExistingTitles(): string[] {
   } catch { return []; }
 }
 
+
 // Two titles are duplicates if they have the same word set, OR if one has exactly
 // one extra word (a team prefix like C9, NRG) and all other words match.
 function isDuplicate(candidate: string, existingTitles: string[]): boolean {
@@ -90,15 +91,22 @@ Examples:
 "TenZ Jett Fracture RADIANT ECO FRAGS"
 "Tarik Skye Pearl RADIANT RETAKE"
 "PRX f0rsakeN Chamber Lotus RADIANT POST PLANT"
+"nAts Cypher Bind RADIANT ANCHOR"
+"Dasnerth Killjoy Split RADIANT LOCKDOWN"
 
 Format: [TEAM] Player Agent Map RANK DESCRIPTOR
 - TEAM prefix (org abbreviation like ENVY, C9, NRG, PRX, TL) only if confirmed in YouTube title — omit if unknown
 - Player name as-is (preserve casing like TenZ, s0m, OXY)
 - Agent and Map in Title Case
-- End with 1-3 ALL CAPS words drawn from real Valorant gameplay vocabulary:
-  ACE, CLUTCH, OPERATOR, RIFLE, PISTOL ROUND, ECO, ECO FRAGS, THRIFTY, RETAKE, LURK, FLANK, ANCHOR, POST PLANT, SPIKE RUSH, DEFUSE, DUEL, PEEK, ENTRY, ORB, ROUND WIN, SITE HOLD, ROTATE, COMEBACK, OVERTIME, TOURNAMENT
-- Pick the descriptor that best matches what the YouTube title or player/agent combo suggests — a Jett + OPERATOR title makes sense, a Skye entry makes sense, etc.
-- If a tag combo is already used for this player/agent/map, pick a different descriptor
+- End with 1-3 ALL CAPS words that describe the VOD. Use real Valorant gameplay vocabulary.
+- The descriptor MUST make sense for the agent's role:
+  - Duelists (Jett, Reyna, Raze, Neon, Phoenix, Yoru, Iso, Waylay): ENTRY, OPERATOR, RIFLE, ACE, CLUTCH, DUELS, FRAG REEL, AGGRESSIVE, PEEK
+  - Initiators (Sova, Breach, Skye, KAY/O, Fade, Gekko, Tejo): ENTRY, RETAKE, UTIL DUMP, FLASH ENTRY, INFO, SUPPORT, FLANK
+  - Controllers (Omen, Viper, Brimstone, Astra, Harbor, Clove, Miks): SMOKES, LURK, CONTROL, SETUP, ECONOMY, ROTATE, POST PLANT
+  - Sentinels (Sage, Cypher, Killjoy, Chamber, Deadlock, Vyse, Veto): ANCHOR, LOCKDOWN, SITE HOLD, RETAKE, SENTINEL PLAY, SETUPS, TRIPS
+  - Generic (any role): RANKED, MVP, DOMINATION, 30 KILLS, COMEBACK, OVERTIME, THRIFTY, ECO, ACE
+- You may invent a fresh descriptor that isn't on these lists if it fits better
+- Draw from the YouTube title if it has something specific (kill count, matchup, game mode)
 - Max 65 chars, no quotes
 
 VOD info:
