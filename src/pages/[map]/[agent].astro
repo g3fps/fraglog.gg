@@ -2,7 +2,8 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Nav from '../../components/Nav.astro';
 import Footer from '../../components/Footer.astro';
-import { MAPS, AGENTS, agentVods, formatDate } from '../../data/data.js';
+import { MAPS, AGENTS, formatDate } from '../../data/data.js';
+import { getAgentVods } from '../../lib/vods.js';
 import { getSessionUser } from '../../lib/auth.js';
 
 const { user } = await getSessionUser(Astro.cookies);
@@ -13,7 +14,7 @@ const agentData = AGENTS.find(a => a.id === agentId);
 
 if (!mapData || !agentData) return Astro.redirect('/');
 
-const vods = agentVods(mapId, agentId)
+const vods = (await getAgentVods(mapId as string, agentId as string))
   .slice()
   .sort((a: any, b: any) => (b.date || '').localeCompare(a.date || ''));
 const playerCounts = vods.reduce((m: Map<string, number>, v: any) => m.set(v.player, (m.get(v.player) || 0) + 1), new Map<string, number>());

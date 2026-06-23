@@ -4,7 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 import { isAdminEmail } from '../../lib/admin.js';
 import { checkRateLimit, getClientIp } from '../../lib/ratelimit.js';
 import { buildAskPrompt } from '../../lib/coaching-prompt.js';
-import { getAllVods } from '../../data/data.js';
+import { getAllVods } from '../../lib/vods.js';
 import { getPremium, getLimits, featureLocked } from '../../lib/premium.js';
 
 export const POST: APIRoute = async ({ request, clientAddress }) => {
@@ -48,7 +48,7 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
   }
 
   // Fetch user's notes for context
-  const allLibVods = getAllVods();
+  const allLibVods = await getAllVods();
   const libVodMap = new Map(allLibVods.map((v: any) => [v.id, v]));
 
   const [{ data: videoNotes }, { data: notebookNotes }, { data: userVods }] = await Promise.all([

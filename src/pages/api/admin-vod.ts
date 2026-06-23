@@ -1,49 +1,42 @@
 /// <reference types="astro/client" />
-import { readFileSync, writeFileSync } from 'fs';
-import { resolve } from 'path';
 import { createClient } from '@supabase/supabase-js';
 import { isAdminEmail } from '../../lib/admin.js';
 import { MAPS, AGENTS } from '../../data/data.js';
 
 export const prerender = false;
 
-const DATA_PATH = resolve('src/data/data.js');
-const MAP_IDS = new Set(MAPS.map((m: any) => m.id));
+const SUPABASE_URL = 'https://cvdtykmkajmhlxydhzzl.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_I16eAnYgsA9fd8ZMlmFQtA_RxepSaXi';
+
+// summit is pre-approved in the allowlist before going public in MAPS
+const MAP_IDS = new Set([...MAPS.map((m: any) => m.id), 'summit']);
 const AGENT_IDS = new Set(AGENTS.map((a: any) => a.id));
 
-function readDataFile() {
-  return readFileSync(DATA_PATH, 'utf-8');
-}
-
-function buildEntryLine(vod: { id: string; title: string; player: string; date?: string }) {
-  // JSON.stringify safely escapes quotes/backslashes/newlines so nothing can break out of data.js
-  let line = `      { id:${JSON.stringify(vod.id)}, title:${JSON.stringify(vod.title)}, player:${JSON.stringify(vod.player)}`;
-  if (vod.date) line += `, date:${JSON.stringify(vod.date)}`;
-  line += ` },`;
-  return line;
+function sbService() {
+  return createClient(SUPABASE_URL, import.meta.env.SUPABASE_SERVICE_KEY);
 }
 
 async function verifyAdmin(accessToken: string) {
-  const sb = createClient(
-    'https://cvdtykmkajmhlxydhzzl.supabase.co',
-    'sb_publishable_I16eAnYgsA9fd8ZMlmFQtA_RxepSaXi'
-  );
+  const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   const { data: { user } } = await sb.auth.getUser(accessToken);
   return isAdminEmail(user?.email) ? user : null;
 }
 
+// GET — return existing IDs and titles for duplicate checking
 export async function GET({ request }: { request: Request }) {
   const auth = request.headers.get('Authorization')?.replace('Bearer ', '');
   if (!auth || !await verifyAdmin(auth)) {
     return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403 });
   }
 
-  const content = readDataFile();
-  const ids = [...content.matchAll(/id:"([a-zA-Z0-9_-]{11})"/g)].map(m => m[1]);
-  const titles = [...content.matchAll(/title:"([^"]+)"/g)].map(m => m[1]);
+  const sb = sbService();
+  const { data } = await sb.from('vods').select('id,title').limit(5000);
+  const ids = (data || []).map((v: any) => v.id);
+  const titles = (data || []).map((v: any) => v.title);
   return new Response(JSON.stringify({ ids, titles }), { headers: { 'Content-Type': 'application/json' } });
 }
 
+// POST — insert a new VOD
 export async function POST({ request }: { request: Request }) {
   const auth = request.headers.get('Authorization')?.replace('Bearer ', '');
   if (!auth || !await verifyAdmin(auth)) {
@@ -56,13 +49,11 @@ export async function POST({ request }: { request: Request }) {
   const agent = String(raw.agent || '').trim().toLowerCase();
   const title = String(raw.title || '').trim().slice(0, 200);
   const player = String(raw.player || '').trim().slice(0, 100);
-  const date = raw.date ? String(raw.date).trim().slice(0, 20) : '';
+  const date = raw.date ? String(raw.date).trim().slice(0, 20) : null;
 
   if (!map || !agent || !id || !title || !player) {
     return new Response(JSON.stringify({ error: 'Missing required fields' }), { status: 400 });
   }
-
-  // ── Validate before anything touches the filesystem or a RegExp ──
   if (!/^[a-zA-Z0-9_-]{11}$/.test(id)) {
     return new Response(JSON.stringify({ error: 'Invalid video ID' }), { status: 400 });
   }
@@ -76,48 +67,38 @@ export async function POST({ request }: { request: Request }) {
     return new Response(JSON.stringify({ error: 'Invalid date' }), { status: 400 });
   }
 
-  let content = readDataFile();
+  const sb = sbService();
+  const { error } = await sb.from('vods').insert({
+    id, map_id: map, agent_id: agent, title, player, date: date || null,
+  });
 
-  // Duplicate check
-  if (content.includes(`id:"${id}"`)) {
-    return new Response(JSON.stringify({ error: 'Duplicate: video ID already exists in data.js' }), { status: 409 });
+  if (error?.code === '23505') {
+    return new Response(JSON.stringify({ error: 'Duplicate: video ID already exists' }), { status: 409 });
   }
-  const titleLower = title.toLowerCase();
-  const allTitles = [...content.matchAll(/title:"([^"]+)"/g)].map(m => m[1].toLowerCase());
-  if (allTitles.includes(titleLower)) {
-    return new Response(JSON.stringify({ error: 'Duplicate: title already exists in data.js' }), { status: 409 });
-  }
-
-  // Find the agent array within the correct map section.
-  // map and agent are validated against known id sets above, so they are safe in a RegExp.
-  const mapPattern = new RegExp(`  ${map}:\\s*\\{`);
-  const mapMatch = mapPattern.exec(content);
-  if (!mapMatch) {
-    return new Response(JSON.stringify({ error: `Map "${map}" not found in data.js` }), { status: 404 });
+  if (error) {
+    return new Response(JSON.stringify({ error: error.message }), { status: 500 });
   }
 
-  const afterMap = content.indexOf(mapMatch[0]) + mapMatch[0].length;
-  const agentPattern = new RegExp(`    ${agent}:\\s*\\[`);
-  const agentSearchIn = content.slice(afterMap);
-  const agentMatch = agentPattern.exec(agentSearchIn);
-  if (!agentMatch) {
-    return new Response(JSON.stringify({ error: `Agent "${agent}" not found under map "${map}"` }), { status: 404 });
+  return new Response(JSON.stringify({ success: true }), { headers: { 'Content-Type': 'application/json' } });
+}
+
+// DELETE — remove a VOD by ID
+export async function DELETE({ request }: { request: Request }) {
+  const auth = request.headers.get('Authorization')?.replace('Bearer ', '');
+  if (!auth || !await verifyAdmin(auth)) {
+    return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403 });
   }
 
-  const arrayOpenPos = afterMap + agentSearchIn.indexOf(agentMatch[0]) + agentMatch[0].length;
-
-  const closingPattern = /\n    \],/;
-  const afterArrayOpen = content.slice(arrayOpenPos);
-  const closingMatch = closingPattern.exec(afterArrayOpen);
-  if (!closingMatch) {
-    return new Response(JSON.stringify({ error: 'Could not find array closing bracket' }), { status: 500 });
+  const { id } = await request.json().catch(() => ({}));
+  if (!id || !/^[a-zA-Z0-9_-]{11}$/.test(String(id))) {
+    return new Response(JSON.stringify({ error: 'Invalid ID' }), { status: 400 });
   }
 
-  const insertPos = arrayOpenPos + closingMatch.index;
-  const newLine = '\n' + buildEntryLine({ id, title, player, date });
-  content = content.slice(0, insertPos) + newLine + content.slice(insertPos);
-
-  writeFileSync(DATA_PATH, content, 'utf-8');
+  const sb = sbService();
+  const { error } = await sb.from('vods').delete().eq('id', id);
+  if (error) {
+    return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+  }
 
   return new Response(JSON.stringify({ success: true }), { headers: { 'Content-Type': 'application/json' } });
 }

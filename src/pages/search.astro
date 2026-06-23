@@ -2,12 +2,13 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Nav from '../components/Nav.astro';
 import Footer from '../components/Footer.astro';
-import { getAllVods, AGENTS, MAPS } from '../data/data.js';
+import { AGENTS, MAPS } from '../data/data.js';
+import { getAllVods } from '../lib/vods.js';
 import { getSessionUser } from '../lib/auth.js';
 
 const { user } = await getSessionUser(Astro.cookies);
 
-const allVods = getAllVods();
+const allVods = await getAllVods();
 const agentRoles = Object.fromEntries(AGENTS.map((a: any) => [a.id, a.role]));
 ---
 <BaseLayout title="Search — fraglog.gg" description="Search Valorant VODs by player, map, or agent on FragLog.gg" user={user}>

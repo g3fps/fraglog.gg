@@ -2,14 +2,14 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Nav from '../components/Nav.astro';
 import Footer from '../components/Footer.astro';
-import { getAllVods } from '../data/data.js';
+import { getAllVods } from '../lib/vods.js';
 import { PREMIUM_ENABLED } from '../lib/premium.js';
 import { getSessionPremium } from '../lib/auth.js';
 
 const { user, isPremium } = await getSessionPremium(Astro.cookies);
 
 const locked = PREMIUM_ENABLED && !isPremium;
-const libVods = getAllVods().map((v: any) => ({
+const libVods = (await getAllVods()).map((v: any) => ({
   id: v.id, title: v.title, player: v.player, mapId: v.mapId, agentId: v.agentId, mapName: v.mapName, agentName: v.agentName,
 }));
 ---

@@ -2,7 +2,8 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Nav from '../../components/Nav.astro';
 import Footer from '../../components/Footer.astro';
-import { MAPS, AGENTS, ROLES_ORDER, ROLE_DOTS, agentVods } from '../../data/data.js';
+import { MAPS, AGENTS, ROLES_ORDER, ROLE_DOTS } from '../../data/data.js';
+import { getMapVodCounts } from '../../lib/vods.js';
 import { getSessionUser } from '../../lib/auth.js';
 
 const { user } = await getSessionUser(Astro.cookies);
@@ -11,6 +12,8 @@ const { map: mapId } = Astro.params;
 const mapData = MAPS.find(m => m.id === mapId);
 
 if (!mapData) return Astro.redirect('/');
+
+const vodCounts = await getMapVodCounts(mapId as string);
 
 const title = `${mapData.name} Valorant VODs — fraglog.gg`;
 const description = `Watch Radiant and pro player Valorant VODs on ${mapData.name}, filtered by agent. Study ${mapData.name} gameplay from the best players in the world on fraglog.gg.`;
@@ -46,8 +49,7 @@ const jsonLd = JSON.stringify({
           </div>
           <div class="agent-grid">
             {roleAgents.map(agent => {
-              const vods = agentVods(mapId, agent.id);
-              const hasVods = vods.length > 0;
+              const hasVods = (vodCounts[agent.id] || 0) > 0;
               return (
                <a   class={`agent-card ${hasVods ? 'has-vods' : 'no-vods'}`}
                   href={hasVods ? `/${mapId}/${agent.id}/` : undefined}

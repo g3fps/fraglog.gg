@@ -2,18 +2,18 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Nav from '../components/Nav.astro';
 import Footer from '../components/Footer.astro';
-import { MAPS, vodCount, getAllVods } from '../data/data.js';
+import { MAPS } from '../data/data.js';
+import { getTotalVodCount, getRecentVods, getAllMapVodCounts } from '../lib/vods.js';
 import { getSessionUser } from '../lib/auth.js';
 
 const { user } = await getSessionUser(Astro.cookies);
 
-const totalVods = MAPS.reduce((sum, map) => sum + vodCount(map.id), 0);
+const [totalVods, recentVods, mapCounts] = await Promise.all([
+  getTotalVodCount(),
+  getRecentVods(8),
+  getAllMapVodCounts(),
+]);
 const displayVods = Math.floor(totalVods / 100) * 100;
-
-// Recently added — last 8 VODs by date
-const recentVods = getAllVods()
-  .sort((a: any, b: any) => +new Date(b.date) - +new Date(a.date))
-  .slice(0, 8);
 
 const jsonLd = JSON.stringify({
   "@context": "https://schema.org",
@@ -129,7 +129,7 @@ const jsonLd = JSON.stringify({
     </div>
     <div class="home-map-grid">
       {MAPS.map(map => {
-        const count = vodCount(map.id);
+        const count = mapCounts[map.id] || 0;
         return (
           <a
             class={`hmc ${count > 0 ? 'hmc--active' : 'hmc--empty'}`}

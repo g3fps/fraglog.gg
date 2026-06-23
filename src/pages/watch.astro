@@ -3,13 +3,13 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import Nav from '../components/Nav.astro';
 import Footer from '../components/Footer.astro';
 import { getSessionUser } from '../lib/auth.js';
-import { getAllVods } from '../data/data.js';
+import { getAllVods } from '../lib/vods.js';
 
 const { user } = await getSessionUser(Astro.cookies);
 const videoId = Astro.url.searchParams.get('v') || '';
 if (!videoId) return Astro.redirect('/');
 
-const vod = getAllVods().find(v => v.id === videoId) ?? null;
+const vod = (await getAllVods()).find((v: any) => v.id === videoId) ?? null;
 ---
 <BaseLayout title="Watch — fraglog.gg" user={user}>
   <Nav crumbs={[{ label: 'ALL MAPS', href: '/' }, { label: 'WATCH' }]} user={user} />

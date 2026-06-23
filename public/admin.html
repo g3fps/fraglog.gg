@@ -203,6 +203,7 @@ select option { background: var(--surface); }
           <option value="sunset">Sunset</option>
           <option value="abyss">Abyss</option>
           <option value="corrode">Corrode</option>
+          <option value="summit">Summit (unreleased)</option>
         </select>
       </div>
       <div class="field">
@@ -269,11 +270,11 @@ select option { background: var(--surface); }
   </div>
 
   <!-- STEP 3: Save -->
-  <div class="section-title">Step 3 — Save to data.js</div>
+  <div class="section-title">Step 3 — Save to Supabase</div>
   <div class="card">
-    <button class="btn btn-primary" style="width:100%;padding:14px" onclick="saveVod()">+ Save VOD to data.js</button>
+    <button class="btn btn-primary" style="width:100%;padding:14px" onclick="saveVod()">+ Save VOD to Supabase</button>
     <div id="save-status" style="font-family:'DM Mono',monospace;font-size:11px;text-align:center;margin-top:10px;min-height:16px"></div>
-    <p class="tip" style="margin-top:12px">Saves directly to <strong>src/data/data.js</strong>. Duplicate IDs are rejected automatically. Press <strong>Ctrl+Enter</strong> to save quickly.</p>
+    <p class="tip" style="margin-top:12px">Saves to the <strong>vods</strong> Supabase table. Duplicate IDs are rejected automatically. Press <strong>Ctrl+Enter</strong> to save quickly.</p>
   </div>
 
   <!-- Session log -->
@@ -285,6 +286,14 @@ select option { background: var(--surface); }
     <div class="entries-list" id="entries-list">
       <div class="empty-state">No VODs saved yet — fill in the form above and hit Save.</div>
     </div>
+  </div>
+
+  <div class="section-title" style="display:flex;justify-content:space-between;align-items:center;margin-top:2rem">
+    <span>Recent VODs (<span id="vod-recent-count">0</span>)</span>
+    <button class="btn btn-secondary" style="font-size:10px;padding:5px 12px" onclick="loadVodRecent()">Refresh</button>
+  </div>
+  <div class="card">
+    <div class="entries-list" id="vod-recent-list"><div class="empty-state">Loading...</div></div>
   </div>
 
   <hr style="border:none;border-top:1px solid var(--border);margin:2.5rem 0">
@@ -306,7 +315,7 @@ select option { background: var(--surface); }
   <div class="section-title">Map 1</div>
   <div class="card">
     <div class="row">
-      <div class="field"><label>Map</label><select id="pro-map1"><option value="">Select map...</option><option value="ascent">Ascent</option><option value="bind">Bind</option><option value="haven">Haven</option><option value="split">Split</option><option value="fracture">Fracture</option><option value="pearl">Pearl</option><option value="icebox">Icebox</option><option value="breeze">Breeze</option><option value="lotus">Lotus</option><option value="sunset">Sunset</option><option value="abyss">Abyss</option><option value="corrode">Corrode</option></select></div>
+      <div class="field"><label>Map</label><select id="pro-map1"><option value="">Select map...</option><option value="ascent">Ascent</option><option value="bind">Bind</option><option value="haven">Haven</option><option value="split">Split</option><option value="fracture">Fracture</option><option value="pearl">Pearl</option><option value="icebox">Icebox</option><option value="breeze">Breeze</option><option value="lotus">Lotus</option><option value="sunset">Sunset</option><option value="abyss">Abyss</option><option value="corrode">Corrode</option><option value="summit">Summit</option></select></div>
       <div class="field"><label>YouTube URL</label><input type="text" id="pro-yt1" placeholder="https://youtube.com/..." oninput="proHandleYT('1')"></div>
     </div>
     <div class="field" style="margin-top:10px"><label>Start Time (MM:SS or seconds)</label><input type="text" id="pro-ts1" placeholder="0:00 or 0"></div>
@@ -316,7 +325,7 @@ select option { background: var(--surface); }
   <div class="section-title">Map 2</div>
   <div class="card">
     <div class="row">
-      <div class="field"><label>Map</label><select id="pro-map2"><option value="">Select map...</option><option value="ascent">Ascent</option><option value="bind">Bind</option><option value="haven">Haven</option><option value="split">Split</option><option value="fracture">Fracture</option><option value="pearl">Pearl</option><option value="icebox">Icebox</option><option value="breeze">Breeze</option><option value="lotus">Lotus</option><option value="sunset">Sunset</option><option value="abyss">Abyss</option><option value="corrode">Corrode</option></select></div>
+      <div class="field"><label>Map</label><select id="pro-map2"><option value="">Select map...</option><option value="ascent">Ascent</option><option value="bind">Bind</option><option value="haven">Haven</option><option value="split">Split</option><option value="fracture">Fracture</option><option value="pearl">Pearl</option><option value="icebox">Icebox</option><option value="breeze">Breeze</option><option value="lotus">Lotus</option><option value="sunset">Sunset</option><option value="abyss">Abyss</option><option value="corrode">Corrode</option><option value="summit">Summit</option></select></div>
       <div class="field"><label>YouTube URL</label><input type="text" id="pro-yt2" placeholder="https://youtube.com/..." oninput="proHandleYT('2')"></div>
     </div>
     <div class="field" style="margin-top:10px"><label>Start Time (MM:SS or seconds)</label><input type="text" id="pro-ts2" placeholder="0:00 or 0"></div>
@@ -326,7 +335,7 @@ select option { background: var(--surface); }
   <div class="section-title">Map 3 (optional)</div>
   <div class="card">
     <div class="row">
-      <div class="field"><label>Map</label><select id="pro-map3"><option value="">Select map...</option><option value="ascent">Ascent</option><option value="bind">Bind</option><option value="haven">Haven</option><option value="split">Split</option><option value="fracture">Fracture</option><option value="pearl">Pearl</option><option value="icebox">Icebox</option><option value="breeze">Breeze</option><option value="lotus">Lotus</option><option value="sunset">Sunset</option><option value="abyss">Abyss</option><option value="corrode">Corrode</option></select></div>
+      <div class="field"><label>Map</label><select id="pro-map3"><option value="">Select map...</option><option value="ascent">Ascent</option><option value="bind">Bind</option><option value="haven">Haven</option><option value="split">Split</option><option value="fracture">Fracture</option><option value="pearl">Pearl</option><option value="icebox">Icebox</option><option value="breeze">Breeze</option><option value="lotus">Lotus</option><option value="sunset">Sunset</option><option value="abyss">Abyss</option><option value="corrode">Corrode</option><option value="summit">Summit</option></select></div>
       <div class="field"><label>YouTube URL</label><input type="text" id="pro-yt3" placeholder="https://youtube.com/..." oninput="proHandleYT('3')"></div>
     </div>
     <div class="field" style="margin-top:10px"><label>Start Time (MM:SS or seconds)</label><input type="text" id="pro-ts3" placeholder="0:00 or 0"></div>
@@ -336,7 +345,7 @@ select option { background: var(--surface); }
   <div class="section-title">Map 4 (optional)</div>
   <div class="card">
     <div class="row">
-      <div class="field"><label>Map</label><select id="pro-map4"><option value="">Select map...</option><option value="ascent">Ascent</option><option value="bind">Bind</option><option value="haven">Haven</option><option value="split">Split</option><option value="fracture">Fracture</option><option value="pearl">Pearl</option><option value="icebox">Icebox</option><option value="breeze">Breeze</option><option value="lotus">Lotus</option><option value="sunset">Sunset</option><option value="abyss">Abyss</option><option value="corrode">Corrode</option></select></div>
+      <div class="field"><label>Map</label><select id="pro-map4"><option value="">Select map...</option><option value="ascent">Ascent</option><option value="bind">Bind</option><option value="haven">Haven</option><option value="split">Split</option><option value="fracture">Fracture</option><option value="pearl">Pearl</option><option value="icebox">Icebox</option><option value="breeze">Breeze</option><option value="lotus">Lotus</option><option value="sunset">Sunset</option><option value="abyss">Abyss</option><option value="corrode">Corrode</option><option value="summit">Summit</option></select></div>
       <div class="field"><label>YouTube URL</label><input type="text" id="pro-yt4" placeholder="https://youtube.com/..." oninput="proHandleYT('4')"></div>
     </div>
     <div class="field" style="margin-top:10px"><label>Start Time (MM:SS or seconds)</label><input type="text" id="pro-ts4" placeholder="0:00 or 0"></div>
@@ -346,7 +355,7 @@ select option { background: var(--surface); }
   <div class="section-title">Map 5 (optional)</div>
   <div class="card">
     <div class="row">
-      <div class="field"><label>Map</label><select id="pro-map5"><option value="">Select map...</option><option value="ascent">Ascent</option><option value="bind">Bind</option><option value="haven">Haven</option><option value="split">Split</option><option value="fracture">Fracture</option><option value="pearl">Pearl</option><option value="icebox">Icebox</option><option value="breeze">Breeze</option><option value="lotus">Lotus</option><option value="sunset">Sunset</option><option value="abyss">Abyss</option><option value="corrode">Corrode</option></select></div>
+      <div class="field"><label>Map</label><select id="pro-map5"><option value="">Select map...</option><option value="ascent">Ascent</option><option value="bind">Bind</option><option value="haven">Haven</option><option value="split">Split</option><option value="fracture">Fracture</option><option value="pearl">Pearl</option><option value="icebox">Icebox</option><option value="breeze">Breeze</option><option value="lotus">Lotus</option><option value="sunset">Sunset</option><option value="abyss">Abyss</option><option value="corrode">Corrode</option><option value="summit">Summit</option></select></div>
       <div class="field"><label>YouTube URL</label><input type="text" id="pro-yt5" placeholder="https://youtube.com/..." oninput="proHandleYT('5')"></div>
     </div>
     <div class="field" style="margin-top:10px"><label>Start Time (MM:SS or seconds)</label><input type="text" id="pro-ts5" placeholder="0:00 or 0"></div>
@@ -407,10 +416,10 @@ function checkDuplicates() {
   const titleDup = title && existingTitles.some(t => t.toLowerCase() === title);
   const display = document.getElementById("video-id-display");
   if (idDup) {
-    display.textContent = "⚠ Duplicate — this video ID is already in data.js";
+    display.textContent = "⚠ Duplicate — this video ID is already in Supabase";
     display.style.color = "#FF4655";
   } else if (titleDup) {
-    display.textContent = "⚠ Duplicate — this title already exists in data.js";
+    display.textContent = "⚠ Duplicate — this title already exists in Supabase";
     display.style.color = "#FF4655";
   } else if (currentVideoId) {
     display.textContent = "Video ID: " + currentVideoId;
@@ -520,7 +529,7 @@ async function saveVod() {
       body: JSON.stringify({ map, agent, id: currentVideoId, title, player, date }),
     });
     const data = await res.json();
-    if (res.status === 409) { setSaveStatus("Duplicate — ID already in data.js", "#FF4655"); return; }
+    if (res.status === 409) { setSaveStatus("Duplicate — ID already in Supabase", "#FF4655"); return; }
     if (!res.ok) { setSaveStatus("Error: " + (data.error || res.status), "#FF4655"); return; }
 
     setSaveStatus(`✓ Saved — ${map} › ${agent} › ${player}`);
@@ -528,6 +537,7 @@ async function saveVod() {
     localStorage.setItem('fraglog-admin-log', JSON.stringify(sessionLog.slice(0, 50)));
     renderLog();
     loadExisting();
+    loadVodRecent();
     clearForm();
   } catch (err) {
     setSaveStatus("Network error.", "#FF4655");
@@ -596,7 +606,7 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
   }
   document.getElementById('pro-date').valueAsDate = new Date();
   loadProRecent();
-  if (session) loadGameplanData(0);
+  if (session) { loadVodRecent(); loadGameplanData(0); }
 })();
 
 async function adminSignIn() {
@@ -692,6 +702,46 @@ async function saveProMatch() {
     proYtIds[n] = null;
   });
   loadProRecent();
+}
+
+async function loadVodRecent() {
+  const token = await getAccessToken();
+  if (!token) return;
+  const list = document.getElementById('vod-recent-list');
+  const count = document.getElementById('vod-recent-count');
+  try {
+    const res = await fetch('/api/admin-vod', { headers: { 'Authorization': `Bearer ${token}` } });
+    if (!res.ok) { list.innerHTML = '<div class="empty-state">Error loading VODs.</div>'; return; }
+    const { ids, titles } = await res.json();
+    count.textContent = ids.length;
+    if (!ids.length) { list.innerHTML = '<div class="empty-state">No VODs in database yet.</div>'; return; }
+    // Show last 20
+    const recent = ids.slice(0, 20);
+    list.innerHTML = recent.map((id, i) => `
+      <div class="entry-item">
+        <div class="entry-text">${titles[i] || id} · <span style="opacity:0.6">${id}</span></div>
+        <span class="entry-remove" onclick="deleteVod('${id}')">✕</span>
+      </div>
+    `).join('');
+  } catch { list.innerHTML = '<div class="empty-state">Failed to load.</div>'; }
+}
+
+async function deleteVod(id) {
+  if (!confirm(`Delete VOD ${id}?`)) return;
+  const token = await getAccessToken();
+  if (!token) return;
+  const res = await fetch('/api/admin-vod', {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+    body: JSON.stringify({ id }),
+  });
+  if (res.ok) {
+    loadVodRecent();
+    loadExisting();
+  } else {
+    const d = await res.json().catch(() => ({}));
+    alert('Error: ' + (d.error || res.status));
+  }
 }
 
 async function loadProRecent() {

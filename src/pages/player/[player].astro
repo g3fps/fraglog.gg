@@ -2,14 +2,15 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Nav from '../../components/Nav.astro';
 import Footer from '../../components/Footer.astro';
-import { getAllVods, formatDate } from '../../data/data.js';
+import { formatDate } from '../../data/data.js';
+import { getAllVods } from '../../lib/vods.js';
 import { getSessionUser } from '../../lib/auth.js';
 
 const { user } = await getSessionUser(Astro.cookies);
 
 const { player } = Astro.params;
-const allVods = getAllVods();
-const playerVods = allVods.filter(v => v.player.toLowerCase() === (player ?? '').toLowerCase());
+const allVods = await getAllVods();
+const playerVods = allVods.filter((v: any) => v.player.toLowerCase() === (player ?? '').toLowerCase());
 if (!playerVods.length) return Astro.redirect('/');
 
 const displayName = playerVods[0].player;
@@ -34,7 +35,7 @@ const description = `Watch all ${playerVods.length} ${displayName} VODs on FragL
           data-title={v.title}
           data-player={v.player}
           data-date={v.date ? formatDate(v.date) : ''}
-          data-note={v.note || ''}
+          data-note=""
           data-map-id={v.mapId}
           data-map-name={v.mapName}
           data-agent-id={v.agentId}

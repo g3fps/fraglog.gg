@@ -2,7 +2,8 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Nav from '../../components/Nav.astro';
 import Footer from '../../components/Footer.astro';
-import { getAllVods, AGENTS, formatDate } from '../../data/data.js';
+import { AGENTS, formatDate } from '../../data/data.js';
+import { getAllVods } from '../../lib/vods.js';
 import { getSessionUser } from '../../lib/auth.js';
 
 const { user } = await getSessionUser(Astro.cookies);
@@ -11,7 +12,7 @@ const { agent } = Astro.params;
 const agentData = (AGENTS as any[]).find((a: any) => a.id === agent);
 if (!agentData) return Astro.redirect('/');
 
-const agentVods = getAllVods().filter((v: any) => v.agentId === agent);
+const agentVods = (await getAllVods()).filter((v: any) => v.agentId === agent);
 if (!agentVods.length) return Astro.redirect('/');
 
 const title = `${agentData.name} VODs — fraglog.gg`;

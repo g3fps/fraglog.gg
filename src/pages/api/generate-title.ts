@@ -1,16 +1,17 @@
 /// <reference types="astro/client" />
 import { createClient } from '@supabase/supabase-js';
-import { readFileSync } from 'fs';
-import { resolve } from 'path';
 import { isAdminEmail } from '../../lib/admin.js';
 import { checkRateLimit } from '../../lib/ratelimit.js';
 
 export const prerender = false;
 
-function loadExistingTitles(): string[] {
+const SUPABASE_URL = 'https://cvdtykmkajmhlxydhzzl.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_I16eAnYgsA9fd8ZMlmFQtA_RxepSaXi';
+
+async function loadExistingTitles(sb: ReturnType<typeof createClient>): Promise<string[]> {
   try {
-    const content = readFileSync(resolve('src/data/data.js'), 'utf-8');
-    return [...content.matchAll(/title:"([^"]+)"/g)].map(m => m[1]);
+    const { data } = await sb.from('vods').select('title').limit(5000);
+    return (data || []).map((v: any) => v.title);
   } catch { return []; }
 }
 
@@ -56,10 +57,7 @@ export async function POST({ request }: { request: Request }) {
 
   if (!accessToken) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
 
-  const sb = createClient(
-    'https://cvdtykmkajmhlxydhzzl.supabase.co',
-    'sb_publishable_I16eAnYgsA9fd8ZMlmFQtA_RxepSaXi'
-  );
+  const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   const { data: { user } } = await sb.auth.getUser(accessToken);
   if (!isAdminEmail(user?.email)) return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403 });
 
@@ -71,8 +69,8 @@ export async function POST({ request }: { request: Request }) {
     return new Response(JSON.stringify({ error: 'Missing required fields' }), { status: 400 });
   }
 
-  // Always load fresh from data.js — don't trust client-supplied list
-  const existingTitles = loadExistingTitles();
+  // Always load fresh from Supabase — don't trust client-supplied list
+  const existingTitles = await loadExistingTitles(sb);
 
   let ytTitle = '';
   try {
