@@ -80,7 +80,8 @@ export async function getTotalVodCount(): Promise<number> {
 export async function getAllMapVodCounts(): Promise<Record<string, number>> {
   const { data } = await sb()
     .from('vods')
-    .select('map_id');
+    .select('map_id')
+    .limit(5000);
   const counts: Record<string, number> = {};
   for (const row of (data || [])) {
     counts[row.map_id] = (counts[row.map_id] || 0) + 1;
