@@ -78,15 +78,16 @@ export async function getTotalVodCount(): Promise<number> {
 
 /** map_id → count across all maps — for the homepage map grid. */
 export async function getAllMapVodCounts(): Promise<Record<string, number>> {
-  const { data } = await sb()
-    .from('vods')
-    .select('map_id')
-    .limit(5000);
-  const counts: Record<string, number> = {};
-  for (const row of (data || [])) {
-    counts[row.map_id] = (counts[row.map_id] || 0) + 1;
-  }
-  return counts;
+  const results = await Promise.all(
+    MAPS.map(async (m: any) => {
+      const { count } = await sb()
+        .from('vods')
+        .select('*', { count: 'exact', head: true })
+        .eq('map_id', m.id);
+      return [m.id, count || 0] as [string, number];
+    })
+  );
+  return Object.fromEntries(results);
 }
 
 /** Most recent VODs by date. */
