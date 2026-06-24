@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>fraglog.gg — Admin</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onTurnstileLoad" async defer></script>
 <style>
 :root {
   --red: #FF4655;
@@ -163,6 +164,7 @@ select option { background: var(--surface); }
         <input type="password" id="auth-pass" placeholder="••••••••">
       </div>
     </div>
+    <div id="turnstile-widget" style="margin-top:12px"></div>
     <button class="btn btn-primary" style="width:100%;margin-top:12px" onclick="adminSignIn()">Sign In</button>
     <div id="auth-error" style="font-family:'DM Mono',monospace;font-size:11px;color:#FF4655;margin-top:8px;min-height:14px"></div>
   </div>
@@ -609,11 +611,30 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
   if (session) { loadVodRecent(); loadGameplanData(0); }
 })();
 
+function onTurnstileLoad() {}
+
+function getTurnstileToken() {
+  return new Promise((resolve, reject) => {
+    const el = document.getElementById('turnstile-widget');
+    el.innerHTML = '';
+    turnstile.render(el, {
+      sitekey: '0x4AAAAAADfLzeMlyfoAvDRy',
+      theme: 'dark',
+      callback: resolve,
+      'error-callback': (code) => reject(new Error(`CAPTCHA error: ${code}`)),
+    });
+  });
+}
+
 async function adminSignIn() {
   const email = document.getElementById('auth-email').value.trim();
   const pass = document.getElementById('auth-pass').value;
   const errEl = document.getElementById('auth-error');
-  const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
+  errEl.textContent = 'Verifying…';
+  let captchaToken;
+  try { captchaToken = await getTurnstileToken(); }
+  catch (e) { errEl.textContent = e.message; return; }
+  const { data, error } = await sb.auth.signInWithPassword({ email, password: pass, options: { captchaToken } });
   if (error) { errEl.textContent = error.message; return; }
   document.getElementById('auth-status').textContent = `✓ ${data.user.email}`;
   document.getElementById('auth-status').style.color = '#6BCF6B';

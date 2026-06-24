@@ -1006,17 +1006,17 @@ export const AGENT_KNOWLEDGE = {
   },
   iso: {
     role: "Duelist",
-    core_philosophy: "Iso is a mechanics-first agent. If you're not getting kills you're not finding value — unlike initiators or controllers, Iso's entire kit is built around winning gunfights. You need good movement, crosshair placement, and raw aim to play him properly. He's one of the best solo carry agents in the game if your mechanics are there.",
+    core_philosophy: "Iso is a second entry duelist — like Reyna or Phoenix, his kit is built around winning fights after initial contact has been made, not opening space himself. His shield generates from a kill orb (a teammate's kill counts too), so he snowballs off first blood rather than creating it. He needs good mechanics and is a strong solo carry option, but he needs someone else to make first contact so he can trade in with his shield active.",
     watch: [],
     abilities: {
       double_tap: {
-        correct_usage: "Treat exactly like Jett dash — only pop when you know you're about to fight someone. Use jump spotting to confirm a target before popping. Shield turns 50/50 fights into 70/30 fights by absorbing the first burst and giving you more time to shoot back.",
+        correct_usage: "Activating gives you a shield immediately that absorbs one hit. After any kill or damaging assist — yours or a teammate's — an orb spawns that you can collect to refresh the shield. Use jump spotting to confirm a target before activating. Best used as second entry: teammate opens, trades or damages, and the orb lets you push in with your shield refreshed.",
         common_mistakes: [
-          "Popping shield speculatively on an angle without confirming anyone is there",
           "Wasting it early in the round before a site hit",
-          "Letting it expire unused — it's gone forever once it runs out"
+          "Letting it expire unused — it's gone forever once it runs out",
+          "Not collecting the orb after a teammate kill or assist — a free shield refresh is sitting there"
         ],
-        key_insight: "Shield is the most important part of Iso's kit. Without it you're just a regular duelist with a wall and vulnerable. If you pop it and it expires without a fight, you've given away your biggest advantage for the round."
+        key_insight: "The orb spawns on any kill or damaging assist — including teammates'. If your team's first entry trades or chips an enemy, that orb is sitting there for you to collect as you push in shielded. This is Iso's core attack pattern: teammate opens, you go second with a refreshed shield."
       },
       undercut: {
         correct_usage: "Silences abilities in addition to making targets take more damage. Use to deny drone info, cancel Gecko ult, or shut down rushes through choke points. If enemies push through it they die faster — if they stop, you've bought time for teammates to rotate.",
