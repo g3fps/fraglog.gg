@@ -96,15 +96,14 @@ Format: [TEAM] Player Agent Map RANK DESCRIPTOR
 - TEAM prefix (org abbreviation like ENVY, C9, NRG, PRX, TL) only if confirmed in YouTube title — omit if unknown
 - Player name as-is (preserve casing like TenZ, s0m, OXY)
 - Agent and Map in Title Case
-- End with 1-3 ALL CAPS words that describe the VOD. Use real Valorant gameplay vocabulary.
-- The descriptor MUST make sense for the agent's role:
+- End with 2-3 ALL CAPS words from the approved descriptor lists below. ONLY use words from these lists — do not invent descriptors.
+- Pick the descriptor that best fits the agent's role:
   - Duelists (Jett, Reyna, Raze, Neon, Phoenix, Yoru, Iso, Waylay): ENTRY, OPERATOR, RIFLE, ACE, CLUTCH, DUELS, FRAG REEL, AGGRESSIVE, PEEK
-  - Initiators (Sova, Breach, Skye, KAY/O, Fade, Gekko, Tejo): ENTRY, RETAKE, UTIL DUMP, FLASH ENTRY, INFO, SUPPORT, FLANK
-  - Controllers (Omen, Viper, Brimstone, Astra, Harbor, Clove, Miks): SMOKES, LURK, CONTROL, SETUP, ECONOMY, ROTATE, POST PLANT
-  - Sentinels (Sage, Cypher, Killjoy, Chamber, Deadlock, Vyse, Veto): ANCHOR, LOCKDOWN, SITE HOLD, RETAKE, SENTINEL PLAY, SETUPS, TRIPS
-  - Generic (any role): RANKED, MVP, DOMINATION, 30 KILLS, COMEBACK, OVERTIME, THRIFTY, ECO, ACE
-- You may invent a fresh descriptor that isn't on these lists if it fits better
-- Draw from the YouTube title if it has something specific (kill count, matchup, game mode)
+  - Initiators (Sova, Breach, Skye, KAY/O, Fade, Gekko, Tejo): ENTRY, RETAKE, UTIL DUMP, INFO, SUPPORT, FLANK, ACE, CLUTCH
+  - Controllers (Omen, Viper, Brimstone, Astra, Harbor, Clove, Miks): SMOKES, LURK, CONTROL, SETUP, POST PLANT, ROTATE, ACE, CLUTCH
+  - Sentinels (Sage, Cypher, Killjoy, Chamber, Deadlock, Vyse, Veto): ANCHOR, LOCKDOWN, SITE HOLD, RETAKE, SENTINEL PLAY, SETUPS, TRIPS, ACE, CLUTCH
+  - Any role: RANKED, MVP, DOMINATION, COMEBACK, OVERTIME, ACE, CLUTCH
+- If the YouTube title mentions a specific kill count (e.g. "40 kills"), round number (e.g. "30 BOMB"), or game situation, use that as the descriptor instead (e.g. "40 KILLS", "30 BOMB")
 - Max 65 chars, no quotes
 
 VOD info:
