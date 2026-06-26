@@ -182,6 +182,7 @@ async function renderMyVods() {
       : `<img src="https://img.youtube.com/vi/${v.video_id}/mqdefault.jpg" alt="${v.title}" loading="lazy">`;
     return `
     <div class="video-card" data-id="${v.id}" data-vid="${v.video_id}" data-title="${v.title.replace(/"/g, '&quot;')}" style="cursor:pointer">
+      <a class="card-link" href="/watch?v=${encodeURIComponent(v.video_id)}" tabindex="-1" aria-hidden="true"></a>
       <div class="video-thumb">
         ${thumb}
         <div class="play-overlay"><div class="play-icon"><div class="play-tri"></div></div></div>
@@ -191,7 +192,7 @@ async function renderMyVods() {
           <span class="video-map-tag">${mapName(v.map_id)}</span>
           <span class="video-agent-tag">${agentName(v.agent_id)}</span>
         </div>
-        <div class="video-title">${v.title}</div>
+        <a class="card-link video-title" href="/watch?v=${encodeURIComponent(v.video_id)}">${v.title}</a>
         <div class="video-meta-row">
           <span class="video-date">${v.date ? new Date(v.date).toLocaleDateString('en-US',{month:'short',year:'numeric'}) : ''}</span>
           <div class="mv-card-actions">
@@ -206,6 +207,9 @@ async function renderMyVods() {
   grid.onclick = e => {
     const card = e.target.closest('.video-card[data-vid]');
     if (!card || e.target.closest('button') || card.classList.contains('mv-editing') || e.target.closest('input,select,.mv-edit')) return;
+    const a = e.target.closest('a');
+    if (a && !a.classList.contains('card-link')) return;
+    if (a) e.preventDefault();
     openVideo(card.dataset.vid, card.dataset.title, 'Me', { mode: 'own' });
   };
   if (window.applyWatchProgress) window.applyWatchProgress();

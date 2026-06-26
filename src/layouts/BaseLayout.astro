@@ -688,6 +688,31 @@ const TURNSTILE_SITE_KEY = import.meta.env.TURNSTILE_SITE_KEY || '';
   let vmSharedNote = null;
   let vmPreOpenUrl = null;
 
+  // Ctrl/Cmd+click → open in new tab
+  document.addEventListener('click', function(e) {
+    if (!e.ctrlKey && !e.metaKey) return;
+    const card = e.target.closest('[data-vid]');
+    if (!card) return;
+    e.preventDefault();
+    e.stopPropagation();
+    window.open('/watch?v=' + encodeURIComponent(card.dataset.vid), '_blank');
+  }, true);
+  // Middle-click: prevent autoscroll on mousedown, open new tab on auxclick
+  document.addEventListener('mousedown', function(e) {
+    if (e.button !== 1) return;
+    const card = e.target.closest('[data-vid]');
+    if (!card) return;
+    e.preventDefault();
+  }, true);
+  document.addEventListener('auxclick', function(e) {
+    if (e.button !== 1) return;
+    const card = e.target.closest('[data-vid]');
+    if (!card) return;
+    e.preventDefault();
+    e.stopPropagation();
+    window.open('/watch?v=' + encodeURIComponent(card.dataset.vid), '_blank');
+  }, true);
+
   function openVideo(videoId, title, player, opts = {}) {
     clearTimeout(vmAutosaveTimer);
     vmAutosaveTimer = null;

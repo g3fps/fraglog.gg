@@ -81,8 +81,9 @@ function renderVods(vods) {
     return;
   }
   grid.innerHTML = vods.map(v => `
-    <div class="video-card">
-      <div class="video-thumb" data-vid="${v.id}" style="cursor:pointer">
+    <div class="video-card" data-vid="${v.id}">
+      <a class="card-link" href="/watch?v=${encodeURIComponent(v.id)}" tabindex="-1" aria-hidden="true"></a>
+      <div class="video-thumb">
         <img src="https://img.youtube.com/vi/${v.id}/mqdefault.jpg" alt="${v.title}" loading="lazy" decoding="async">
         <div class="play-overlay"><div class="play-icon"><div class="play-tri"></div></div></div>
         <div class="vc-actions"><button class="vc-action-btn" data-fav-btn="${v.id}" title="Save to favorites">♡</button></div>
@@ -92,9 +93,9 @@ function renderVods(vods) {
           <span class="video-map-tag">${v.mapName||''}</span>
           <span class="video-agent-tag">${v.agentName||''}</span>
         </div>
-        <div class="video-title" data-vid="${v.id}" style="cursor:pointer">${v.title}</div>
+        <a class="card-link video-title" href="/watch?v=${encodeURIComponent(v.id)}">${v.title}</a>
         <div class="video-meta-row">
-          <a class="video-player" href="/player/${v.player.toLowerCase().replace(/\//g,'').replace(/ /g,'-')}" onclick="event.stopPropagation()">${v.player}</a>
+          <a class="video-player" href="/player/${v.player.toLowerCase().replace(/\//g,'').replace(/ /g,'-')}">${v.player}</a>
           ${v.date ? `<span class="video-date">${new Date(v.date).toLocaleDateString('en-US',{month:'short',year:'numeric'})}</span>` : ''}
         </div>
       </div>
@@ -102,11 +103,13 @@ function renderVods(vods) {
   `).join("");
 
   grid.onclick = e => {
-    const el = e.target.closest("[data-vid]");
-    if (el && !e.target.closest("button") && !e.target.closest("a")) {
-      const vod = ALL_VODS.find(v => v.id === el.dataset.vid);
-      if (vod) openVideo(vod.id, vod.title, vod.player, { mapId: vod.mapId, mapName: vod.mapName, agentId: vod.agentId, agentName: vod.agentName, date: vod.date });
-    }
+    const card = e.target.closest('.video-card[data-vid]');
+    if (!card || e.target.closest('button')) return;
+    const a = e.target.closest('a');
+    if (a && !a.classList.contains('card-link')) return;
+    if (a) e.preventDefault();
+    const vod = ALL_VODS.find(v => v.id === card.dataset.vid);
+    if (vod) openVideo(vod.id, vod.title, vod.player, { mapId: vod.mapId, mapName: vod.mapName, agentId: vod.agentId, agentName: vod.agentName, date: vod.date });
   };
 
 

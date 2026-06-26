@@ -249,7 +249,7 @@ export const AGENT_KNOWLEDGE = {
     watch: [],
     abilities: {
       recon_bolt: {
-        mechanics: "Charged dart with up to two bounces. Landing is set by aim angle, charge, and bounces — no mid-flight adjustment. Reveals enemies in range, pings regularly. Destructible.",
+        mechanics: "Charged dart with up to two bounces. Landing is set by aim angle, charge, and bounces — no mid-flight adjustment. Reveals enemies in range, pings regularly. Destructible. Signature — regenerates after 50 seconds.",
         usage: "Vary lineups round to round so enemies can't pre-aim and destroy a predictable dart. Follow immediately with team pressure — info is wasted if no one acts. On defense, a well-timed dart against a rush lets your team spam safely through walls and smokes.",
         key_insight: "If enemies shoot the dart, that's still info — someone stopped and aimed, telling you where they are."
       },
@@ -619,7 +619,7 @@ export const AGENT_KNOWLEDGE = {
         key_insight: "Most valuable on enemies already in motion — let them commit, then stun, no way out."
       },
       flashpoint: {
-        mechanics: "Aimed at a surface; fires through the wall to the other side, no arc. Right geometry flashes enemies without blinding teammates.",
+        mechanics: "Aimed at a surface; fires through the wall to the other side, no arc. Right geometry flashes enemies without blinding teammates. Signature — regenerates after 50 seconds.",
         usage: "When peeking, flash farther from yourself so your gun is out as it lands. Flash close only to disrupt enemy crosshair placement when a teammate peeks. Combo with Aftershock — hide the flash inside the explosion.",
         key_insight: "The flash-inside-Aftershock combo gets more valuable the higher you climb."
       },
@@ -640,7 +640,7 @@ export const AGENT_KNOWLEDGE = {
     watch: [],
     abilities: {
       guiding_light: {
-        mechanics: "Hawk flash Skye steers and activates on command, flashing everyone looking at it. Can be banked off walls.",
+        mechanics: "Hawk flash Skye steers and activates on command, flashing everyone looking at it. Can be banked off walls. Signature — regenerates after 50 seconds.",
         usage: "Wait for footsteps before timing the flash. Smoke + flash: when an enemy smokes a spot, flash into it to blind whoever holds the exit. Have a teammate jiggle as bait, then flash from a different position and swing for a free kill.",
         key_insight: "Enemies who haven't been fooled by your flashes yet can't predict them — play aggressively early and establish the threat before they adapt."
       },
@@ -663,7 +663,7 @@ export const AGENT_KNOWLEDGE = {
     watch: [],
     abilities: {
       haunt: {
-        mechanics: "Thrown orb that lands and scans enemies in range, periodically pinging positions. Set by where you aim and throw — only the landing position matters, not the trajectory. Lineup spots exist for key areas.",
+        mechanics: "Thrown orb that lands and scans enemies in range, periodically pinging positions. Only the landing position matters. Lineup spots exist for key areas. Signature — regenerates after 50 seconds.",
         usage: "Throw at a high angle to cover the bomb site before executing. On defense, throw into smokes to scan executers, then spray through. Call out before throwing on retakes so everyone pushes off the scan. Wait for it to regen before initiating an execute.",
         key_insight: "Haunt starts your team's execute countdown — throw it when the team is ready, not randomly.",
         lineup_note: "When coaching Haunt placement, the drill is practicing landing spots — never 'arc' or trajectory, which doesn't exist for this ability."
@@ -798,7 +798,7 @@ export const AGENT_KNOWLEDGE = {
     watch: [],
     abilities: {
       zero_point: {
-        mechanics: "Thrown knife that suppresses enemies and scans for nearby targets. Suppressed enemies can't use abilities. Sticks to surfaces.",
+        mechanics: "Thrown knife that suppresses enemies and scans for nearby targets. Suppressed enemies can't use abilities. Sticks to surfaces. Signature — regenerates after 50 seconds.",
         usage: "Cross-map lineups give presence in two areas at once. Suppress enemies mid-rush before they commit to force a scramble. A scan locates them to rotate teammates; no scan is info too.",
         key_insight: "Suppressing a key ability user mid-round often beats the info — KJ lockdown, Cypher camera, Viper wall all shut off instantly."
       },

@@ -43,6 +43,7 @@ const description = `Watch all ${agentVods.length} ${agentData.name} VODs on Fra
           data-agent-name={v.agentName}
           style="cursor:pointer"
         >
+          <a class="card-link" href={`/watch?v=${v.id}`} tabindex="-1" aria-hidden="true"></a>
           <div class="video-thumb">
             <img src={`https://img.youtube.com/vi/${v.id}/mqdefault.jpg`} alt={v.title} loading="lazy" />
             <div class="play-overlay">
@@ -57,7 +58,7 @@ const description = `Watch all ${agentVods.length} ${agentData.name} VODs on Fra
               <a class="video-map-tag" href={`/${v.mapId}`}>{v.mapName}</a>
               <a class="video-agent-tag" href={`/${v.mapId}/${v.agentId}`}>{v.agentName}</a>
             </div>
-            <div class="video-title">{v.title}</div>
+            <a class="card-link video-title" href={`/watch?v=${v.id}`}>{v.title}</a>
             <div class="video-meta-row">
               <span class="video-player">{v.player}</span>
               {v.date && <span class="video-date">{formatDate(v.date)}</span>}
@@ -74,7 +75,10 @@ const description = `Watch all ${agentVods.length} ${agentData.name} VODs on Fra
 document.addEventListener('click', function(e) {
   const card = e.target.closest('.video-card[data-vid]');
   if (!card) return;
-  if (e.target.closest('button') || e.target.closest('a')) return;
+  if (e.target.closest('button')) return;
+  const a = e.target.closest('a');
+  if (a && !a.classList.contains('card-link')) return;
+  if (a) e.preventDefault();
   openVideo(card.dataset.vid, card.dataset.title, card.dataset.player, {
     date: card.dataset.date || '',
     adminNote: card.dataset.note || '',
