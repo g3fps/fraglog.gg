@@ -1,38 +1,37 @@
 export const AGENT_KNOWLEDGE = {
   jett: {
     role: "Duelist",
-    core_philosophy: "Jett's job is making space and getting info for teammates, not getting kills. Dash is both an entry tool and an escape — use it to get onto site through a smoke, to close distance on an angle, or to get out when pressure comes. Entry, clear angles, get info — let teammates follow into the space you made.",
+    core_philosophy: "Jett's job is making space and info for teammates, not kills. Dash is both entry and escape: get onto site through a smoke, close distance on an angle, or escape pressure. Entry, clear angles, get info — teammates follow into the space you made.",
     watch: [],
     abilities: {
       cloudburst: {
-        mechanics: "Throwable smoke that can be curved midair by holding the activation key and moving the mouse — you don't need to be looking at the target area. Creates a small smoke cloud on landing.",
-        usage: "Use to create oneways or smoke off angles without peeking them. Curve it around corners to smoke spots you couldn't reach with a straight throw. Core entry pattern: throw cloudburst, dash into it.",
-        key_insight: "You can smoke around corners without exposing yourself. Most players throw it straight — learn to curve it."
+        mechanics: "Throwable smoke that can be curved midair by holding the activation key and moving the mouse — you don't need to look at the target area. Small smoke cloud on landing.",
+        usage: "Create oneways or smoke off angles without peeking them. Curve it around corners to reach spots a straight throw can't. Core entry: throw cloudburst, dash into it.",
+        key_insight: "Curving lets you smoke around corners without exposing yourself — most players only throw it straight."
       },
       updraft: {
-        mechanics: "Short vertical boost. Jump and updraft simultaneously for maximum height. Hold spacebar to glide and control descent — also negates fall damage.",
-        usage: "Use to reach elevated positions. Jump and updraft at the exact same moment — timing matters.",
-        key_insight: "Exact timing matters — jump and updraft at the same moment, not before or after."
+        mechanics: "Short vertical boost. Jump and updraft at the exact same moment for max height. Hold spacebar to glide, control descent, and negate fall damage.",
+        usage: "Reach elevated positions. Timing matters — jump and updraft simultaneously, not before or after."
       },
       tailwind: {
-        mechanics: "Dash activates on first press (charging phase) then fires on second press or automatically after a short window. If the window expires unused, the charge is wasted. Jump + dash simultaneously extends distance.",
-        usage: "Only activate when a fight is confirmed — popping it speculatively before an angle wastes it. On attack use as a primary entry tool: dash into your smoke, onto site, or to close distance. Dash onto site with a clear follow-up plan — get in, do something, stay positioned. On defense, dash onto an early angle only if you have a plan for what comes after; don't dash into multiple enemies unless it's a confirmed 1v1.",
-        key_insight: "Dash is both an entry tool and an escape. The mistake isn't using it to get somewhere — it's popping it with no clear purpose and no plan for what happens next."
+        mechanics: "Activates on first press (charging) then fires on second press or automatically after a short window. Unused window wastes the charge. Jump + dash simultaneously extends distance.",
+        usage: "Activate only when a fight is confirmed. On attack, primary entry tool: dash into your smoke, onto site, or to close distance — always with a follow-up plan. On defense, dash an early angle only with a plan for what comes after; into multiple enemies only on a confirmed 1v1.",
+        key_insight: "Dash is both entry and escape. The mistake is popping it with no purpose and no plan for what happens next."
       },
       bladestorm: {
-        mechanics: "Left click throws single knives — fully accurate while moving, running, or airborne. Right click throws all remaining knives in a spread — close range only. Kills with knives replenish the supply. Gliding slows momentum and improves accuracy.",
-        usage: "Click knives individually for precision — don't hold left click and spray into a wall. Right click only at close range. Glide to slow momentum while shooting. Save dash during ult — updraft for height, keep dash for repositioning after a kill rather than using it to enter the fight.",
-        key_insight: "Knives are also an economy tool — buy a gun for a teammate and use knives yourself on low economy rounds. Knives are accurate even while gliding — glide down to slow momentum and take more precise shots."
+        mechanics: "Left click throws single knives — fully accurate while moving, running, or airborne. Right click throws all remaining knives in a close-range spread. Knife kills replenish the supply. Gliding slows momentum and improves accuracy.",
+        usage: "Click knives individually for precision; right click only at close range. Glide to slow momentum while shooting. Save dash during ult — updraft for height, keep dash to reposition after a kill rather than to enter.",
+        key_insight: "Knives are also an economy tool — buy a teammate a gun and use knives yourself on low-buy rounds."
       }
     },
     attack: {
-      primary_job: "Be the spearhead. Throw cloudburst, dash into it, flick left and right to clear close angles as you come out. Don't stare at your crosshair — glance minimap. Enemies appear on minimap after 0.1 seconds of vision so you don't need to hard stare to spot them.",
-      key_insight: "Entry isn't about getting kills — it's about clearing space so teammates don't have to. Your team should be able to flood in behind you without clearing the angles you already covered."
+      primary_job: "Be the spearhead. Throw cloudburst, dash into it, flick left and right to clear close angles on exit. Glance the minimap instead of hard-staring — enemies appear after 0.1s of vision.",
+      key_insight: "Entry is clearing space so teammates don't have to. Your team should flood in behind you without re-clearing angles you covered."
     },
     defense: {
-      primary_job: "Fight aggressively for early space and info so teammates can stack elsewhere. Jett can do this because she can always dash out. Take space, get info, call it, fall back.",
-      op_usage: "OP is extremely strong on Jett. Keep it moving — different angle every round. Immediately rotate to other site after getting an OP kill, you'll beat the rotation there.",
-      key_insight: "The more space you take early on defense, the more your team can stack. One Jett controlling A main can free up four players to stack B."
+      primary_job: "Fight aggressively for early space and info so teammates stack elsewhere — Jett can always dash out. Take space, get info, call it, fall back.",
+      op_usage: "OP is extremely strong on Jett. Keep it moving — different angle every round. After an OP kill, immediately rotate to the other site to beat the rotation.",
+      key_insight: "The more early space you take, the more your team can stack. One Jett controlling A main frees four players to stack B."
     },
     weapons: {
       post_pistol_win_defense: "Outlaw. Scoped weapons are Jett's friend because she has a dash escape. Outlaw does 140 body damage per shot — one-shots players with light shields (125 HP total) but requires two body shots to kill players with heavy shields (150 HP total). Flows into bonus rounds well since most enemies won't have heavy shields."
@@ -40,199 +39,199 @@ export const AGENT_KNOWLEDGE = {
   },
   phoenix: {
     role: "Duelist",
-    core_philosophy: "Phoenix is self-sufficient — his kit is designed to keep fights going across an entire round. Flashes let him re-engage, wall creates space and heals, molly denies or flushes. Plan util around winning multiple fights per round, not just one. Think at least two kills ahead.",
+    core_philosophy: "Phoenix is self-sufficient — his kit keeps fights going across a whole round. Flashes let him re-engage, wall creates space and heals, molly denies or flushes. Plan util to win multiple fights per round; think at least two kills ahead.",
     watch: [],
     abilities: {
       curveball: {
         mechanics: "Throwable flash that curves based on which hand you throw from. Fully blinds anyone who sees it detonate. Can be banked off walls.",
-        usage: "Fight before flashing — back up, flash, re-engage against anyone trying to trade. Double flash to beat anti-flash players — the second flash re-blinds whoever went anti on the first. High flash over objects is underrated and rarely expected. Vary timing, position, and flash type every round — never flash from the same spot at the same time twice in a row.",
-        key_insight: "When you flash someone from the front of a box and circle to the back, most players panic spray or retreat toward the flash — you catch them off guard coming from the other side. Vary your timings dramatically — sometimes wait 20-30 seconds before using your flash on a common angle to completely throw off enemy reads."
+        usage: "Fight before flashing — back up, flash, re-engage against traders. Double flash to beat anti-flash players: the second re-blinds whoever turned on the first. High flash over objects is rarely expected. Vary timing, position, and flash type every round.",
+        key_insight: "Flash from the front of a box and circle to the back — most players panic spray or retreat toward the flash, so you catch them from the other side. Occasionally wait 20-30s before flashing a common angle to break enemy reads."
       },
       blaze: {
-        mechanics: "Moving wall that blocks vision, heals Phoenix while he stands in it, and briefly heals teammates who walk through it. Can break Cypher trips and stop defuses. Stand slightly back from walls when throwing to reduce clipping gaps.",
-        usage: "Use to expand space and create combos — not just to heal. Wall through objects for better entry setups. Block an angle AND heal simultaneously rather than dumping wall just for HP. Don't heal while your team is fighting — go with them, secure site, then heal. Using the whole kit just to recover health is almost never worth it.",
-        key_insight: "Wall is a moving smoke that heals. Use it to isolate fights, expand space, and enable combos with flash or molly — not just as a heal tool."
+        mechanics: "Moving wall that blocks vision, heals Phoenix standing in it, and briefly heals teammates who walk through. Breaks Cypher trips and stops defuses. Stand slightly back when throwing to reduce clipping gaps.",
+        usage: "Expand space and enable combos, not just heal. Wall through objects for better entry. Block an angle AND heal at once. When your team is fighting, go with them and secure site before healing.",
+        key_insight: "Wall is a moving smoke that heals — use it to isolate fights, expand space, and combo with flash or molly."
       },
       hot_hands: {
-        mechanics: "One charge per round. Thrown grenade that lands and burns for several seconds, healing Phoenix who stands in it.",
-        usage: "Every throw needs a job: deny a peak, flush enemies out of smokes before pushing, wrap smokes to deny pushes through them, or clear an angle so you can focus elsewhere. Throw it at one angle and look at the other — free info. Don't heal while your team is actively fighting, go with them and heal after the site is secured.",
-        key_insight: "With only one molly, ask before throwing: does this deny a peak, flush someone out, or enable a follow-up flash? If the answer is no, hold it."
+        mechanics: "One charge per round. Thrown grenade that lands and burns for several seconds, healing Phoenix standing in it.",
+        usage: "Every throw needs a job: deny a peek, flush enemies from smokes before pushing, wrap smokes to deny pushes, or clear an angle. Throw at one angle and look at the other for free info. Heal after site is secured, not mid-fight.",
+        key_insight: "One molly — before throwing, ask: does this deny a peek, flush someone, or enable a flash? If not, hold it."
       },
       run_it_back: {
-        mechanics: "6 orbs. Phoenix marks a respawn point, then has a window to fight — if he dies or the window expires he respawns at the mark. Full HP on respawn.",
-        usage: "Don't hoard it — 6 orbs is easy to get back. Use it for small things: grabbing a gun in a bad spot, picking up the spike, getting HP back. Spend it if there's a decent chance it wins or swings the round.",
-        key_insight: "Phoenix players often save ult too long. It's only 6 orbs — if it can help you win the round, use it."
+        mechanics: "6 orbs. Marks a respawn point, then a window to fight — die or time out and respawn at the mark at full HP.",
+        usage: "Spend it freely — 6 orbs comes back fast. Use it for small things: grabbing a gun in a bad spot, the spike, HP. Use it whenever it has a decent chance to win or swing the round.",
+        key_insight: "Phoenix players save ult too long. It's only 6 orbs — if it can win the round, use it."
       }
     },
     general: {
-      have_a_plan: "Before each round, know what your util is doing and why. Phoenix's kit is self-sufficient enough that you can formulate a full plan solo. Have a backup plan on defense especially — you can get overwhelmed fast and need to know where to fall back to.",
-      multi_kill_thinking: "Plan for at least two kills every round. Don't think about one kill and die — think about the first kill, where you fall back to, what util you use next, and where the second kill comes from. Phoenix's kit is built for this chain of fights. Think at least two kills in advance, then improvise from there.",
-      lineup_rotations: "After throwing a lineup or flash from one position, immediately rotate to a different angle. Enemies read where your util comes from and hold that spot — if you're already peeking from somewhere else you get a free kill."
+      have_a_plan: "Each round, know what your util is doing and why — Phoenix's kit lets you plan solo. Have a defensive backup plan especially; you can get overwhelmed fast and need a fallback.",
+      multi_kill_thinking: "Plan for two kills every round: the first kill, where you fall back, what util comes next, and where the second kill comes from. The kit is built for this chain — plan two ahead, then improvise.",
+      lineup_rotations: "After a lineup or flash from one position, immediately rotate to a different angle. Enemies hold where your util comes from — peeking from elsewhere gets a free kill."
     }
   },
   raze: {
     role: "Duelist",
-    core_philosophy: "Raze overloads the enemy team with so many simultaneous threats they can't focus on any single one. Her kit isn't about individual kills — it's about taking space and making entry easier. Think of every ability as a tool to clear angles or force reactions, not just deal damage.",
+    core_philosophy: "Raze overloads the enemy with so many simultaneous threats they can't focus on any one. Her kit is about taking space and making entry easier, not individual kills. Every ability is a tool to clear angles or force reactions.",
     watch: [],
     abilities: {
       boombot: {
-        mechanics: "Deployed bot that follows walls and detonates on enemy contact for ~80 damage. Can be destroyed. Jump-throw to launch it safely while keeping yourself behind cover.",
-        usage: "Two uses: info or damage. Clear angles you don't want to peek manually. Swing alongside it — enemy has to choose between shooting you or the bot, giving you a flash-like window. On defense mid-round when you have no info, jump-throw for free reads without exposing yourself.",
-        key_insight: "Boombot isn't just an entry tool. If it tags someone it deals about 80 damage — that's a free swing for the kill on a crippled enemy."
+        mechanics: "Deployed bot that follows walls and detonates on enemy contact for ~80 damage. Can be destroyed. Jump-throw to launch it while staying behind cover.",
+        usage: "Two uses: info or damage. Clear angles you don't want to peek. Swing alongside it — the enemy must choose you or the bot, a flash-like window. On defense with no info, jump-throw for free reads without exposing yourself.",
+        key_insight: "If it tags someone it deals ~80 damage — a free swing for the kill on a crippled enemy."
       },
       blast_pack: {
-        mechanics: "Two charges of throwable satchels. Detonating one launches Raze. Single satchel for entry; double satchel sends you further but gun isn't out in time without ult. B-hop after satchels expire for extra momentum. Rebind to a mouse side button — Q is slower and less precise.",
-        usage: "Single satchel to enter fights — double is only reliable with ult active. Press equip primary in midair to have gun ready on landing. Use S+A or S+D satchel to dodge laterally like a Jett dash. To change direction mid-air, let go of W completely and hold only the directional key you want.",
-        key_insight: "Double satchel is only reliable with ult. Without ult, single satchel into a fight — pros like Aspas almost always single satchel. When changing direction, release W entirely and hold only the directional key — that's how high level Raze players control movement precisely."
+        mechanics: "Two throwable satchels. Detonating launches Raze. Double satchel sends you further but your gun isn't out in time without ult. B-hop after they expire for extra momentum. Rebind to a mouse side button — Q is slower.",
+        usage: "Single satchel to enter; double only reliable with ult. Equip primary midair to have your gun ready on landing. S+A or S+D satchel dodges laterally like a Jett dash. To change direction mid-air, release W entirely and hold only the directional key.",
+        key_insight: "Pros like Aspas almost always single satchel. Releasing W and holding only the directional key is how high-level Razes control air movement precisely."
       },
       paint_shells: {
-        mechanics: "Cluster grenade that splits into sub-grenades on contact. High damage in a large area. Not for random kills — for clearing specific angles.",
-        usage: "Use to clear an angle so you can focus on the rest of site, not to hunt kills blindly. Satchel on top of the nade so enemies can't escape. Hold the angle after throwing — if someone's there they die, if not it's cleared. Save it until you're committing to entry or certain it gets value, not early in the round speculatively.",
-        key_insight: "Nade + satchel on top is a guaranteed kill on anyone in that spot. The nade makes entry easier by handling one angle entirely — you can focus on everything else."
+        mechanics: "Cluster grenade that splits into sub-grenades on contact. High damage over a large area.",
+        usage: "Clear an angle so you can focus on the rest of site. Satchel on top of the nade so enemies can't escape. Hold the angle after throwing — anyone there dies, otherwise it's cleared. Save it for entry commitment or a certain-value spot, not early speculation.",
+        key_insight: "Nade + satchel on top is a guaranteed kill in that spot and hands you one angle entirely, freeing you to focus everywhere else."
       },
       showstopper: {
-        mechanics: "Rocket launcher ult. Press X + satchel simultaneously to animation cancel the ult draw. Shift walk to move silently with ult active.",
-        usage: "Primarily for taking space, not kills. Everyone retreats when they see it — walk onto site while they hide and let your team flood behind you. Shift walk with ult active — Raze is normally very loud, so going silent creates uncertainty about where she is. Single satchel if you're unsure where enemies are — more control.",
-        key_insight: "You don't have to kill anyone with the rocket for it to be worth it. If the entire enemy team is hiding while you take site, the ult did its job — threat alone is enough."
+        mechanics: "Rocket launcher ult. Press X + satchel simultaneously to animation-cancel the draw. Shift walk to move silently with ult active.",
+        usage: "Primarily for taking space. Everyone retreats on sight — walk onto site while they hide and let your team flood in. Shift walk to go silent (Raze is normally loud), creating uncertainty about your position. Single satchel for more control when unsure where enemies are.",
+        key_insight: "You don't need a kill for the rocket to be worth it — if the enemy team hides while you take site, the threat alone did its job."
       }
     }
   },
   cypher: {
     role: "Sentinel",
-    core_philosophy: "Cypher controls information. Every piece of his kit is about knowing where enemies are, isolating fights, and making decisions — not just getting kills. The player who understands Cypher's info is always one step ahead.",
+    core_philosophy: "Cypher controls information. Every piece of his kit is about knowing where enemies are, isolating fights, and making decisions — not just kills. Whoever reads Cypher's info best is a step ahead.",
     watch: [],
     abilities: {
       cyber_cage: {
-        mechanics: "Pre-placed smoke that activates on command. Creates a sphere of vision denial with one-way potential depending on placement angle.",
-        usage: "Don't activate the moment you see someone — wait until they're committed and directly underneath, then pop it. Use cages to hide, reposition, and re-peek — not just to block a sightline. Don't burn them all early; save at least one for the actual fight or post-plant. Hide inside the cage, let enemies push past, swing out behind them.",
-        key_insight: "Cage is an isolation and repositioning tool, not just a smoke. Overwhelmed in a 3v5? Hide in cage, reposition while enemies push past, pop out behind them."
+        mechanics: "Pre-placed smoke that activates on command. Sphere of vision denial with one-way potential depending on placement angle.",
+        usage: "Wait until enemies are committed and directly underneath before popping — not the instant you see someone. Use cages to hide, reposition, and re-peek. Save at least one for the fight or post-plant. Hide inside, let enemies push past, swing out behind them.",
+        key_insight: "Cage is an isolation and repositioning tool. Overwhelmed in a 3v5? Hide in it, reposition as enemies push past, pop out behind them."
       },
       trapwire: {
         mechanics: "Stretched between two surfaces. Tethers and reveals enemies who walk through. Low floor-level trips catch enemies pre-aiming chest height. Skye, Fade, and Raze boombot can clear trips — adapt placement against these comps.",
-        usage: "Place deep on site where enemies have already committed — not at the entry choke where they can clear it safely before pushing. Vary height round to round; if enemies keep clearing it, change the placement or time it for after their clearing util is spent. Use trips to isolate specific agents — place to make Jett dash over while teammates walk into it.",
-        key_insight: "If enemies keep breaking your trips, change height or timing — place after their clearing util has been used, not before. Activate cage, reposition inside it, and wait — they won't expect you to still be there."
+        usage: "Place deep on site where enemies have committed, not at the entry choke where they clear it safely first. Vary height; if enemies keep clearing it, change placement or time it for after their clearing util is spent. Use trips to isolate agents — place so Jett dashes over while teammates walk in.",
+        key_insight: "If enemies keep breaking trips, place after their clearing util is used, not before."
       },
       spycam: {
-        mechanics: "Placeable camera that Cypher can remotely view. High placements are harder to spot and shoot. Can be retrieved and redeployed. Tagging enemies through the camera marks them briefly.",
-        usage: "Camera is a decision-making tool, not a kill tool. Before placing ask: does it see the whole site? Is it hard to pre-fire? Can it be safely reopened mid-round? High cameras last longer — enemies have to break their movement path to shoot them, exposing themselves. Match aggression to setup. In 1v1 use it as a fake flash — place it and swing while enemies look up to shoot it. Pick it up and bring it to retake if enemies go elsewhere.",
-        key_insight: "A high camera that lasts all round is worth far more than an aggressive one that gets shot in 10 seconds. Sustained information beats a brief peek."
+        mechanics: "Placeable camera Cypher views remotely. High placements are harder to spot and shoot. Retrievable. Tagging enemies through it marks them briefly.",
+        usage: "A decision-making tool. Before placing: does it see the whole site? Hard to pre-fire? Reopenable mid-round? High cams last longer — enemies expose themselves breaking their path to shoot them. In a 1v1 use it as a fake flash: place it and swing while they look up. Pick it up for retake if enemies go elsewhere.",
+        key_insight: "A high cam that lasts all round beats an aggressive one shot in 10 seconds — sustained info beats a brief peek."
       }
     },
     defense: {
-      primary_job: "Create an information web that tells you exactly where enemies are before they reach site. Don't stand where enemies pre-aim — play off-angles they won't expect. Time your utility so cage and trips are both active when enemies commit.",
-      key_insight: "Cypher's kit is passive until enemies activate it. Your job is positioning and setup — let the utility do the work."
+      primary_job: "Build an info web that locates enemies before they reach site. Play off-angles enemies won't pre-aim. Time util so cage and trips are both active when enemies commit.",
+      key_insight: "Cypher's kit is passive until enemies activate it — your job is positioning and setup, then let the utility work."
     },
     attack: {
-      lurk_timing: "Lurk after teammates make contact, not before. If you push too early, enemies are alert and your lurk is wasted. Wait for noise and pressure on the other side, then move — you'll catch rotators off guard. Use an early cam to give vision on their setup, making it look like you're going with your team while actually lurking.",
-      post_plant: "Cypher gets stronger after plant. Use your defense setups as post-plant setups. Always put a trip behind your team when lurking to prevent flanks.",
-      key_insight: "A Cypher lurk that catches a rotator mid-rotation is one of the most impactful plays in the game. Patience is the skill."
+      lurk_timing: "Lurk after teammates make contact, not before — pushing early means enemies are alert. Wait for noise and pressure on the other side, then move to catch rotators. An early cam gives vision on their setup and sells that you're going with your team.",
+      post_plant: "Cypher is stronger after plant — reuse your defense setups as post-plant setups. Always put a trip behind your team when lurking to stop flanks.",
+      key_insight: "A lurk that catches a rotator mid-rotation is among the most impactful plays in the game. Patience is the skill."
     },
     neural_theft: {
       mechanics: "Ult. Use on an enemy corpse to reveal all living enemies on the map twice.",
-      usage: "Very situational. Use in low numbers situations (2v5, 1v3) to find enemies. Use on attack to check if enemies are rotating before committing to a site. Don't hoard it waiting for the perfect moment — if you're outnumbered and need to know where enemies are, use it.",
-      key_insight: "Don't overthink it. You'll learn when it's valuable as you play."
+      usage: "Situational. Use when outnumbered (2v5, 1v3) to find enemies, or on attack to check rotations before committing. If you're outnumbered and need to know where enemies are, use it — don't wait for the perfect moment.",
+      key_insight: "You'll learn when it's valuable as you play."
     }
   },
   killjoy: {
     role: "Sentinel",
-    core_philosophy: "Killjoy dominates defense through setups that force enemies into bad choices. On attack she anchors and excels post-plant. Her value comes from making enemies react to her utility rather than playing freely — every setup should present the enemy with two bad options, not one.",
+    core_philosophy: "Killjoy dominates defense through setups that force enemies into bad choices; on attack she anchors and excels post-plant. Every setup should present two bad options, not one — making enemies react to her utility rather than play freely.",
     watch: [],
     abilities: {
       nanoswarm: {
-        mechanics: "Pre-placed grenade that activates on command — invisible until triggered. Deals damage in a small area. Can be hidden against railings and corners to clip through walls, damaging enemies who back off it.",
-        usage: "Place deep in setups rather than obvious spots that get cleared by Raze nade, Sova dart, or Yoru clone every round. Give enemies two bad options — die in the molly or take an exposed fight. Throw lineup from one position then immediately rotate to a different angle before popping — enemies hold where mollies come from, so peeking from somewhere else gets a free kill.",
-        key_insight: "The alarmbot makes enemies vulnerable and take more damage — its placement is as important as the mollies. Put it deep so enemies must push through molly damage to reach it."
+        mechanics: "Pre-placed grenade that activates on command — invisible until triggered. Damage in a small area. Hide against railings and corners to clip through walls.",
+        usage: "Place deep rather than obvious spots cleared by Raze nade, Sova dart, or Yoru clone every round. Force two bad options — die in the molly or take an exposed fight. Throw the lineup from one position, then rotate to a different angle before popping, since enemies hold where mollies come from.",
+        key_insight: "Pair with alarmbot placed deep so enemies must push through molly damage to reach it."
       },
       alarmbot: {
-        mechanics: "KJ has only ONE alarmbot per round. Applies a vulnerability debuff to enemies it activates on — increases incoming damage. Can be retrieved and redeployed.",
-        usage: "Place deep in setups so enemies must push through mollies to reach it. Doesn't always need a nanoswarm next to it — a well-placed alarmbot that forces a reaction or slows a push is value on its own.",
-        key_insight: "Alarmbot placement matters more than always pairing it with a molly. Force a reaction first — the damage combo is secondary."
+        mechanics: "ONE per round. Applies Vulnerable (increased damage) to enemies it activates on. Retrievable.",
+        usage: "Place deep so enemies push through mollies to reach it. Doesn't always need a nanoswarm beside it — one that forces a reaction or slows a push is value alone.",
+        key_insight: "Force a reaction first; the damage combo is secondary."
       },
       turret: {
-        mechanics: "Auto-fires at enemies in range. Can be retrieved and redeployed. Shooting the turret takes enemies' attention off you.",
-        usage: "On attack use for flank watch — covers the route you're NOT watching so you can focus forward. On defense use for info and distraction while you hold from a different angle. If enemies are shooting the turret, they're not shooting you — use that window to swing.",
-        key_insight: "Turret is an information and distraction tool, not a kill tool. The value is the attention it draws away from you."
+        mechanics: "Auto-fires at enemies in range. Retrievable. Shooting it pulls enemy attention off you.",
+        usage: "On attack, flank watch — covers the route you're NOT watching so you focus forward. On defense, info and distraction while you hold a different angle. If enemies shoot the turret, swing in that window.",
+        key_insight: "An info and distraction tool — the value is the attention it draws away from you."
       }
     },
     defense: {
-      setups: "Consider setups that force enemies into two bad choices — die in the molly or take a fight at a disadvantage. Hidden setups that clip through walls catch enemies who think they've dodged. Adapt your setup based on the enemy comp — what gets broken every round needs to change.",
-      key_insight: "Don't use the same setup every round at higher ranks. Enemies will read it and play around it."
+      setups: "Force enemies into two bad choices — die in the molly or fight at a disadvantage. Hidden setups that clip through walls catch enemies who think they dodged. Adapt to the enemy comp; what gets broken every round must change.",
+      key_insight: "Vary setups at higher ranks — enemies read and play around a repeated one."
     },
     attack: {
-      post_plant: "Consider replicating your defensive setup after planting. Place turret for flank watch, plant toward default, then set up mollies the same way you would on defense. Enemies retaking run straight into it.",
-      lineup_rotations: "Consider throwing your lineup from one position then immediately rotating to a different angle before popping it. Enemies read where mollies come from and hold that spot — if you're already peeking from somewhere else you get a free kill.",
-      key_insight: "Most KJ players only think about defense. Attack post-plant setups are just as strong and most enemies don't expect them."
+      post_plant: "Replicate your defensive setup after planting: turret for flank watch, plant toward default, then mollies as on defense. Retakers run straight into it.",
+      lineup_rotations: "Throw the lineup from one position, then rotate to a different angle before popping. Enemies hold where mollies come from — peeking elsewhere gets a free kill.",
+      key_insight: "Attack post-plant setups are as strong as defense and most enemies don't expect them."
     },
     lockdown: {
-      mechanics: "Ult. Large device that detains all enemies caught in range after a wind-up. Has small gaps at the edges.",
-      usage: "Combine with mollies to close off escape routes. Throw a molly into the gap to force enemies into only two choices: die in the molly or get detained. This makes retakes nearly free.",
-      key_insight: "Ult alone gives enemies options. Ult plus molly removes them."
+      mechanics: "Ult. Large device that detains all enemies in range after a wind-up. Small gaps at the edges.",
+      usage: "Throw a molly into the edge gap to force the choice: die in the molly or get detained. Makes retakes nearly free.",
+      key_insight: "Ult alone gives enemies options; ult plus molly removes them."
     },
     general: {
-      silent_drop: "Consider placing your turret on the ground and dropping onto it to land silently with no fall damage. Useful for dropping from elevated positions without giving away your location with a sound cue. Pick up the turret after landing."
+      silent_drop: "Place the turret on the ground and drop onto it to land silently with no fall damage off elevated positions. Pick it up after."
     }
   },
   deadlock: {
     role: "Sentinel",
-    core_philosophy: "Deadlock slows down pushes and secures kills off her stuns — she is NOT a traditional info-gathering sentinel. Her sensors can't lock down areas the way Cypher trips can because enemies can crouch or shift walk past them silently. She's more aggressive than other sentinels and her kit is built around forcing bad situations rather than passive information.",
+    core_philosophy: "Deadlock slows pushes and secures kills off her stuns — not a traditional info sentinel. Her sensors can't lock down areas like Cypher trips because enemies crouch or shift walk past silently. More aggressive than other sentinels; her kit forces bad situations rather than gathers passive info.",
     watch: [],
     abilities: {
       barrier_mesh: {
-        mechanics: "Thrown wall that blocks movement. Expires after 30 seconds. Enemies can break individual segments.",
-        usage: "Don't throw at round start with no info — it expires uselessly. Place deep enough that enemies must peek out and expose themselves to break it; if they can break it for free the wall has no value. On attack use to delay defenders and cut off choke points. Save for post-plant to block the path to the spike.",
-        key_insight: "The wall's value is forcing enemies to expose themselves to break it. Place it where breaking requires peeking into your line of sight."
+        mechanics: "Thrown wall that blocks movement. Expires after 30 seconds. Enemies break individual segments.",
+        usage: "Place deep enough that enemies must peek out and expose themselves to break it. On attack, delay defenders and cut off chokes. Save for post-plant to block the path to the spike. Avoid throwing at round start with no info — it expires uselessly.",
+        key_insight: "Place it where breaking requires peeking into your line of sight."
       },
       sonic_sensor: {
-        mechanics: "Placed sensor that concusses enemies who make noise near it — jumps, drops, planting, defusing. Cannot detect enemies who shift walk past silently.",
-        usage: "Place where enemies are forced to make noise — not for passive flank watch, since enemies just shift walk past. On attack place on spike for post-plant. Swing immediately when a sensor activates — the concuss window is short. Use it as an active kill tool over an angle you're holding, not as passive info gathering.",
-        key_insight: "Sensors are kill tools, not info tools. Place them where enemies are forced to make noise, then swing immediately on the concuss."
+        mechanics: "Concusses enemies who make noise near it — jumps, drops, planting, defusing. Can't detect enemies who shift walk past silently.",
+        usage: "Place where enemies are forced to make noise, over an angle you're holding. On attack, place on spike for post-plant. Swing immediately on activation — the concuss window is short.",
+        key_insight: "A kill tool, not an info tool — place where enemies must make noise, then swing on the concuss."
       },
       gravenet: {
-        mechanics: "Left click for long range arc, right click for short underhand throw. Slows and roots enemies. Enemies can remove it with a loud audio cue. Pairs with Raze nade for combo damage.",
-        usage: "Best to stall rushes and isolate fights — net one group while another is entering. Follow up every net with a swing or ult; a net with no follow-up is just a brief delay. Throw it just as enemies are committing, not speculatively before they push.",
-        key_insight: "The net removal sound cue is extremely loud and reliable. When you hear it, you know exactly where the enemy is — that's your window to shoot ult or swing."
+        mechanics: "Left click long-range arc, right click short underhand throw. Slows and roots. Removable with a loud audio cue. Pairs with Raze nade for combo damage.",
+        usage: "Stall rushes and isolate fights — net one group while another enters. Follow every net with a swing or ult. Throw it as enemies commit, not speculatively before they push.",
+        key_insight: "The removal cue is loud and reliable — when you hear it you know exactly where the enemy is, your window to ult or swing."
       },
       annihilation: {
-        mechanics: "Projectile that captures a target in a cocoon — enemy must be extracted or they die. Cocoon has 600 HP and can be broken by enemies grouped near the target. Can bounce off walls.",
-        usage: "Core combo: net first, wait for the removal sound cue, then shoot ult at that location — near-guaranteed hit. Don't use ult dry without netting first, it's much harder to land. Avoid using it when enemies are clustered near the target — they'll break the cocoon. Practice wall bounces in custom lobby — the trajectory is unintuitive.",
-        key_insight: "Net + ult is the core combo. The net confirms the enemy position and briefly forces them crouched — ult immediately after the removal sound cue."
+        mechanics: "Captures a target in a 600 HP cocoon — they die unless extracted. Enemies grouped near the target can break it. Bounces off walls.",
+        usage: "Core combo: net first, wait for the removal cue, then shoot ult at that location for a near-guaranteed hit. Avoid using it with enemies clustered near the target — they break the cocoon. Practice wall bounces in custom lobby; the trajectory is unintuitive.",
+        key_insight: "Net + ult is the core combo — the net confirms position and forces them crouched. Ult right after the removal cue."
       }
     },
     defense: {
-      primary_job: "Use sensors in areas where enemies are forced to make noise. Use wall and net as delay utility to buy time for teammates to rotate. Be ready to swing and kill off every sensor activation — sensors are useless if you don't follow up.",
-      key_insight: "Deadlock on defense is about creating moments where you have perfect information and the enemy is at a disadvantage. Sensor goes off = concussed enemy = free kill if you swing immediately."
+      primary_job: "Sensors where enemies must make noise. Wall and net as delay to buy rotation time. Swing and kill off every sensor activation — sensors are useless without follow-up.",
+      key_insight: "Sensor goes off = concussed enemy = free kill if you swing immediately."
     },
     attack: {
-      sensors: "Place on spike for post-plant — anyone defusing activates it and you swing off the stun. Place on aggressive angles you're holding so you get a warning and can swing. Don't use for flank watch — enemies will shift walk past.",
-      wall: "Throw on choke points to delay retakes. Block off heaven or spawn floods. Save for post-plant to put it on the path to the spike so enemies must break it to defuse.",
-      net: "Same as defense — isolate fights, combo with teammate util, or save for post-plant. Net at the tap, listen for removal cue, swing or ult.",
-      key_insight: "Deadlock on attack is more aggressive than other sentinels. Think about creating moments of advantage rather than passive setup."
+      sensors: "On spike for post-plant — defusers activate it, you swing off the stun. On aggressive angles you hold for a warning to swing.",
+      wall: "On chokes to delay retakes, blocking heaven or spawn floods. Save for post-plant on the path to the spike so enemies must break it to defuse.",
+      net: "Isolate fights, combo with teammate util, or save for post-plant. Net at the tap, listen for the removal cue, swing or ult.",
+      key_insight: "More aggressive than other sentinels — create moments of advantage rather than passive setup."
     }
   },
   waylay: {
     role: "Duelist",
-    core_philosophy: "Waylay is unlike other dive duelists — half her kit is designed to get you away from fights, not into them. On attack she's aggressive, on defense she plays safe and doesn't fight for early space the way Jett or Raze would. Don't try to be a space-taking duelist on defense with Waylay — she doesn't have the tools for it.",
+    core_philosophy: "Waylay is unlike other dive duelists — half her kit is built to get you away from fights, not into them. Aggressive on attack; on defense she plays safe and doesn't fight for early space like Jett or Raze, since she only has a dash and an easily-dodged slow.",
     watch: [],
     abilities: {
       saturate: {
-        mechanics: "Thrown projectile that lands and applies hinder — slows movement, shooting, and reloading. Requires line of sight from landing position, won't hit around walls.",
-        usage: "Best with confirmed info on where someone is, not for blind clears. Three situations: preemptively as enemies are about to push, to help your team entry, or on an isolated target. Jiggle or jump spot before swinging into a hindered enemy — hinder is most effective after they've already whiffed their first shot, not before.",
-        key_insight: "Saturate has surprising stopping power. If you hear enemies rushing, throw it in their path — they have to take the fight at a disadvantage."
+        mechanics: "Purchased (C). Thrown projectile that lands and applies Hinder — slows movement speed, fire rate, reload speed, recoil recovery, and jump height. Requires line of sight from landing position.",
+        usage: "Best with confirmed info. Three situations: preemptively as enemies push, to help team entry, or on an isolated target. Jiggle or jump spot before swinging a hindered enemy — Hinder works best after they've whiffed their first shot.",
+        key_insight: "Surprising stopping power — throw it in the path of a rush to force the fight at a disadvantage."
+      },
+      light_speed: {
+        mechanics: "Signature (Q), free. Two forward dashes. FIRE = two dashes; ALT FIRE = one dash. Only the FIRST dash can go upward — the second is horizontal/downward only. No fall damage after using. Also called 'dash' colloquially.",
+        usage: "Enter site aggressively, reach vertical angles, or escape. First dash for height/entry, second to push forward. No fall damage lets you dash off ledges safely. Coordinate with initiator before dashing onto site.",
+        key_insight: "A flash or drone before the dash dramatically raises success — dashing without prep is a coin flip."
       },
       refract: {
-        mechanics: "Signature ability that resets after two kills. Recalls Waylay to her position when she activated it. Allows her to enter smokes and retreat safely.",
-        usage: "Use to take aggressive fights then recall out. Walk into smokes with it active — almost no consequences. Core combo: dash onto site, get entry, refract out. Refract is designed to give up space safely, not hold aggressive positions.",
-        key_insight: "Refract gets you in and out. Use it to do damage and escape — not to hold a spot you shouldn't be able to hold."
+        mechanics: "Basic (E). Instantly places a beacon at your current position. Reactivate to phase back to the beacon as invulnerable light. Resets after 2 kills. Players often call this 'phase shift' or 'recalling.'",
+        usage: "Activate BEFORE engaging, not after you're already dying — you need a safe beacon position. Core combo: activate beacon in cover, push aggressively, take the fight, phase back out. On defense: activate before peeking and recall if you get traded or take a bad fight.",
+        key_insight: "The beacon position determines everything. If your beacon is in a bad spot, Refract doesn't save you — you phase into a worse position. Activate from cover, push, recall to cover."
       },
-      dash: {
-        mechanics: "Purchased ability. Teleports Waylay to a targeted location.",
-        usage: "Always dash to a safe landing location. Coordinate with your initiator before committing — tell them where you're dashing, they tell you where their util is going. Dash without initiator coordination is a coin flip.",
-        key_insight: "A well-timed flash or drone before your dash dramatically increases success rate."
-      },
-      twilight_cage: {
-        mechanics: "Ult. Deploys a large cage that damages and traps enemies inside. Check minimap to see exact coverage — small gaps on edges are possible.",
-        usage: "Not great for executing on attack. Best for aggressive defensive ults. Leave small gaps on the edges intentionally if needed — it will still hit if precise.",
-        key_insight: "Most value comes from aggressive defensive ults, not as an execute tool on attack."
+      convergent_paths: {
+        mechanics: "Ult (X), 8 points. Creates an afterimage that projects a beam, then Waylay gains a speed boost and the beam expands outward, applying Hinder to all enemies hit.",
+        usage: "Use offensively to close space and Hinder enemies you're pushing into, or defensively to slow a site push. Combine with Light Speed to dash into the Hindered group.",
+        key_insight: "The speed boost is as important as the Hinder — use it to close ground on enemies who are already slowed."
       }
     },
     attack: {
@@ -246,608 +245,608 @@ export const AGENT_KNOWLEDGE = {
   },
   sova: {
     role: "Initiator",
-    core_philosophy: "Sova is a pure info and post-plant machine. Frags are a bonus. His value comes from reliable information gathering and unstoppable post-plant utility.",
+    core_philosophy: "Sova is a pure info and post-plant machine — frags are a bonus. His value is reliable info gathering and unstoppable post-plant utility.",
     watch: [],
     abilities: {
       recon_bolt: {
-        mechanics: "Charged dart with up to two bounces. Landing position is determined entirely by aim angle, charge level, and bounces — you cannot adjust it mid-flight. Reveals enemies in range, pings regularly. Enemies can destroy it.",
-        usage: "Vary lineups round to round — enemies will pre-aim and destroy a predictable dart. Follow up with team pressure immediately; info is wasted if your team doesn't act. On defense, a well-timed dart against a rush lets your team spam through walls and smokes safely. Even if enemies shoot it, that's info — someone stopped and aimed at it.",
-        key_insight: "If enemies shoot the dart, that's still info. Someone had to stop and aim at it — that tells you where they are and what they're doing."
+        mechanics: "Charged dart with up to two bounces. Landing is set by aim angle, charge, and bounces — no mid-flight adjustment. Reveals enemies in range, pings regularly. Destructible.",
+        usage: "Vary lineups round to round so enemies can't pre-aim and destroy a predictable dart. Follow immediately with team pressure — info is wasted if no one acts. On defense, a well-timed dart against a rush lets your team spam safely through walls and smokes.",
+        key_insight: "If enemies shoot the dart, that's still info — someone stopped and aimed, telling you where they are."
       },
       shock_bolt: {
-        mechanics: "Charged electric dart with up to two bounces and three charges. Deals damage and destroys utility without line of sight.",
-        usage: "Most reliable and impactful use is post-plant to deny defuse. You don't need complex lineups — know general trajectory based on bounce count and surface type and build from there.",
-        key_insight: "You don't need the nastiest lineups to get value. Basic shots at the spike from common positions are enough for most rounds."
+        mechanics: "Charged electric dart, up to two bounces, three charges. Deals damage and destroys utility without line of sight.",
+        usage: "Most impactful post-plant to deny defuse. No complex lineups needed — learn general trajectory from bounce count and surface type.",
+        key_insight: "Basic shots at the spike from common positions are enough for most rounds."
       },
       owl_drone: {
-        mechanics: "Piloted reconnaissance drone. Drone height is determined by the platform directly below it — navigating it over elevated surfaces increases altitude and vision range. Rotate the drone to clear corners rather than panning left and right — faster and covers more ground.",
-        usage: "Navigate over elevated platforms early to gain height and see into heaven areas. Rotate to clear corners rather than looking left and right. Tag enemies with the drone's dart to assist teammates' shots.",
-        key_insight: "A drone that gains height by navigating elevated platforms can see into heaven areas and gather far more info than one kept at ground level."
+        mechanics: "Piloted recon drone. Height is set by the platform below it — navigating over elevated surfaces increases altitude and vision. Rotate to clear corners rather than panning, which is faster.",
+        usage: "Navigate over elevated platforms early to gain height and see into heaven. Rotate to clear corners. Tag enemies with the dart to assist teammates' shots.",
+        key_insight: "Gaining height off elevated platforms sees into heaven and gathers far more than a ground-level drone."
       },
       hunters_fury: {
         mechanics: "Three horizontal shots that pass through walls. Each shot has a windup — switch targets between shots to predict enemy movement. Press X to deactivate early. Sova is completely vulnerable while ulting.",
         usage: "Best used post-plant or paired with a recon dart/drone tag for confirmed positions. Activate behind cover or have a teammate guard you. Jump before winding up shots to adjust vertical angle. Don't hold it for perfect scenarios — post-plant alone justifies using it most rounds.",
-        key_insight: "Ult paired with Iso undercut applies hinder and makes shots one-hit kills. Ult paired with Yoru ult reveals and blocks enemy pathing. Know your combos before you need them."
+        key_insight: "Ult paired with Iso Undercut makes shots one-hit kills — Undercut applies Vulnerable (double damage taken). Ult paired with Yoru ult reveals and blocks enemy pathing. Know your combos before you need them."
       }
     }
   },
   reyna: {
     role: "Duelist",
-    core_philosophy: "Reyna is a self-sufficient, mechanics-first duelist built around taking 1v1 fights and snowballing. If you're not getting kills her kit is useless — you can only use her flash. She has massive solo carry potential but provides almost nothing for the team beyond a flash. Her ult is arguably the worst in the game at high elo.",
+    core_philosophy: "Reyna is a self-sufficient, mechanics-first duelist built around 1v1 fights and snowballing. Without kills her kit does nothing but the flash. Massive solo carry potential, almost nothing for the team beyond a flash. Her ult is arguably the worst in the game at high elo.",
     watch: [],
     abilities: {
       leer: {
-        mechanics: "Unlimited range. Nearsights anyone who looks at it — not a full blind. Stays active for two seconds if unbroken. Throw close to ground for fast pop at close range; throw high so enemies must flick upward to break it. Can see nearsight indicator over enemies hiding behind boxes.",
-        usage: "Don't throw too close — enemies can still see through it at very close range. Use it with initiator util for checkmate situations — Skye flash or Sova dart paired with Reyna flash means enemies have too many things to react to. If enemies shoot the flash, you know exactly where they are. Use it like a smoke to cross open space — as long as it's up, anyone aiming that direction is nearsighted.",
-        key_insight: "Her flash stays up for two seconds unbroken. Use it like a smoke to cross open space — as long as it's up, anyone aiming that direction gets nearsighted."
+        mechanics: "Unlimited range. Nearsights anyone who looks at it — not a full blind. Active for two seconds if unbroken. Throw low for a fast close-range pop; throw high so enemies must flick up to break it. Nearsight indicator shows over enemies behind boxes.",
+        usage: "Pair with initiator util for checkmates — a Skye flash or Sova dart plus your nearsight gives enemies too much to react to. If enemies shoot it, you know where they are. Use it like a smoke to cross open space: anyone aiming that direction stays nearsighted.",
+        key_insight: "Two seconds unbroken — cross open space behind it like a smoke."
       },
       devour: {
-        mechanics: "Heals 50 HP, overheals to 150, lasts 10 seconds then decays. Consumes one soul orb and one ability charge (see Dismiss entry for full charge/orb system). Requires unbroken line of sight to the soul orb — cancels if LoS breaks for 0.5 seconds. Cannot activate from fully behind cover.",
-        usage: "Jiggle in and out of cover while healing to stay in LoS and peek for info simultaneously. Key technique: delay the orb grab after a kill — hold the angle, see if someone swings to trade, then grab if safe. Don't grab immediately every time. Don't try to heal from fully behind cover — both abilities require LoS to the soul orb.",
-        key_insight: "Delayed orb grab is one of Reyna's most underused techniques. Hold the angle after a kill, see if the trader peeks, then grab the orb if it's safe."
+        mechanics: "Heals 50 HP, overheals to 150, decays after 10 seconds. Consumes one soul orb and one charge (see Dismiss for the charge/orb system). Needs unbroken line of sight to the orb — cancels if LoS breaks for 0.5s. Can't activate from fully behind cover.",
+        usage: "Jiggle in and out of cover while healing to stay in LoS and peek for info at once. Key technique: delay the orb grab after a kill — hold the angle, see if someone swings to trade, grab if safe.",
+        key_insight: "Delayed orb grab is underused — hold the angle after a kill, see if the trader peeks, then grab if safe."
       },
       dismiss: {
-        mechanics: "REYNA ABILITY SYSTEM: Reyna gets 1 charge per round free (signature), can buy a second. Charges are shared between Devour and Dismiss. Kills spawn a soul orb — but ONLY if at least one charge remains. Using either ability consumes the orb AND one charge. No charges = no orbs spawn, no abilities for the rest of the round. Max 2 uses per round with the purchased charge. Both abilities require line of sight to the orb — cannot activate from fully behind cover.",
-        usage: "Use dismiss to escape after a kill, bait a trade, or get info on a 50/50 angle. Hold the angle after the kill — see if a trader peeks, then grab the orb. Don't dismiss immediately every time. B-hop on landing to make yourself harder to hit. Don't use dismiss to close distance on a live enemy — you come out stationary and fully visible, they just pre-aim your landing spot. Don't burn both charges early; if you spend them in the first two fights, orbs stop spawning for the rest of the round.",
-        key_insight: "Dismiss is a bait and switch tool after a kill. Kill first guy, dismiss — second guy swings to trade while your teammate kills them from a different angle. Never used to approach someone already aiming at you."
+        mechanics: "REYNA ABILITY SYSTEM: 1 free charge per round (signature), can buy a second. Charges are shared between Devour and Dismiss. Kills spawn a soul orb ONLY if at least one charge remains. Using either ability consumes the orb AND a charge. No charges = no orbs, no abilities the rest of the round. Both require line of sight to the orb.",
+        usage: "Primarily an escape: get off an angle after a kill, bait a trader, or disengage a bad duel. Hold the angle after a kill, see if a trader peeks, then dismiss. B-hop on landing to be harder to hit. You come out of Dismiss stationary and fully visible, so it can't close distance on a live enemy — it's escape, not aggression. Don't burn both charges in the first two fights or orbs stop spawning.",
+        key_insight: "Kill the first guy, dismiss away — the second swings to trade and your teammate kills them. Pushing toward enemies with it is almost always wrong."
       }
     },
     attack: {
-      entry: "Play front on contact rounds (no utility entry) since you can heal and dismiss. Be second entry when flashing for a teammate — go the opposite side of the first entry to pinch front site, mid site, and back site together.",
-      flash_usage: "Use flash on roulette/50/50 angles that are hard to isolate with a gunfight. Combo with Skye flash or Sova dart for checkmate — enemies have to choose between breaking your flash or the other util and get punished either way.",
-      bait_and_switch: "Kill first guy, dismiss, second guy tries to trade you — your teammate kills the trader while they're focused on you. This is Reyna's core attack pattern.",
-      key_insight: "If you have a movement duelist on your team, be second entry with your flash. Go opposite side of their entry to pinch."
+      entry: "Play front on contact rounds (no-util entry) since you can heal and dismiss. Be second entry when flashing for a teammate — opposite side of the first entry to pinch front, mid, and back site together.",
+      flash_usage: "Flash roulette/50-50 angles hard to isolate with a gunfight. Combo with Skye flash or Sova dart for a checkmate — enemies get punished whichever util they break.",
+      bait_and_switch: "Kill first guy, dismiss, the second swings to trade — your teammate kills the trader while they're focused on you. Reyna's core attack pattern.",
+      key_insight: "With a movement duelist on your team, be second entry with your flash, opposite their entry to pinch."
     },
     defense: {
-      playstyle: "Reyna is a floater like Jett, not an anchor. Kite — take early fight, back up, take another fight from a different angle, repeat. Stay alive as long as possible until teammates rotate.",
-      off_angles: "Abuse off angles. Unlike Jett whose dash is on a timer, Reyna can hold an off angle the entire round because dismiss resets on kill, not on cooldown. Play a spot, get a kill, dismiss out, reposition, repeat.",
-      key_insight: "Bait and switch works on defense too. Hold an off angle, kill the first attacker, dismiss — the second attacker swings to trade while your teammate kills them."
+      playstyle: "A floater like Jett, not an anchor. Kite — take an early fight, back up, take another from a different angle, repeat. Stay alive until teammates rotate.",
+      off_angles: "Abuse off-angles. Dismiss resets on kill, not cooldown, so unlike Jett's timed dash you can hold an off-angle all round: play a spot, get a kill, dismiss out, reposition, repeat.",
+      key_insight: "Bait and switch works on defense too — kill the first attacker off an off-angle, dismiss, your teammate trades the one who swings."
     }
   },
   omen: {
     role: "Controller",
-    core_philosophy: "Omen is one of the most aggressive controllers in the game, not a passive support. His blind, hollow smokes, and two TPs create massive space for creative plays. If you just want to sit back and smoke, other controllers do that better. After using utility, Omen takes fights and makes space.",
+    core_philosophy: "Omen is one of the most aggressive controllers in the game, not a passive support. His blind, hollow smokes, and two TPs create space for creative plays. After using utility, Omen takes fights and makes space — if you only want to sit back and smoke, other controllers do it better.",
     watch: [],
     abilities: {
       paranoia: {
-        mechanics: "Large projectile that nearsights and deafens everyone who sees it. Wide spread — target center of grouped enemies. Slower than before; wait for it to reach enemies before peeking. Nearsight indicator appears above boxes — use to detect hidden enemies.",
-        usage: "Call the throw to teammates so they can push off the blind. Don't peek before it actually lands — it's slower now. Aim errors on Paranoia cannot be practiced in deathmatch (abilities disabled) — use custom lobby with bots or conscious focus in actual games.",
-        key_insight: "The blind deafens enemies too — combine with aggressive plays while they can't hear your movement."
+        mechanics: "Large projectile that nearsights and deafens everyone who sees it. Wide spread — target center of grouped enemies. Slow; wait for it to reach enemies before peeking. Nearsight indicator appears above boxes to detect hidden enemies.",
+        usage: "Call the throw so teammates push off the blind. Wait for it to land before peeking — it's slow. Paranoia aim can't be drilled in deathmatch (abilities off) — use a custom lobby with bots.",
+        key_insight: "The blind deafens too — push aggressively while enemies can't hear your movement."
       },
       shrouded_step: {
-        mechanics: "Short TP (signature). Ult also provides a global TP. Both have sound cues.",
-        usage: "Use for elevation, timing advantages, flanks, and fast rotations. Avoid predictable TP spots — enemies who know your common locations will pre-aim. Only TP to a spot where you have a read on enemy positions from prior rounds. Use ult TP in 1v1/1v2 situations — TP to an unexpected spot, draw their attention, escape, shoot from behind.",
-        key_insight: "TP is most dangerous when it creates a lane enemies weren't expecting to hold. Use it to multiply the angles defenders have to cover."
+        mechanics: "Shrouded Step (E) is a SHORT-RANGE teleport — roughly 10-15 meters max, NOT global. Both it and From the Shadows (ult) produce a visible cast animation and sound cue enemies can react to.",
+        usage: "Shrouded Step is for micro-repositioning: elevation changes, peeking a tight angle from an unexpected height, slipping around a corner without crossing open space. Short range — not for crossing a site or rotating. Vary landing spots; enemies tracking your common TPs pre-aim. From the Shadows (ult) is the global TP — use it in 1v1/1v2 to appear in an unexpected spot and create confusion.",
+        key_insight: "Shrouded Step repositions short-range; From the Shadows is the global map TP. Always specify which when coaching — completely different ranges."
       },
       dark_cover: {
-        mechanics: "Smokes placed via map overview — no lineups or trajectories involved. Practicing Omen smokes means learning positions on the map overview. Smokes have a built-in visual expiry indicator — never count time manually. Hollow smokes allow Omen to see enemies crossing through them.",
-        usage: "Time smokes to when teammates are at the choke — too early and they fade before the team arrives, too late and the team hesitates. Smoke the angle hardest for teammates to hold first, not the most obvious one. Learn oneways — they refresh fast enough to use frequently.",
-        key_insight: "Hollow smokes give outplay potential — you can see enemies crossing through and be ready on the exit side. Learn to play around your own smoke, not just place it and ignore it."
+        mechanics: "Smokes placed via map overview — no lineups. Practicing them means learning map-overview positions. Built-in visual expiry indicator — never count time manually. Hollow smokes let Omen see enemies crossing through.",
+        usage: "Time smokes to when teammates reach the choke — too early they fade, too late the team hesitates. Smoke the angle hardest for teammates to hold first, not the obvious one. Learn oneways — they refresh fast enough to use often.",
+        key_insight: "Hollow smokes give outplay potential — watch enemies cross through and be ready on the exit side."
       }
     },
     aggression_vs_support: {
-      be_aggressive: "When enemies are passive — TP to create extra lanes they weren't expecting. When you need to take space that your team doesn't have the utility to take.",
-      be_supportive: "When your team is taking site well — hold flash for post-plant instead of using it early. Stay alive to keep smokes recharging for retake.",
-      key_insight: "Omen's low win rate in ranked comes from players thinking their only job is to smoke and flash. There's always more you can be doing with your kit."
+      be_aggressive: "When enemies are passive, TP to create lanes they didn't expect. When your team lacks the util to take space, take it yourself.",
+      be_supportive: "When your team is taking site well, hold flash for post-plant and stay alive to keep smokes recharging for retake.",
+      key_insight: "Omen's low ranked win rate comes from players thinking their only job is to smoke and flash — there's always more to do with the kit."
     },
     stall_potential: {
-      summary: "Oneways force enemies to burn utility to push through. When enemies are rushing fast and you can't get main smoked in time, throw a side smoke for teammates to play around instead. During retake, smoke off angles to isolate fights rather than trying to smoke the entire site.",
-      key_insight: "A well-placed side smoke during a fast push can buy your team 3-4 seconds — enough time for rotators to arrive."
+      summary: "Oneways force enemies to burn util to push through. Against a fast rush you can't smoke main in time, throw a side smoke for teammates to play around. On retake, smoke off angles to isolate fights rather than the whole site.",
+      key_insight: "A side smoke during a fast push buys 3-4 seconds — enough for rotators to arrive."
     },
     smoke_order: {
-      principle: "Always smoke the angle that's hardest for your teammates to hold first, not the most obvious one. Elevated angles like heaven are usually more dangerous than main choke points because teammates entering are naturally looking toward the choke, not up.",
-      key_insight: "Think about where the first person through the choke is looking — smoke the angle they can't cover while doing that."
+      principle: "Smoke the angle hardest for teammates to hold first, not the obvious one. Elevated angles like heaven are usually more dangerous than the choke, since entering teammates naturally look at the choke, not up.",
+      key_insight: "Smoke the angle the first person through the choke can't cover while looking at the choke."
     }
   },
   neon: {
     role: "Duelist",
-    core_philosophy: "Neon's superpower is speed. Her kit is about creating chaos through movement, making herself harder to hit while closing distance fast. She excels at catching enemies off guard with timings they aren't prepared for.",
+    core_philosophy: "Neon's superpower is speed. Her kit creates chaos through movement — harder to hit while closing distance fast, catching enemies off guard with timings they aren't prepared for.",
     watch: [],
     abilities: {
       fast_lane: {
         mechanics: "Two parallel walls of electricity that block vision and damage enemies who cross them.",
-        usage: "Use to cross into position safely, block operators, and create chaos. Jump in and out of your own walls to make yourself unpredictable — enemies don't know which side you'll exit from. Use wall to isolate fights when one enemy isn't affected by util while others are.",
-        key_insight: "Your wall gives you two surfaces to play around. Jumping in and out is nearly impossible to track, especially in chaotic team fights."
+        usage: "Cross into position safely, block operators, create chaos. Jump in and out of your own walls so enemies don't know which side you'll exit. Use it to isolate a fight when only some enemies are affected by util.",
+        key_insight: "Two surfaces to play around — jumping in and out is nearly impossible to track in a chaotic team fight."
       },
       relay_bolt: {
         mechanics: "Thrown stun that bounces once off walls. Stuns vertically down long walls as well as horizontally.",
-        usage: "Use preemptively when you have a read on enemy position from prior rounds — not reactively in the moment. Core combo: jump spot around a corner, see enemy, stun mid-jump, slide in. There's no time for them to react to the full sequence.",
-        key_insight: "The jump spot into stun into slide combo is one of Neon's strongest plays. See them, stun mid-air, slide in — the whole sequence happens before they can respond."
+        usage: "Use preemptively off a read from prior rounds, not reactively. Core combo: jump spot around a corner, see enemy, stun mid-jump, slide in — no time for them to react.",
+        key_insight: "Jump spot → stun → slide is one of Neon's strongest plays — the whole sequence happens before they respond."
       },
       high_gear: {
-        mechanics: "Speed boost with a slide charge. Gun is NOT equipped while running — Neon cannot shoot during high gear movement. All abilities remain usable during high gear.",
-        usage: "Use to catch timings enemies aren't expecting, rotate faster, or chase off enemies hit by teammate util. Activate only in safe positions — gun isn't out, and getting swung while in high gear is a free kill for the enemy.",
-        key_insight: "High gear's power is timing. Enemies who aren't holding for a fast approach get caught completely off guard."
+        mechanics: "Speed boost with a slide charge. Gun is NOT equipped while running — can't shoot during high gear. All abilities stay usable.",
+        usage: "Catch unexpected timings, rotate faster, or chase enemies hit by teammate util. Activate only in safe positions — your gun isn't out, so getting swung mid-high-gear is a free kill for them.",
+        key_insight: "The power is timing — enemies not holding for a fast approach get caught off guard."
       },
       overdrive: {
-        mechanics: "Ult. High accuracy laser that fires continuously while moving. Three headshots is an instant kill. Inaccurate while jumping.",
-        usage: "No rules — use it when it wins the round. Retake, 1vX, or even with an advantage. Never save it. Slide cancel tech: slide one direction, press ult and right-click the opposite direction mid-slide for an instant direction change.",
-        key_insight: "Overdrive's strength is moving and shooting simultaneously. Use the slide cancel tech to change direction instantly and make yourself impossible to track."
+        mechanics: "Ult. High-accuracy laser that fires continuously while moving. Three headshots is an instant kill. Inaccurate while jumping.",
+        usage: "Use it whenever it wins the round — retake, 1vX, even with an advantage. Never save it. Slide cancel tech: slide one direction, press ult and right-click the opposite mid-slide for an instant direction change.",
+        key_insight: "Strength is moving and shooting at once — slide cancel to change direction instantly and be impossible to track."
       }
     },
     movement: {
       slide: {
-        mechanics: "Slide is an ability — it is disabled in deathmatch. Must be practiced in custom lobby or real games only.",
-        usage: "Slide horizontally, not forward. Forward slide stops you in front of the enemy — easy shot for them. Horizontal slide crosses their screen requiring a large mouse movement to track. Slide from behind cover, not from the open. Starting from deep behind cover makes your model go from crouched to upright — enemies often miss their first shot. Crouch spam during slide further manipulates hitbox.",
-        key_insight: "The direction of your slide determines whether you're an easy or hard target. Horizontal = hard to hit. Forward = easy to hit. Default to horizontal whenever possible."
+        mechanics: "An ability — disabled in deathmatch. Practice in custom lobby or real games.",
+        usage: "Slide horizontally, not forward — forward stops you in front of the enemy as an easy shot, horizontal crosses their screen and is hard to track. Slide from deep behind cover so your model rises crouched-to-upright, making enemies miss the first shot. Crouch spam during the slide further manipulates the hitbox.",
+        key_insight: "Horizontal = hard to hit, forward = easy. Default horizontal."
       },
       bhop: {
-        mechanics: "Neon gains speed chaining jumps. Run before jumping to build speed. Air strafe with mouse movement in the same direction as your key input.",
-        usage: "W then jump, press D and turn right simultaneously. Chain left and right to maintain momentum. Once momentum builds you don't need W — just A and D alternating.",
-        key_insight: "B-hopping enables jump spotting — strafe around a corner fast to gather info, stun if you see someone, then slide in. The whole sequence is faster than enemies can react to."
+        mechanics: "Gains speed chaining jumps. Run before jumping to build speed. Air strafe with mouse movement in the same direction as your key input.",
+        usage: "W then jump, press D and turn right at once. Chain left and right to keep momentum. Once it builds you don't need W — just alternate A and D.",
+        key_insight: "Enables jump spotting — strafe a corner fast for info, stun if you see someone, slide in, all faster than they can react."
       }
     },
     weapons: {
-      recommendation: "Pistol and eco: frenzy or stinger. Super low buy: Bucky. Hard read on enemy position: Judge.",
-      key_insight: "Close range weapons complement Neon's playstyle — she's closing distance fast, so weapons that excel at close range are a natural fit."
+      recommendation: "Pistol and eco: Frenzy or Stinger. Super low buy: Bucky. Hard read on enemy position: Judge.",
+      key_insight: "Close-range weapons fit Neon — she closes distance fast."
     }
   },
   viper: {
     role: "Controller",
-    core_philosophy: "Viper is one of the best controllers in the game and a must-pick on multiple maps. Her power comes from lurk setups, cutting off sightlines, and cycling her fuel to constantly create pressure. Good Viper players aren't timid — they take fights and make plays. You can't be a timid lurker and expect consistent impact.",
+    core_philosophy: "Viper is one of the best controllers in the game and a must-pick on multiple maps. Her power is lurk setups, cutting sightlines, and cycling fuel to constantly create pressure. Good Vipers take fights and make plays — a timid lurker has no consistent impact.",
     watch: [],
     abilities: {
       snake_bite: {
-        mechanics: "Thrown grenade — cannot be pre-placed in buy phase. Deals damage and applies decay in a small area for 6.5 seconds.",
-        usage: "Use to hold plant location, flush enemies out of corners, or stall a defensive push. With only one snake bite, stalling the retake is often more valuable than saving it for post-plant — 6.5 seconds at the retake forces a bad swing or takes free damage. Forces enemies into bad choices: swing into the open or take the damage.",
-        key_insight: "Snake bite forces enemies into bad choices — swing into the open or take the damage. Neither is good for them."
+        mechanics: "Thrown grenade — can't be pre-placed in buy phase. Damage and decay in a small area for 6.5 seconds.",
+        usage: "Hold a plant, flush enemies from corners, or stall a push. With only one, stalling the retake often beats saving for post-plant — 6.5s at the retake forces a bad swing or free damage.",
+        key_insight: "Forces a bad choice — swing into the open or take the damage."
       },
       poison_orb: {
-        mechanics: "Thrown orb that creates a sphere of toxic gas when raised. Can be raised and lowered at will using fuel. Cannot be picked up once thrown. Learn lineups so it lands precisely — free-balling leaves exploitable gaps.",
-        usage: "Place in high-traffic areas where it creates constant pressure. Every time it goes up, enemies must decide: invest util, send a player, or cede the space. Vary whether you're lurking behind it, pushing through it, or using it as a distraction.",
-        key_insight: "The orb's value is the questions it creates, not just the smoke. Every raise forces a decision from the enemy."
+        mechanics: "Thrown orb that creates a toxic gas sphere when raised. Raise and lower at will with fuel. Can't be picked up once thrown. Learn lineups so it lands precisely.",
+        usage: "Place in high-traffic areas for constant pressure. Every raise forces enemies to invest util, send a player, or cede space. Vary lurking behind it, pushing through it, or using it as a distraction.",
+        key_insight: "The value is the questions it creates — every raise forces a decision."
       },
       toxic_screen: {
-        mechanics: "Long wall of toxic gas that blocks vision across multiple sightlines. Raised and lowered with fuel. If enemies molly it, drop it, wait for their util to expire, raise again at full fuel — wastes their utility.",
-        usage: "Cycle the wall actively — dropping and re-raising in response to enemy util wastes their resources. Stretch it to cut off defender sightlines on lurks, forcing them to play tight and setting up your move. Alternate between lurking alone and bringing your team through the wall — always lurking solo becomes predictable.",
-        key_insight: "The wall forces defenders to react to you rather than read you. They can't safely gather info when sightlines are cut."
+        mechanics: "Long wall of toxic gas blocking multiple sightlines. Raised and lowered with fuel. If mollied, drop it, wait for their util to expire, raise again at full fuel to waste it.",
+        usage: "Cycle the wall — dropping and re-raising against enemy util wastes their resources. Stretch it to cut defender sightlines on lurks, forcing them tight. Alternate lurking alone and bringing your team through it.",
+        key_insight: "Defenders can't safely gather info when sightlines are cut — they react to you instead of reading you."
       },
       vipers_pit: {
-        mechanics: "Ult. Large sphere of thick toxic gas. Creates oneway potential at corner positions — you can see enemy feet while they can't see you. Destroy any drones or dogs immediately to deny vision inside.",
-        usage: "One of the strongest post-plant ults in the game. Use corner positions that create oneways — placement is everything. On defense drop it at a choke and stack the other site — enemies hesitate to push thick fog.",
-        key_insight: "Even numbers inside Viper's pit almost guarantees a win — enemies are disoriented and you know the layout."
+        mechanics: "Ult. Large sphere of thick toxic gas. Oneway potential at corner positions — you see enemy feet while they can't see you. Destroy drones or dogs immediately to deny vision inside.",
+        usage: "One of the strongest post-plant ults. Corner positions create oneways — placement is everything. On defense, drop it at a choke and stack the other site; enemies hesitate to push thick fog.",
+        key_insight: "Even numbers inside the pit almost guarantees a win — enemies are disoriented and you know the layout."
       }
     },
     playstyle: {
-      fuel_cycling: "Never sit at 100% fuel. Constantly raise and drop your util throughout the round to create pressure. Cycling keeps enemies guessing and prevents you from wasting fuel capacity.",
-      lurking: "Wall cuts off sightlines so defenders can't safely gather info on you, forcing them to either contest or give up space. Alternate between lurking alone and bringing your team through the wall — always lurking solo becomes predictable.",
-      aggression: "Take fights. Most low elo Viper players play too far back. You can't have consistent impact playing timid. Take fights off your utility — molly a spot, push, use the orb as cover.",
-      key_insight: "Viper's wall adds infinite options to your offense. The same setup can become a lurk, a fake, an execute, or a default. Use this to condition enemies into reacting, then exploit whatever response they give."
+      fuel_cycling: "Never sit at 100% fuel. Constantly raise and drop util to create pressure, keep enemies guessing, and avoid wasting capacity.",
+      lurking: "The wall cuts sightlines so defenders can't safely read you, forcing them to contest or give space. Alternate lurking alone and bringing your team through it.",
+      aggression: "Take fights off your util — molly a spot, push, use the orb as cover. Most low-elo Vipers play too far back and have no impact.",
+      key_insight: "The wall makes one setup a lurk, fake, execute, or default — condition enemies to react, then exploit their response."
     }
   },
   yoru: {
     role: "Duelist",
-    core_philosophy: "Yoru is a deception agent. Every piece of his kit is designed to make enemies react to things that aren't real, waste their utility on fakes, and punish them when they least expect it. His value comes from conditioning enemies over multiple rounds then exploiting their patterns.",
+    core_philosophy: "Yoru is a deception agent. His kit makes enemies react to things that aren't real, waste util on fakes, and get punished when they least expect it. Value comes from conditioning enemies over multiple rounds, then exploiting their patterns.",
     watch: ["eggsterr"],
     abilities: {
       fakeout: {
-        mechanics: "Deploys a decoy clone that mimics walking sounds and movement. Enemies react to it as if it were a real player.",
-        usage: "Use to bait enemy util — Raze ult, Gecko ult, Cypher trips, KJ alarm bots. Condition enemies over multiple rounds: throw clone in the same spot until they stop shooting it thinking it's always fake, then walk out yourself for the free kill. Random fakes without conditioning rarely work — the clone's value is in the setup, not the throw.",
-        key_insight: "Conditioning is the whole game with clone. It takes multiple rounds to set up but once it works it's a completely free kill."
+        mechanics: "Decoy clone that mimics walking sounds and movement. Enemies react to it as a real player.",
+        usage: "Bait enemy util — Raze ult, Gekko ult, Cypher trips, KJ alarmbots. Condition over rounds: throw the clone in the same spot until they stop shooting it, then walk out yourself for the free kill.",
+        key_insight: "Conditioning is the whole game with clone — multiple rounds to set up, a completely free kill once it works."
       },
       blindside: {
-        mechanics: "Flash that is hidden if thrown from inside a smoke — the smoke obscures the entire travel time. Flash TP combo: throw TP, activate it just before the flash hits the surface so the flash pops as Yoru arrives. Face opposite direction of the flash when TPing — Yoru avoids it while the enemy gets full blinded.",
-        usage: "Throw from inside smokes: look straight down and throw — enemies have almost no reaction time. Time the flash TP precisely: activate TP just before flash contacts the surface, not before.",
-        key_insight: "The smoke pop flash is one of the most undetectable flashes in the game. The smoke hides the entire travel so enemies have almost no time to react."
+        mechanics: "Flash hidden if thrown from inside a smoke — the smoke obscures its entire travel. Flash TP combo: throw TP, activate it just before the flash hits a surface so it pops as Yoru arrives. Face away from the flash when TPing so Yoru avoids it and the enemy gets full-blinded.",
+        usage: "From inside smokes, look straight down and throw — almost no reaction time. Time the flash TP precisely: activate just before the flash contacts the surface.",
+        key_insight: "The smoke-pop flash is one of the most undetectable in the game — the smoke hides the whole travel."
       },
       gatecrash: {
-        mechanics: "Sends a tether (small moving portal) to a destination — Yoru TPs to wherever the tether is. The tether can be destroyed before use, so place it in low-visibility spots. TERMINOLOGY: The ability is Gatecrash and the deployed object is a tether — there is no 'anchor' in Yoru's kit. You exit facing the direction you were looking when you activated the TP.",
-        usage: "Control your exit angle — look where you want to aim before activating. Avoid obvious spots that enemies are already watching; a tether that gets destroyed before use is wasted utility. For Gatecrash technique, watch eggsterr VODs.",
-        key_insight: "Tether placement is about finding spots enemies won't casually check. Destroyed before use = wasted utility."
+        mechanics: "Sends a tether (small moving portal); Yoru TPs to it. The tether is destructible before use, so place it in low-visibility spots. TERMINOLOGY: the ability is Gatecrash, the object is a tether — no 'anchor' in Yoru's kit. You exit facing where you were looking when you activated.",
+        usage: "Control your exit angle — look where you want to aim before activating. Place where enemies won't casually check. Watch eggsterr VODs for Gatecrash technique.",
+        key_insight: "A tether destroyed before use is wasted utility — placement is finding the spots enemies skip."
       },
       dimensional_drift: {
-        mechanics: "Ult. Makes Yoru invisible and invulnerable, able to move freely and deploy fakeouts/flashes. Sound cues on deactivation give away position.",
-        usage: "Fast flank: activate immediately at round start, get past enemy flank utility, pinch from behind. Post-plant stall: flash enemies off spike, throw clones for noise — every noise cue makes them paranoid and hop off. Spawn TP: effective post-plant on large maps — TP behind the retakers while they push site.",
-        key_insight: "Ult post-plant stall is extremely powerful — flash, clone, and deactivation sounds force enemies off the spike repeatedly and buy massive time."
+        mechanics: "Ult. Yoru goes invisible and invulnerable, moving freely and deploying fakeouts/flashes. Deactivation sound cues give away position.",
+        usage: "Fast flank: activate at round start, slip past flank util, pinch from behind. Post-plant stall: flash enemies off spike, throw clones for noise — every cue makes them hop off. Spawn TP: on large maps, TP behind retakers as they push.",
+        key_insight: "Post-plant stall is extremely powerful — flash, clone, and deactivation sounds force enemies off the spike repeatedly."
       }
     }
   },
   clove: {
     role: "Controller",
-    core_philosophy: "Clove is a frontline controller — death is part of their kit, not a setback. They're designed to entry with their team, take risks, and provide smokes even after dying. Don't lurk on Clove — dying far from your team wastes the post-death smoke and ult value.",
+    core_philosophy: "Clove is a frontline controller — death is part of their kit, not a setback. Designed to entry with the team, take risks, and provide smokes even after dying. Don't lurk: dying far from the team wastes the post-death smoke and ult value. POST-DEATH: Clove can ONLY use Ruse (smokes) after dying. Meddle and Pick-Me-Up are NOT available post-death — never suggest otherwise.",
     watch: ["haeyoday"],
     abilities: {
       pick_me_up: {
         mechanics: "On kill or assist: brief speed boost and health top-up. One use per round. Window expires if not used quickly.",
-        usage: "Use the speed immediately to swing aggressively — catch timings enemies aren't prepared for. Only activate when another fight is imminent. In a 2v2, activate after the first kill — it's your last chance for the round, use it.",
-        key_insight: "The speed boost is the real value, not the health. Any swing with it active will be faster than enemies expect — use it to close gaps and catch timings."
+        usage: "Use the speed immediately to swing aggressively when another fight is imminent. In a 2v2, activate after the first kill — it's your last chance for the round.",
+        key_insight: "The speed is the real value — any swing with it active is faster than enemies expect."
       },
       meddle: {
-        mechanics: "Thrown ability that briefly reduces enemy HP to near-zero in a small area. Does not kill on its own — requires a follow-up hit to finish them.",
-        usage: "Combo with teammate util for near-instant kills: Raze nade, Sova shock dart, or a flash. Throw at spawn barrier at round start to deter aggressive plays. Use at choke points during rushes — one bullet finishes a meddled enemy. Never use it alone without an immediate follow-up swing or combo.",
+        mechanics: "Thrown ability that briefly drops enemy HP to near-zero in a small area. Doesn't kill alone — needs a follow-up hit.",
+        usage: "Combo with teammate util for near-instant kills: Raze nade, Sova shock dart, or a flash. Throw at the spawn barrier to deter aggressive plays. At a choke during a rush, one bullet finishes a meddled enemy.",
         key_insight: "Meddle at a choke during a rush plus any damaging util is essentially a free multi-kill."
       },
       ruse: {
-        mechanics: "Smokes that fade slightly faster than other controllers. Unique: can deploy smokes around last death location even after dying.",
-        usage: "Use post-death smoke to cover spike or provide cover on site for teammates. This is why Clove doesn't lurk — dying far from the team wastes the post-death smoke value entirely.",
-        key_insight: "Your team essentially never goes without smokes as Clove. Even after dying, a smoke on the spike or a key angle can win the round."
+        mechanics: "Smokes that fade slightly faster than other controllers. Unique: can deploy around the last death location even after dying.",
+        usage: "Use post-death smoke to cover spike or shield teammates on site. This is why Clove doesn't lurk — dying far from the team wastes it.",
+        key_insight: "Your team essentially never goes without smokes — even after dying, a smoke on spike or a key angle can win the round."
       },
       not_dead_yet: {
-        mechanics: "Ult. On death, Clove respawns with a window to get a kill or damaging assist — fail and they die for good. HP is restored instantly to full on respawn (no ticking). Invulnerability window on respawn allows repositioning.",
-        usage: "Coordinate with teammates before using — don't ult alone or you'll get chased down. Reposition toward teammates during the invulnerability window. When ult is available, be the frontline — peek the OP, tank the Raze rocket, entry for your team. Don't bait when you have ult.",
-        key_insight: "The threat of respawning is itself valuable — enemies will often push to clean you up, letting your teammates pick up free kills on the aggressor."
+        mechanics: "Ult. On death, Clove respawns with a window to get a kill or damaging assist — fail and they die for good. Respawns at full HP with a brief invulnerability window for repositioning.",
+        usage: "Coordinate before using — ulting alone gets you chased down. Reposition toward teammates during invulnerability. With ult up, be the frontline: peek the OP, tank the Raze rocket, entry for the team.",
+        key_insight: "The respawn threat itself has value — enemies push to clean you up, letting teammates trade the aggressor."
       }
     }
   },
   brimstone: {
     role: "Controller",
-    core_philosophy: "Brimstone is a post-plant machine and stall specialist. His smokes last longer than any other controller and his Molly steals 8 seconds from the enemy team. His value comes from pre-planning — knowing when and where to use utility to buy time, delay retakes, and win rounds his team shouldn't.",
+    core_philosophy: "Brimstone is a post-plant machine and stall specialist. His smokes last longer than any controller's and his Molly steals 8 seconds from the enemy. Value comes from pre-planning when and where to use util to buy time, delay retakes, and win rounds his team shouldn't.",
     watch: [],
     abilities: {
       incendiary: {
-        mechanics: "Thrown grenade — cannot be pre-placed. 8 seconds of stall, 62 damage per second. Impossible to defuse through. Combos with Viper orb for extremely fast kills.",
-        usage: "Use to delay pushes, flush enemies out of corners, or stall the spike. Stack with orbital strike for double stall. When stuck on site with no lineup and time is low, shoot it straight up — even a blind molly steals enough time to win. Pre-plan your position before the round so lineup spots don't reveal your location predictably. If the team is getting overwhelmed, stay and use molly to stall — don't go for a lineup play when bodies are needed.",
-        key_insight: "The molly doesn't need to kill anyone to win the round. 8 seconds of stall at the spike is often enough to run the clock out."
+        mechanics: "Thrown grenade — can't be pre-placed. 8 seconds of stall, 62 damage/sec, impossible to defuse through. Combos with Viper orb for extremely fast kills.",
+        usage: "Delay pushes, flush corners, or stall the spike. Stack with orbital strike for double stall. Stuck on site with no lineup and low time, shoot it straight up — even a blind molly buys enough to win. Pre-plan your position so lineup spots don't reveal you. If the team is overwhelmed, stay and stall with molly rather than going for a lineup.",
+        key_insight: "It doesn't need a kill — 8 seconds of stall at the spike often runs the clock out."
       },
       stim_beacon: {
         mechanics: "AoE speed boost. Buff lasts 4 seconds after leaving the radius.",
-        usage: "Use for fast pushes, rotations, 1v1 swings, and entries. Throw at feet for a race-car swing in a 1v1. Place slightly behind the push point so the buff carries teammates through the choke. Can sell fakes — enemies who hear a stim beacon expect a fast push and may over-rotate.",
-        key_insight: "The 4-second carry-over is what makes it powerful. Place it behind the push point, not at it."
+        usage: "Fast pushes, rotations, 1v1 swings, entries. At your feet for a race-car 1v1 swing. Place slightly behind the push point so the buff carries teammates through the choke. Can sell fakes — enemies hearing it expect a fast push and over-rotate.",
+        key_insight: "The 4-second carry-over is the power — place it behind the push point, not at it."
       },
       sky_smoke: {
-        mechanics: "Longest smokes in the game at 19.25 seconds. Three charges — chain all three for 57+ seconds of denial. Deployed via tactical map. Low internal visibility — enemies in the smoke can barely see out.",
-        usage: "Position to reach both sites so you can smoke either. Don't burn all three smokes at round start without a reason. Stand near the edge of your own smoke — whoever is on the edge sees enemies first. Use single smokes to fake pushes — enemies who see one smoke and nothing happens may rotate, leaving site open.",
-        key_insight: "Brimstone's smokes are delay and denial tools. Use them to deny pushes, hide spike, and force enemies into your fights — not just to block a sightline."
+        mechanics: "Longest smokes in the game at 19.25 seconds. Three charges — chain all three for 57+ seconds of denial. Deployed via tactical map. Enemies inside can barely see out.",
+        usage: "Position to reach both sites. Stand near the edge of your own smoke to see enemies first. Use a single smoke to fake a push — enemies who see one smoke and nothing happens may rotate off site.",
+        key_insight: "Delay and denial tools — deny pushes, hide spike, force enemies into your fights, not just block a sightline."
       },
       orbital_strike: {
-        mechanics: "500 total damage over 3 seconds at full size. Deals less damage to Brimstone and teammates. Kills anyone in a locked animation — Phoenix ult spawn, Sova drone, revive animation.",
-        usage: "Primary use: delay spike defuse, stacked with incendiary for double stall. Clears common held angles on site entry. Don't hoard it — if it wins the round, use it. Center it on the enemy — they can escape if it only clips the edge.",
-        key_insight: "Ult + Molly staggered is Brimstone's signature post-plant play. Ult forces enemies off spike, Molly prevents defuse after ult fades — you can be rotating the entire time."
+        mechanics: "500 damage over 3 seconds at full size. Less damage to Brimstone and teammates. Kills anyone in a locked animation — Phoenix ult spawn, Sova drone, revive.",
+        usage: "Primary: delay defuse, stacked with incendiary for double stall. Clears common held angles on entry. Center it on the enemy — clipping the edge lets them escape. Use it whenever it wins the round.",
+        key_insight: "Ult + Molly staggered is Brimstone's signature post-plant: ult forces them off spike, molly denies defuse after it fades — rotate the whole time."
       }
     },
     post_plant: {
-      core_skill: "Pre-plan your lineup position before the round starts. Know where you'll plant and where you'll run to set up. Stagger utility — Molly lands, you rotate, ult drops, you move again. Each piece of utility buys time to reach a better position.",
-      key_insight: "Brimstone has so much delay that he can rotate to a very far position between utility uses if pre-planned correctly. The best Brimstone players are always two steps ahead — they know exactly where they'll be when each piece of utility lands."
+      core_skill: "Pre-plan your lineup position before the round. Know where you'll plant and where you'll set up. Stagger util — molly lands, you rotate, ult drops, you move again. Each piece buys time to reach a better position.",
+      key_insight: "With so much delay, a pre-planned Brimstone rotates very far between util uses — the best are always two steps ahead, knowing exactly where they'll be when each piece lands."
     },
     smoke_order: {
-      principle: "Always smoke the most dangerous sightline first — usually elevated angles like heaven that teammates entering site can't cover while looking at the choke. Don't smoke obvious positions every round at the same time.",
-      key_insight: "Vary which angles you smoke and when. Enemies who know your smoke pattern will peek between them. Keep them guessing."
+      principle: "Smoke the most dangerous sightline first — usually elevated angles like heaven that entering teammates can't cover while looking at the choke. Vary which positions you smoke and when.",
+      key_insight: "Enemies who learn your smoke pattern peek between them — keep them guessing."
     }
   },
   astra: {
     role: "Controller",
-    core_philosophy: "The most complex controller in the game but her fundamentals are simple — global utility that can affect any part of the map. Requires pre-planning and communication. Every piece of utility must be placed before you need it.",
+    core_philosophy: "The most complex controller in the game, but the fundamentals are simple — global utility affecting any part of the map. Requires pre-planning and comms; every piece must be placed before you need it.",
     watch: [],
     abilities: {
       nova_pulse: {
-        mechanics: "Star placed in astral form that concusses enemies in an area when activated. Can be placed anywhere on the map.",
-        usage: "Place preemptively and activate when enemies hit a choke point. Use inside a smoke to slow rushes and create spam openings. Activate off minimap contact — when enemies appear near your star, pop it. Combo with gravity well: concuss first, then pull — stunned enemies can't resist the pull.",
-        key_insight: "Concuss before gravity well pull — stunned enemies can't move against the pull direction and get sucked in guaranteed."
+        mechanics: "Star placed in astral form that concusses an area when activated. Placeable anywhere on the map.",
+        usage: "Place preemptively, activate when enemies hit a choke or off minimap contact. Inside a smoke it slows rushes and creates spam openings. Combo with gravity well — concuss first, then pull.",
+        key_insight: "Concuss before the pull — stunned enemies can't resist it and get sucked in."
       },
       nebula: {
-        mechanics: "Second shortest smoke duration in the game. Recalling a star creates a brief fake smoke — the recall animation looks like a smoke forming before it disappears.",
-        usage: "Best controller for fake plays — Astra controls utility globally regardless of position. Recalling a star to cross open gaps safely or as a decoy. Pre-position stars at round start based on likely enemy behavior."
+        mechanics: "Second shortest smoke duration in the game. Recalling a star creates a brief fake smoke — the recall animation looks like one forming.",
+        usage: "Best controller for fakes — Astra controls util globally regardless of position. Recall a star to cross open gaps or as a decoy. Pre-position stars at round start on likely enemy behavior."
       },
       gravity_well: {
-        mechanics: "Pulls enemies toward center and applies vulnerable. Enemies can counter by moving in the pull direction or body-blocking. Spike placement near the edge of the radius pulls enemies away from it when they try to defuse.",
-        usage: "Combo with damage util — Raze nade, Brimstone molly, orbital strike. Spam accurately during the pull — enemies are vulnerable and can't move freely. Position spike near the edge of the radius on post-plant.",
-        key_insight: "Spam accurately during the pull — enemies are vulnerable and can't move freely, making them easy to hit even through smoke."
+        mechanics: "Pulls enemies to center and applies Vulnerable. Countered by moving with the pull or body-blocking. Spike near the radius edge pulls defusers away from it.",
+        usage: "Combo with damage util — Raze nade, Brimstone molly, orbital strike. Spam accurately during the pull. Place spike near the radius edge on post-plant.",
+        key_insight: "During the pull enemies are Vulnerable and can't move freely — easy to hit even through smoke."
       },
       cosmic_divide: {
-        mechanics: "Ult. Splits the map with a wall that blocks vision, sound, and bullets. Utilities and knives can still pass through.",
-        usage: "Use to take large areas of space safely, deny pushes, or fake a site. Ping the location for teammates before activating — a Cosmic Divide no one knows is coming helps no one.",
-        key_insight: "The ult is only as good as your team's coordination around it. Ping before activating."
+        mechanics: "Ult. Splits the map with a wall blocking vision, sound, and bullets. Util and knives still pass through.",
+        usage: "Take large space safely, deny pushes, or fake a site. Ping the location before activating.",
+        key_insight: "Only as good as your team's coordination — ping before activating."
       }
     },
     astral_form: {
-      mechanics: "Astra enters an invulnerable but stationary state to place and manage stars. Completely defenseless while in it.",
-      usage: "Always seek cover before entering. Get in and out as fast as possible. Practice placing and activating stars quickly to minimize exposure time."
+      mechanics: "Invulnerable but stationary and defenseless while placing and managing stars.",
+      usage: "Seek cover before entering, get in and out fast. Practice placing and activating stars quickly to minimize exposure."
     }
   },
   miks: {
     role: "Controller",
-    core_philosophy: "Straightforward controller with limited smoke radius similar to Clove — needs to play mid positions to cover both sites. Smokes don't last long. Lacks the complexity of Viper or Astra but gets the job done with smart positioning.",
+    core_philosophy: "Straightforward controller with a limited smoke radius like Clove — plays mid to cover both sites. Smokes are short. Lacks Viper or Astra's complexity but gets the job done with smart positioning.",
     watch: [],
     abilities: {
       stun_heal: {
-        mechanics: "AoE that pulses — right click switches between stun and heal mode. Easily broken by one knife. The AoE goes through walls — placing it behind a wall means enemies can't shoot it without exposing themselves.",
-        usage: "Place behind smokes or walls to protect it. Heal teammates through walls without exposing yourself."
+        mechanics: "Pulsing AoE — right click switches between stun and heal. Broken by one knife. Goes through walls, so placing it behind a wall forces enemies to expose themselves to shoot it.",
+        usage: "Place behind smokes or walls to protect it and heal teammates through walls without exposing yourself."
       },
       boost: {
-        mechanics: "Stim beacon effect on a single teammate. Buffs one player at a time unlike Brimstone's AoE beacon.",
-        usage: "Use on your duelist at round start or during pushes. Straightforward — don't overthink it."
+        mechanics: "Stim beacon on a single teammate, unlike Brimstone's AoE.",
+        usage: "Use on your duelist at round start or during pushes."
       },
       smokes: {
-        mechanics: "Short duration, small radius compared to other controllers. Miks needs to play mid positions to cover both sites effectively.",
-        usage: "Similar positioning requirements to Clove. Maps with large sites like Abyss are harder. Plan positions to reach both sites."
+        mechanics: "Short duration, small radius. Miks plays mid to cover both sites.",
+        usage: "Positioning like Clove. Large-site maps like Abyss are harder. Plan positions to reach both sites."
       },
       ult: {
-        mechanics: "AoE blast that pushes enemies back and blinds them. Small radius — must be used intentionally.",
-        usage: "Check minimap before activating to see exactly what you'll hit. Go into the round with a plan for where to position it. Strongest for site takes, post-plant, and defensive pushes."
+        mechanics: "AoE blast that pushes enemies back and blinds them. Small radius.",
+        usage: "Check the minimap before activating to see what you'll hit. Plan its position before the round. Strongest for site takes, post-plant, and defensive pushes."
       }
     }
   },
   vyse: {
     role: "Sentinel",
-    core_philosophy: "Built around isolated duels. Her wall isolates fights, her flash blinds enemies mid-duel, and her vines slow and damage. Every ability is designed to combo together — the more you stack them the more one-sided the fight becomes.",
+    core_philosophy: "Built around isolated duels. Her wall isolates fights, her flash blinds mid-duel, her vines slow and damage. Every ability combos — the more you stack, the more one-sided the fight.",
     watch: [],
     abilities: {
       shear: {
-        mechanics: "Wall that isolates one side from the other. Can be jump-peeked to activate early. Place diagonally as a technique — enemies can only jump it from one specific spot, then spam that spot when they try.",
-        usage: "Place just outside choke points where jumping requires exposure, not directly in the choke where it's trivially jumped. Use for aggressive ratty 1v1s with a shotgun. On attack: save for post-plant if another sentinel covers flanks. Always combo with vine and flash — wall alone is weaker than wall plus flash plus vine.",
-        key_insight: "The wall forces a 1v1 where you also have flash and vine advantage. A blinded, slowed enemy behind your wall is a free kill."
+        mechanics: "Wall that isolates one side from the other. Jump-peekable to activate early. Place diagonally so enemies can only jump it from one spot — then spam that spot.",
+        usage: "Place just outside chokes where jumping requires exposure, not in the choke where it's trivially jumped. Good for aggressive ratty 1v1s with a shotgun. On attack, save for post-plant if another sentinel covers flanks. Always combo with vine and flash.",
+        key_insight: "A blinded, slowed enemy behind your wall is a free 1v1."
       },
       razor_vine: {
-        mechanics: "Placed vine that slows 15% and deals chip damage every few steps. Goes invisible shortly after placing. 10 second duration, two charges. 20m activation range — large enough for most post-plant scenarios.",
-        usage: "Pre-place around choke points before fights. Best defensively — combo with wall and flash for maximum value. Don't use aggressively where enemies can see and shoot it before it activates. Standard setup: one vine at the choke you're holding, one combo'd with wall and flash.",
-        key_insight: "One vine near the choke you're holding, one combo'd with your wall and flash — that's the standard defensive setup."
+        mechanics: "Placed vine, slows 15% and chips every few steps. Goes invisible shortly after placing. 10s duration, two charges, 20m activation range.",
+        usage: "Pre-place around chokes before fights. Best defensively, combo'd with wall and flash. Standard setup: one vine at the choke you're holding, one combo'd with wall and flash.",
+        key_insight: "Avoid placing it where enemies see and shoot it before it activates."
       },
       arc_rose: {
-        mechanics: "Flash that stays on the ground — invisible until activated or within 10m of an enemy. Gun stays out while using it. 20-second cooldown for use and pickup. Right click to place aggressively through walls. Placing aggressively where enemies spot and shoot it incurs a 45-second cooldown penalty.",
-        usage: "Defensive placement is almost always better than aggressive. Flash an enemy through your wall and immediately swing — gun stays out the whole time. Pick it up while rotating to redeploy on the other site. Vary placement round to round — enemies will pre-shoot a predictable spot even if it's invisible.",
-        key_insight: "Defensive arc rose is almost always better than aggressive. You have wall for aggressive plays — use the flash to punish enemies who trigger it."
+        mechanics: "Ground flash — invisible until activated or within 10m of an enemy. Gun stays out. 20s cooldown for use and pickup. Right click places it aggressively through walls; if spotted and shot there, a 45s cooldown penalty.",
+        usage: "Defensive placement is almost always better. Flash an enemy through your wall and immediately swing — gun's out the whole time. Pick it up while rotating to redeploy. Vary placement; enemies pre-shoot a predictable invisible spot.",
+        key_insight: "Wall handles aggression — use the flash to punish enemies who trigger it."
       },
       steel_garden: {
-        mechanics: "Ult. Jams primary weapons in an area for 8 seconds — enemies are forced to secondary or melee. Cannot be broken. Faster windup than KJ lockdown, costs one fewer orb.",
-        usage: "Strong for site takes, post-plant, and stopping pushes. Don't be afraid to take the defuse instead of using ult — one fewer orb than lockdown means the tradeoff is worth it more often.",
-        key_insight: "Don't be afraid to take the defuse instead — the ult costs one fewer orb than lockdown so the tradeoff is worth it more often."
+        mechanics: "Ult. Jams primary weapons in an area for 8 seconds — enemies forced to secondary or melee. Unbreakable. Faster windup than KJ lockdown and one fewer orb.",
+        usage: "Strong for site takes, post-plant, and stopping pushes. Often take the defuse instead of using ult — at one fewer orb than lockdown, the tradeoff is worth it more often.",
+        key_insight: "At one fewer orb than lockdown, taking the defuse over the ult is often the better trade."
       }
     }
   },
   harbor: {
     role: "Controller",
-    core_philosophy: "Frontline controller who uses his wall and smoke together to cover multiple sightlines simultaneously. Wall covers one side, smoke covers the other, ult blinds the site as you enter. Built for pushing with your team.",
+    core_philosophy: "Frontline controller who pairs wall and smoke to cover multiple sightlines at once — wall one side, smoke the other, ult to blind the site as you enter. Built for pushing with your team.",
     watch: [],
     abilities: {
       cascade: {
-        mechanics: "Wave that travels forward, briefly blocks vision, and slows enemies it passes through. NOT a lineup ability — there is no fixed spot to memorize. Direction can be adjusted slightly mid-wave.",
-        usage: "Read where enemies are and send it through them proactively — not reactively after they've already committed. Good for taking space, interrupting a push, or covering a crossing. The error to fix is timing and direction, not finding a spot to drill."
+        mechanics: "Wave that travels forward, briefly blocks vision, and slows enemies it passes. NOT a lineup ability — no fixed spot. Direction adjusts slightly mid-wave.",
+        usage: "Read where enemies are and send it through them proactively. Good for taking space, interrupting a push, or covering a crossing. The error to fix is timing and direction, not a spot to drill."
       },
       high_tide: {
-        mechanics: "Long steerable wall that blocks vision and slows enemies who cross it. Guided by holding left click or thrown straight. Cancel early with right click. NOT a lineup ability — steer it to cover the angles your team needs.",
-        usage: "Pair with Cove to cover both sides of a site. Activate before contact pressure, not in response to it — a late wall provides no value regardless of where it lands. The error on a bad High Tide is almost always timing, not placement.",
-        key_insight: "The mistake on a late High Tide is timing, not placement. Practice deploying it at the start of an execute in live games."
+        mechanics: "Long steerable wall that blocks vision and slows crossers. Guide by holding left click or throw straight; cancel early with right click. NOT a lineup ability — steer it to cover what your team needs.",
+        usage: "Pair with Cove to cover both sides of a site. Activate before contact pressure — a late wall provides no value wherever it lands.",
+        key_insight: "The mistake on a late High Tide is timing, not placement. Practice deploying it at the start of an execute."
       },
       cove: {
-        mechanics: "Thrown smoke like Omen's — aim and throw, no lineup required. Reinforcing with a second click blocks bullets. 40-second cooldown. Good range across most maps; struggles on very large maps like Pearl or Breeze.",
-        usage: "Aim and throw where you need coverage. Use unreinforced to cross; reinforce when you need bullet protection for planting. Stand away from the edge — when it breaks you need reaction time, not be right on the boundary."
+        mechanics: "Thrown smoke like Omen's — aim and throw, no lineup. A second click reinforces it to block bullets. 40s cooldown. Struggles on very large maps like Pearl or Breeze.",
+        usage: "Throw where you need coverage. Unreinforced to cross; reinforce for bullet protection while planting. Stand back from the edge for reaction time when it breaks."
       },
       reckoning: {
         mechanics: "Ult. Large AoE that nearsights and stuns enemies in the area. 7 orbs.",
-        usage: "Wait for enemies to be fully committed before throwing — too early and they back out, too late and you miss the entry window. Aim for the center of the enemy cluster, not just the first enemy you see. Timing and targeting are separate skills — review rounds where it underperformed to identify which was wrong.",
-        key_insight: "Timing: wait for enemies to commit. Targeting: aim for the center of the group. These are separate errors — identify which one went wrong."
+        usage: "Wait for enemies to fully commit — too early they back out, too late you miss the window. Aim for the center of the cluster. Review underperforming rounds to tell whether timing or targeting was wrong.",
+        key_insight: "Timing (wait for commit) and targeting (center of the group) are separate errors — identify which one went wrong."
       }
     }
   },
   breach: {
     role: "Initiator",
-    core_philosophy: "Team-enabler initiator. Every ability goes through walls, making him uniquely powerful in narrow corridors and choke points. His job is to set up teammates for easy kills — stun, flash, aftershock in combination so enemies have no room to react.",
+    core_philosophy: "Team-enabler initiator. Every ability goes through walls, making him powerful in narrow corridors and chokes. His job is setting up teammates — stun, flash, aftershock in combination so enemies have no room to react.",
     watch: [],
     abilities: {
       fault_line: {
-        mechanics: "Ground stun that goes through walls. Breach has a long equip time after abilities — gun is not immediately available after stunning.",
-        usage: "Focus on narrow corridors where enemies have no room to dodge. Let enemies commit first, then stun when they can't back out. Don't peek before the stun lands — wait for it to hit, then peek. Use to catch duelists mid-mobility: stun common Jett dash or Raze satchel spots just as they commit.",
-        key_insight: "The stun is most valuable when enemies are already in motion. Let them commit, then stun — they have no way out."
+        mechanics: "Ground stun through walls. Long equip time after abilities — your gun isn't ready right after stunning.",
+        usage: "Focus narrow corridors where enemies can't dodge. Let them commit, then stun when they can't back out, then peek once it lands. Catch duelists mid-mobility — stun common Jett dash or Raze satchel spots as they commit.",
+        key_insight: "Most valuable on enemies already in motion — let them commit, then stun, no way out."
       },
       flashpoint: {
-        mechanics: "Aimed at a surface — it fires through the wall to the other side. There is no throw trajectory or arc. Goes through walls — can flash enemies without blinding teammates by finding the right geometry.",
-        usage: "Flash farther from yourself when peeking so your gun is out by the time it lands. Flash close to yourself only to disrupt enemy crosshair placement when you're not the one peeking. Combo with Aftershock: hide the flash inside the explosion — enemies focused on the Aftershock won't turn away from the flash.",
-        key_insight: "The flash plus Aftershock combo hides the flash inside the explosion. Gets more valuable the higher you climb."
+        mechanics: "Aimed at a surface; fires through the wall to the other side, no arc. Right geometry flashes enemies without blinding teammates.",
+        usage: "When peeking, flash farther from yourself so your gun is out as it lands. Flash close only to disrupt enemy crosshair placement when a teammate peeks. Combo with Aftershock — hide the flash inside the explosion.",
+        key_insight: "The flash-inside-Aftershock combo gets more valuable the higher you climb."
       },
       aftershock: {
-        mechanics: "Three-burst explosive through walls with an activation delay. Kills Gecko's Wingman and interrupts plant entirely. Hard to see inside smokes.",
-        usage: "Use as bait — enemies often push the activation delay, so place it and hold the angle instead of retreating. Stun plus Aftershock on cornered enemies: aim crosshair farther from the wall so you don't miss when they're forced to exit. Use to deny a spot for a few seconds while your team pushes."
+        mechanics: "Three-burst explosive through walls with an activation delay. Kills Gekko's Wingman, interrupts plant. Hard to see inside smokes.",
+        usage: "Use as bait — enemies push the delay, so place it and hold the angle. Stun + Aftershock on cornered enemies: aim farther from the wall so you don't miss as they're forced out. Deny a spot for a few seconds while your team pushes."
       },
       rolling_thunder: {
-        mechanics: "Ult. Large cone flash and stun through walls. Very long equip and use time — completely vulnerable while activating. Mouse movement during the animation can accidentally shift the direction.",
-        usage: "Be in cover before activating — never use it while exposed. After ulting, don't chase; flash corners first — enemies crouch in corners and bait the chase. In post-plant 1v1, reposition instead of chasing so by the time the stun wears off you could be anywhere.",
-        key_insight: "The ult's best use isn't the kills it gets directly — it's the repositioning advantage it gives you while the enemy is stunned."
+        mechanics: "Ult. Large cone flash and stun through walls. Very long equip/use time — completely vulnerable while activating. Mouse movement during the animation can shift the direction.",
+        usage: "Be in cover before activating. After ulting, flash corners first instead of chasing — enemies crouch in corners to bait the chase. In a post-plant 1v1, reposition so you could be anywhere when the stun wears off.",
+        key_insight: "The best use is the repositioning advantage while the enemy is stunned, not the direct kills."
       }
     }
   },
   skye: {
     role: "Initiator",
-    core_philosophy: "Flash-based initiator who can play aggressively, especially early in rounds. Value comes from surprising enemies with unpredictable flashes and using her dog for info. Support role but capable of taking fights herself.",
+    core_philosophy: "Flash-based initiator who plays aggressively, especially early. Value comes from unpredictable flashes and using her dog for info. A support who can also take fights herself.",
     watch: [],
     abilities: {
       guiding_light: {
-        mechanics: "Hawk flash that Skye can steer and activate on command. Activating it flashes everyone looking at it. Can be banked off walls.",
-        usage: "Wait for footsteps before timing the flash — don't throw early. Smoke plus flash combo: when an enemy smokes a spot, flash into it to blind anyone holding the smoke exit. Ask teammates to jiggle an angle as bait, then flash from a different position and swing for a free kill.",
-        key_insight: "If enemies haven't been fooled by your flashes yet, they're unlikely to predict them — play aggressively early and establish the threat before they adapt."
+        mechanics: "Hawk flash Skye steers and activates on command, flashing everyone looking at it. Can be banked off walls.",
+        usage: "Wait for footsteps before timing the flash. Smoke + flash: when an enemy smokes a spot, flash into it to blind whoever holds the exit. Have a teammate jiggle as bait, then flash from a different position and swing for a free kill.",
+        key_insight: "Enemies who haven't been fooled by your flashes yet can't predict them — play aggressively early and establish the threat before they adapt."
       },
       trailblazer: {
         mechanics: "Piloted dog that concusses enemies on contact.",
-        usage: "Use for info and to clear angles you don't want to peek manually on attack."
+        usage: "Info and clearing angles you don't want to peek manually on attack."
       },
       regrowth: {
-        mechanics: "Channeled heal targeting nearby teammates.",
-        usage: "Call out that you have heal so teammates know to back off a fight instead of greedily going for a kill they might not get."
+        mechanics: "Channeled heal on nearby teammates.",
+        usage: "Call out that you have heal so teammates back off a fight instead of forcing a kill they might not get."
       }
     },
     economy: {
-      guidance: "On attack gun rounds take full abilities — heal is a significant advantage. On defense buy ghost and heal to play aggressive. Don't buy Sheriff if you can't afford full abilities and full shield."
+      guidance: "On attack gun rounds, take full abilities — heal is a big advantage. On defense, ghost + heal to play aggressive. Avoid Sheriff if it costs you full abilities and full shield."
     }
   },
   fade: {
     role: "Initiator",
-    core_philosophy: "Recon duelist — provides info like an initiator but plays on the frontlines like a duelist. Use utility selfishly on attack, supportively on defense. Her kit is designed for solo climbing because she doesn't rely on teammates to get value from her abilities.",
+    core_philosophy: "Recon duelist — provides info like an initiator but plays the frontlines like a duelist. Util selfishly on attack, supportively on defense. Built for solo climbing since she doesn't rely on teammates for value.",
     watch: [],
     abilities: {
       haunt: {
-        mechanics: "Thrown orb that lands and scans enemies in range, periodically pinging their positions. Landing position is determined by where you aim and throw — lineup spots exist for reliably landing on key areas of a site. The throw trajectory itself is irrelevant; only the landing position matters.",
-        usage: "Throw at a high angle to cover the bomb site before executing. On defense, throw into smokes to scan enemies executing through them, then spray through smoke or penetrable walls. Call out to teammates before throwing on retakes so everyone pushes together off the scan. Save it until regenerated before initiating an execute.",
-        key_insight: "Haunt controls when your team executes — you initiate the countdown. Don't throw it randomly; throw it right when your team is ready to go.",
-        lineup_note: "When coaching Haunt placement mistakes, the drill is practicing landing spots — never 'arc' or trajectory practice, which doesn't exist for this ability."
+        mechanics: "Thrown orb that lands and scans enemies in range, periodically pinging positions. Set by where you aim and throw — only the landing position matters, not the trajectory. Lineup spots exist for key areas.",
+        usage: "Throw at a high angle to cover the bomb site before executing. On defense, throw into smokes to scan executers, then spray through. Call out before throwing on retakes so everyone pushes off the scan. Wait for it to regen before initiating an execute.",
+        key_insight: "Haunt starts your team's execute countdown — throw it when the team is ready, not randomly.",
+        lineup_note: "When coaching Haunt placement, the drill is practicing landing spots — never 'arc' or trajectory, which doesn't exist for this ability."
       },
       seize: {
-        mechanics: "Thrown cage that latches onto enemies in range and roots them. Tells you if someone is in the area by either latching or disappearing.",
-        usage: "Use to clear specific corners without peeking. Save for post-plant to stop enemies from reaching the spike. Don't waste it during defaults — save it for executes or post-plant. On defense use it early at common push spots to catch enemies as they commit.",
-        key_insight: "Post-plant Seize is your most powerful ability — it stops enemies from reaching the spike while confirming whether they're on it or not."
+        mechanics: "Thrown cage that latches onto and roots enemies in range. Latching or disappearing tells you if someone's there.",
+        usage: "Clear specific corners without peeking. Save for post-plant to stop enemies reaching the spike. On defense, use early at common push spots to catch enemies as they commit.",
+        key_insight: "Post-plant Seize is your strongest ability — it stops enemies reaching the spike and confirms whether they're on it."
       },
       prowler: {
-        mechanics: "Piloted beast that chases the nearest enemy and nearsights them on bite. Only nearsights — enemies can still see within 5m. Absorbs bullets while alive.",
-        usage: "Follow it onto site during executes — it absorbs bullets until enemies destroy it. Save for executes, not defaults. Don't get too close to a bitten enemy — they can still see you within 5m. If it gets a bite in close quarters, have a teammate molly rather than taking that fight. On defense use it to buy time after getting flashed — it buys seconds to recover and fight back.",
-        key_insight: "Prowler plus molly from a teammate on a bitten enemy in close quarters is a nearly guaranteed kill — coordinate the combo before executing."
+        mechanics: "Piloted beast that chases the nearest enemy and nearsights on bite — they still see within 5m. Absorbs bullets while alive.",
+        usage: "Follow it onto site during executes — it tanks bullets until destroyed. Save for executes. Stay beyond 5m of a bitten enemy since they still see you; if it bites in close quarters, have a teammate molly instead. On defense it buys seconds to recover after being flashed.",
+        key_insight: "Prowler + teammate molly on a bitten enemy in close quarters is a near-guaranteed kill — coordinate it before executing."
       },
       nightfall: {
         mechanics: "Ult. Large wave that deafens and applies health decay to enemies caught in it.",
-        usage: "Use on retakes — enemies caught in it are completely deaf and losing health. Makes retakes significantly easier. Use it whenever you have it on retake; don't save it."
+        usage: "Use it on every retake — enemies caught are deaf and losing health, making retakes much easier. Don't save it."
       }
     },
     defense: {
-      playstyle: "Play slightly more supportively than attack — throw haunt for your duelist to make first contact, then join the fight. Coordinate with duelist at round start to take map control together. Use Seize early at common push spots to catch enemies before they establish control."
+      playstyle: "Slightly more supportive than attack — throw haunt for your duelist's first contact, then join. Coordinate with the duelist at round start to take map control together. Seize early at common push spots to catch enemies before they establish control."
     }
   },
   sage: {
     role: "Sentinel",
-    core_philosophy: "Battle Sage — walls aren't just for blocking paths, they're for creating off angles, boosting to unexpected positions, and repurposing for multiple goals simultaneously. Every wall should serve more than one purpose.",
+    core_philosophy: "Battle Sage — walls create off-angles, boost to unexpected positions, and serve multiple goals at once, not just block paths. Every wall should do more than one thing.",
     watch: ["Grim"],
     abilities: {
       barrier_orb: {
-        mechanics: "Large placeable wall. Extended wall technique: walk-jump off a ledge and place as your feet are level with the ledge for an extra segment. Crouch bug jump: jump next to a surface, hold crouch as you rise, release at apex — gets you on top of walls too tall to hop normally.",
-        usage: "Always ask: can this wall do two things at once? Standard: block mid, cover a res, delay a push. Advanced: boost yourself to peek over smokes, create gap walls (small angle to peek through), or leave a pocket to hide in. On res walls, place so you can jump on top as it rises — enemies who peek to interrupt get caught off guard by you peeking from above. On eco rounds use walls to create angles that suit cheaper weapons like the Marshal.",
-        key_insight: "When using a res wall, jump on top as it rises — enemies peeking to interrupt the res get caught off guard by you above them."
+        mechanics: "Large placeable wall. Extended wall: walk-jump off a ledge and place as your feet level with it for an extra segment. Crouch bug jump: jump next to a surface, hold crouch rising, release at apex to reach walls too tall to hop.",
+        usage: "Always ask: can this wall do two things? Standard: block mid, cover a res, delay a push. Advanced: boost to peek over smokes, make a gap wall to peek through, or leave a pocket to hide in. On res walls, place so you can jump on top as it rises and catch interrupters from above. On eco, build angles that suit cheaper weapons like the Marshal.",
+        key_insight: "On a res wall, jump on top as it rises — enemies peeking to stop the res get caught off guard by you above them."
       },
       slow_orb: {
-        mechanics: "Thrown orb that creates a slowing field on the ground. Layers with smokes — pushing slowly out of a smoke through a slow orb is usually a losing duel.",
-        usage: "Jump peek when throwing — peeking normally with the orb in hand leaves you vulnerable with no gun out. Layer slow orbs into enemy smokes to lock down choke points.",
-        key_insight: "Slow orb plus smoke layered together is almost impossible for enemies to play around."
+        mechanics: "Thrown orb that creates a ground slowing field. Layers with smokes — pushing slowly out of a smoke through a slow orb is usually a losing duel.",
+        usage: "Jump peek when throwing — a normal peek with the orb in hand leaves you with no gun out. Layer slow orbs into enemy smokes to lock down chokes.",
+        key_insight: "Slow orb layered into a smoke is almost impossible for enemies to play around."
       }
     }
   },
   chamber: {
     role: "Sentinel",
-    core_philosophy: "Chamber is a sentinel who plays like a duelist. On defense his job is to take aggressive off angles with his TP as an escape — get a kill and TP out before getting traded. On attack he's best as a lurker. He's an OP specialist first and foremost.",
+    core_philosophy: "A sentinel who plays like a duelist, and an OP specialist first. On defense he takes aggressive off-angles with his TP as an escape — kill and TP out before getting traded. On attack he's best as a lurker.",
     watch: [],
     abilities: {
       trademark: {
-        mechanics: "Placed trip that reveals and immobilizes enemies who trigger it. Can be bypassed by many abilities — Jett dash, Sage wall, Viper smoke, Yoru TP, and more.",
-        usage: "Place behind your team on attack to cover the angle you are NOT watching — that is the entire point. Don't place it to cover an angle you're already holding. On defense use it to watch a second entry point so you can fully commit to your primary angle.",
-        key_insight: "Trademark placement should always answer: what angle can I not afford to also watch right now? That's where it goes."
+        mechanics: "Placed trip that reveals and immobilizes whoever triggers it. Bypassed by many abilities — Jett dash, Sage wall, Viper smoke, Yoru TP, more.",
+        usage: "On attack, place behind your team to cover the angle you're NOT watching. On defense, watch a second entry so you can fully commit to your primary angle.",
+        key_insight: "Placement answers: what angle can I not afford to also watch right now? That's where it goes."
       },
       headhunter: {
         mechanics: "Pocket pistol at 100 credits per bullet. Extremely fast draw speed.",
-        usage: "If you miss an OP shot, immediately switch to Headhunter — most enemies wide swing after hearing a miss. Crosshair placement over flicking — let enemies run into your crosshair.",
-        key_insight: "Marshal plus Headhunter is usually a better bonus round buy than Outlaw — faster kill time and no slow reload when you miss."
+        usage: "Miss an OP shot, immediately switch — most enemies wide swing after hearing the miss. Crosshair placement over flicking; let enemies run into it.",
+        key_insight: "Marshal + Headhunter usually beats Outlaw on bonus rounds — faster kill time, no slow reload on a miss."
       },
       rendezvous: {
-        mechanics: "Two-anchor TP system. Fake TP tech: place TP, run into it, press TP button the instant you touch it — triggers the sound effect without actually teleporting, creating confusion about your position.",
-        usage: "On defense take off angles enemies won't expect — get the kill and TP out before getting traded. The TP makes dangerous spots essentially free to play.",
-        key_insight: "The TP makes off angles free — you can play spots that would be suicidal without an escape."
+        mechanics: "Two-anchor TP. Fake TP tech: run into the TP and press the button the instant you touch it — triggers the sound without teleporting, confusing enemies about your position.",
+        usage: "On defense, take off-angles enemies won't expect — kill and TP out before getting traded.",
+        key_insight: "The TP makes off-angles free — play spots that would be suicidal without an escape."
       },
       tour_de_force: {
-        mechanics: "Ult. Operator with slowing field on kills.",
-        usage: "Same crosshair placement principles as the OP — let enemies come to you. Pair with Headhunter for follow-up shots after missing."
+        mechanics: "Ult. Operator with a slowing field on kills.",
+        usage: "Same crosshair placement as the OP — let enemies come to you. Pair with Headhunter for follow-ups after a miss."
       }
     },
     defense: {
-      playstyle: "Play aggressively — take space, get picks, TP out. Master off angles. Buy OP as soon as possible."
+      playstyle: "Aggressive — take space, get picks, TP out. Master off-angles. Buy OP as soon as possible."
     },
     attack: {
-      playstyle: "Two options: place TP before entering site as an escape option, or lurk on the opposite side of the map while your team applies pressure. Lurking is generally stronger."
+      playstyle: "Either place a TP before entering site as an escape, or lurk the opposite side while your team applies pressure. Lurking is generally stronger."
     },
     weapons: {
-      recommendation: "Prefer Vandal over Phantom — you don't want to dink someone for 148 and have them get healed. Marshall plus Headhunter over Outlaw on bonus rounds."
+      recommendation: "Prefer Vandal over Phantom — you don't want to dink for 148 and have them healed. Marshal + Headhunter over Outlaw on bonus rounds."
     }
   },
   tejo: {
     role: "Initiator",
-    core_philosophy: "High game-knowledge initiator who dominates through utility placement and timing. Every ability has a delay before exploding — you need to predict enemy positions, not react to them. Best in medium to high elo where you can read patterns and punish repetitive enemies. Not a low elo pick.",
+    core_philosophy: "High game-knowledge initiator who dominates through util placement and timing. Every ability has a delay before exploding, so you predict enemy positions rather than react. Best in mid-to-high elo where you can read patterns and punish repetitive enemies — not a low-elo pick.",
     watch: [],
     abilities: {
       stealth_drone: {
-        mechanics: "Piloted drone that reveals and suppresses enemies. Suppressed enemies cannot use abilities for 7 seconds.",
-        usage: "On attack prioritize buying over stun when credits are limited. Scout bomb sites before executing; reveal and suppress enemies so they can't use stalling utility. Don't drone after teammates are already entering — you're too late, move in with them. On defense take early info and reveal enemies during executes.",
-        key_insight: "Suppressing a sentinel shuts down their utility for 7 seconds — plenty of time to execute. Always destroy revealed sentinel setups before executing."
+        mechanics: "Piloted drone that reveals and suppresses enemies. Suppressed enemies can't use abilities for 7 seconds.",
+        usage: "On attack, prioritize buying it over stun on limited credits. Scout sites before executing; suppress enemies so they can't use stalling util. Drone before teammates enter, not after. On defense, take early info and reveal enemies during executes.",
+        key_insight: "Suppressing a sentinel shuts off their util for 7 seconds — plenty to execute. Destroy revealed sentinel setups before executing."
       },
       guided_salvo: {
         mechanics: "Two rockets that can be aimed independently. Resets after 40 seconds — often usable twice per round.",
-        usage: "Use Guided Salvo first, then stun to cover escape routes — not the other way around. Place rockets to corner enemies with only one escape route, then stun that route. Don't use all utility on one enemy when it could set up a full execute. Don't place rockets in your own team's execute path. On defense use from long range to support without taking 50/50 gunfights.",
-        key_insight: "When enemies are repetitive on defense, pre-fire Guided Salvo on their known positions before they even reach site — save your stun for follow-up."
+        usage: "Guided Salvo has strong standalone value — use it independently to clear angles, force defenders off the bomb, deny a position, or punish a known defensive spot. It does not need to be paired with Special Delivery every time. When pairing: fire rockets first then stun to cover escape routes, not the other way around — rockets corner enemies, stun seals the exit. Don't use all utility on one enemy when it could set up a full execute. Don't place rockets in your own team's execute path. On defense use from long range to support without taking 50/50 gunfights.",
+        key_insight: "When enemies are repetitive on defense, pre-fire Guided Salvo on their known positions before they even reach site. Rockets are strong alone — don't hold them waiting for a perfect stun combo."
       },
       special_delivery: {
-        mechanics: "Thrown stun with bounce. Can be bounced around corners to catch enemies holding off angles.",
-        usage: "On defense prioritize buying over drone when credits are limited. Use to finish off enemies flushed by rockets, deny early peeks, or combo with Guided Salvo to split enemies. On attack use to clear common positions during executes."
+        mechanics: "Thrown stun with bounce — bank it around corners to catch enemies holding off-angles.",
+        usage: "On defense, prioritize buying it over drone on limited credits. Finish enemies flushed by rockets, deny early peeks, or combo with Guided Salvo to split enemies. On attack, clear common positions during executes."
       },
       armageddon: {
-        mechanics: "Ult. Bombs fall with a 3-second delay. Always use before Guided Salvo and Special Delivery so everything lands simultaneously.",
-        usage: "Cover the largest common areas on site or trap enemies in specific locations. Never flush enemies toward your team — trap them with no escape. Use it when it guarantees winning a round where you're at a numbers or economy disadvantage. Don't save it.",
-        key_insight: "Ult from behind the enemy relative to your team's push — enemies get trapped between the bombs and your team with nowhere to go."
+        mechanics: "Ult. Bombs fall with a 3-second delay. Use before Guided Salvo and Special Delivery so everything lands together.",
+        usage: "Cover the largest common areas or trap enemies in specific spots. Trap them with no escape rather than flushing them toward your team. Use it to guarantee a round where you're at a numbers or economy disadvantage.",
+        key_insight: "Ult from behind the enemy relative to your push — they're trapped between the bombs and your team."
       }
     }
   },
   gekko: {
     role: "Initiator",
-    core_philosophy: "Gekko is a self-sufficient initiator with recoverable utility. His unique advantage is being able to reuse Dizzy and Thrash, making him more resource-efficient than other initiators. Strategic planning around recovery is the core skill.",
+    core_philosophy: "Self-sufficient initiator with recoverable utility. Reusing Dizzy and Thrash makes him more resource-efficient than other initiators — planning around recovery is the core skill.",
     watch: [],
     abilities: {
       dizzy: {
-        mechanics: "Blinds enemies who look at it. Recoverable — can be picked up and reused. Easy to destroy if enemies have awareness.",
-        usage: "Before throwing ask: am I flashing for info or for contact? Will it cover common angles? Can I recover it safely? Throw upward from behind cover for off-angle flashes that reach max height and are easy to recover. Pair with another agent's flash simultaneously — Dizzy alone is easy to destroy. Only skip recovery if it would cost you a numbers advantage.",
-        key_insight: "Dizzy is most powerful when paired with another agent's flash simultaneously. Enemies have to deal with two flashes at once and can't dodge both."
+        mechanics: "Blinds enemies who look at it. Recoverable. Easy to destroy if enemies are aware — but a shot Dizzy gives away their position by sound.",
+        usage: "Sending Dizzy without confirmed info is valid — enemies shoot it and reveal themselves, or nothing happens, which is also info. The failure isn't sending it speculatively, it's not acting on the reaction. Throw upward from cover for max-height off-angle flashes that are easy to recover. Pair with another agent's flash. Only skip recovery if it costs you a numbers advantage.",
+        key_insight: "A shot Dizzy isn't wasted — the shot's sound and direction locate the enemy. Coach acting on that, not avoiding util without pre-confirmation."
       },
       wingman: {
-        mechanics: "Companion that can plant or defuse the spike. Can clear corners — concusses enemies on detection. Tanks Viper snake bite despite being vulnerable to other damage util. Recoverable.",
-        usage: "Never send alone without cover — use smokes while he plants or defuses. Main value is defusing while you hold active angles. Trick: have a teammate half-defuse then release — Wingman continues to the spike creating the illusion you backed off to fight. Swing immediately when he detects someone or wait for the concuss.",
-        key_insight: "The half-defuse handoff to Wingman is one of the most deceptive plays in the game — enemies think you disengaged from the defuse but Wingman keeps going."
+        mechanics: "Companion that plants or defuses, concusses enemies on detection, and tanks Viper snake bite. Recoverable.",
+        usage: "Don't send him without cover — smoke while he plants or defuses. Main value is defusing while you hold angles. Trick: a teammate half-defuses then releases, Wingman finishes, selling that you backed off to fight. Swing on detection or wait for the concuss.",
+        key_insight: "The half-defuse handoff is one of the most deceptive plays in the game — enemies think you left the defuse but Wingman keeps going."
       },
       mosh_pit: {
-        mechanics: "Molly that deals damage slowly then bursts. Not recoverable — Gekko's only one-use-per-round util. Same trajectory as KJ and KAY/O mollies so existing lineups transfer. More damage at center than edges.",
-        usage: "Only use with a combo or confirmed position — it's your only non-recoverable util. Combo with grab net, slow orb, concuss, or vulnerable for maximum value. Aim at center of a group or position, not the edge.",
-        key_insight: "The slow damage buildup works in your favor — enemies often don't react fast enough and take the full burst."
+        mechanics: "Molly that damages slowly then bursts. Not recoverable — Gekko's only one-use util. Same trajectory as KJ and KAY/O mollies, so lineups transfer. More damage at center.",
+        usage: "Use only with a combo or confirmed position — it's your one non-recoverable util. Combo with grab net, slow orb, concuss, or Vulnerable. Aim center, not the edge.",
+        key_insight: "The slow buildup works for you — enemies often don't react in time and take the full burst."
       },
       thrash: {
-        mechanics: "Ult. Recoverable and usable twice per round. Detains enemy on detonation. Press X to end without detonating when recovering. Double-click to detonate instantly at short range. Moves forward automatically — no need to hold W; air strafe with A and D to make it harder to destroy.",
-        usage: "First use to clear space and let team plant, recover it, second use for retake or post-plant. Double-click detonation at close range catches enemies trying to juke the normal jump distance.",
-        key_insight: "Getting two ult uses per round is Gekko's biggest advantage. Never detonate unless you get value — pressing X recovers it for the second use."
+        mechanics: "Ult. Recoverable, usable twice per round. Detains on detonation. Press X to recover without detonating. Double-click to detonate instantly at short range. Moves forward automatically; air strafe with A and D to dodge destruction.",
+        usage: "First use to clear space for the plant, recover it, second for retake or post-plant. Double-click detonation at close range catches enemies juking the normal jump distance.",
+        key_insight: "Two ult uses per round is Gekko's biggest advantage — press X to recover for the second use unless detonating gets value."
       }
     }
   },
   kayo: {
     role: "Initiator",
-    core_philosophy: "KAY/O is a disruptor. His job is to stop enemy pushes mid-execution and set up flash traps for teammates. Two roles: disrupt enemy plans with knife and suppression, and create aggressive or passive flash setups to get teammates kills.",
+    core_philosophy: "A disruptor — stops enemy pushes mid-execution and sets up flash traps. Two roles: disrupt plans with knife and suppression, and create aggressive or passive flash setups for teammate kills.",
     watch: [],
     abilities: {
       zero_point: {
         mechanics: "Thrown knife that suppresses enemies and scans for nearby targets. Suppressed enemies can't use abilities. Sticks to surfaces.",
-        usage: "Use cross-map lineups to have presence in two parts of the map simultaneously. Throw knife to suppress enemies mid-rush before they fully commit — forces them to scramble or change plans. If knife scans enemies you know where they are and can rotate teammates. If it scans nothing, that's info too.",
-        key_insight: "Suppressing a sentinel or key ability user mid-round is often more valuable than the info. KJ lockdown, Cypher camera, Viper wall — all shut off instantly."
+        usage: "Cross-map lineups give presence in two areas at once. Suppress enemies mid-rush before they commit to force a scramble. A scan locates them to rotate teammates; no scan is info too.",
+        key_insight: "Suppressing a key ability user mid-round often beats the info — KJ lockdown, Cypher camera, Viper wall all shut off instantly."
       },
       flash_drive: {
-        mechanics: "Two modes — the walk backwards throw suspends the flash in the air, creating a pop flash. Standard throw is a faster, more predictable arc.",
-        usage: "Communicate to teammates which mode you're running. Aggressive: throw into contested space for teammates to immediately push. Passive: wait for enemies to peek and flash them as they do. Use in-game pings to estimate distance for on-the-fly flashes. Can self-flash off a cross-map knife setup to be aggressive yourself.",
-        key_insight: "The walk backwards throw is KAY/O's best pop flash tool — slows and suspends the flash. Learn it for improvised setups when you don't have a lineup memorized."
+        mechanics: "Two modes — the walk-backwards throw suspends it as a pop flash; the standard throw is a faster, predictable arc.",
+        usage: "Tell teammates which mode you're running. Aggressive: into contested space for an immediate push. Passive: wait for enemies to peek and flash them. Use pings to gauge distance for on-the-fly flashes. Self-flash off a cross-map knife to be aggressive yourself.",
+        key_insight: "The walk-backwards throw is KAY/O's best pop flash — learn it for improvised setups without a memorized lineup."
       },
       frag_ment: {
-        mechanics: "Molly that goes through walls and floors. More damage at center than edges.",
-        usage: "Best combo: flash first, molly lands simultaneously — the flash pushes enemies into the molly zone. Don't throw it alone without a combo or confirmed position. Aim at center, not the edge of a group or area.",
-        key_insight: "Molly + flash combo is KAY/O's highest value play. The flash pushes enemies into what they think is a safe zone, then the molly punishes them for being there."
+        mechanics: "Molly through walls and floors. More damage at center.",
+        usage: "Best combo: flash first, molly landing simultaneously — the flash pushes enemies into the zone. Aim center, not the edge.",
+        key_insight: "Molly + flash is KAY/O's highest-value play — the flash drives enemies into a 'safe' spot the molly punishes."
       },
       null_cmd: {
-        mechanics: "Ult. KAY/O suppresses all enemies in range and pulses periodically. KAY/O is completely stationary and vulnerable while pulsing. If downed while pulsing, teammates can res him.",
-        usage: "Pop in a safe position — you're a stationary target while it runs. Best used when your team is winning a fight and needs suppression to close it out, or to counter a specific enemy ult before it's used. Don't save it for late round when enemies have already used their ults.",
-        key_insight: "Coordinate with your team so someone is always close enough to attempt the res. A revived KAY/O still pulsing is a win condition."
+        mechanics: "Ult. Suppresses all enemies in range, pulsing periodically. KAY/O is stationary and vulnerable while pulsing; teammates can res him if he's downed during it.",
+        usage: "Pop in a safe position — you're a stationary target while it runs. Best when your team is winning a fight and needs suppression to close, or to counter an enemy ult before it's used.",
+        key_insight: "Keep a teammate close enough to res — a revived, still-pulsing KAY/O is a win condition."
       }
     },
     attack: {
-      primary_job: "Follow your duelist. Knife to suppress sentinels or close enemies. Molly to clear corners and reduce angles. Flash to get duelist onto site. Post-plant: use remaining flashes aggressively to counterfight retakers.",
-      key_insight: "KAY/O on attack is about removing obstacles for your entry. Suppress the sentinel, clear the corner, flash the duelist in — then be ready to fight yourself."
+      primary_job: "Follow your duelist: knife to suppress sentinels or close enemies, molly to clear corners, flash to get the duelist onto site. Post-plant, use remaining flashes aggressively against retakers.",
+      key_insight: "Remove obstacles for the entry — suppress the sentinel, clear the corner, flash the duelist in, then be ready to fight yourself."
     }
   },
   iso: {
     role: "Duelist",
-    core_philosophy: "Iso is a second entry duelist — like Reyna or Phoenix, his kit is built around winning fights after initial contact has been made, not opening space himself. He needs good mechanics and is a strong solo carry option, but he needs someone else to make first contact so he can trade in with his shield active.",
+    core_philosophy: "A second-entry duelist like Reyna or Phoenix — built to win fights after first contact, not open space himself. Strong solo-carry option with good mechanics, but he needs someone else to make first contact so he can trade in with his shield active.",
     watch: [],
     abilities: {
       double_tap: {
-        mechanics: "Activating Double Tap immediately gives Iso a shield. When Iso gets a kill, an orb spawns — shooting the orb refreshes the shield (restores it if broken, or just extends the timer if it's still active). The orb is shot, not walked over. Only Iso's own kills spawn orbs.",
-        usage: "Activate proactively going into a fight — you get the shield immediately on activation, not after a kill. Use jump spotting to confirm a target before activating. Get the kill, shoot the orb to refresh, push into the next fight still shielded. This is the core loop: activate → fight → kill → shoot orb → fight again. Don't wait for kills before activating — you need the shield for the first fight, not after it.",
-        key_insight: "Double Tap is a chain-fighting tool. The shield gets you through first contact; the orb sustains you through second contact. Iso's job is to go second into a fight where someone else already made contact, so his shield is refreshed from the first kill before he even reaches the site."
+        mechanics: "Activating Double Tap immediately gives Iso a shield. His own kills spawn an orb — shooting it (not walking over it) refreshes the shield: restores it if broken, or extends the timer if active.",
+        usage: "Activate proactively going into a fight — the shield is immediate, not on kill. Jump spot to confirm a target first. Core loop: activate → fight → kill → shoot orb → fight again, staying shielded into the next fight.",
+        key_insight: "A chain-fighting tool — the shield carries you through first contact, the orb sustains you through second. Going second into a fight means your shield is already refreshed from the first kill before you reach site."
       },
       undercut: {
-        mechanics: "Thrown card that applies vulnerable (increased damage taken) and silences abilities in the area.",
-        usage: "Use to deny drone info, cancel Gekko ult, or shut down rushes through choke points. If enemies push through it they die faster — if they stop, you've bought time for teammates to rotate.",
-        key_insight: "Most players only think of vulnerable as damage amplification. The silence is equally valuable — throw it on a Sova about to drone to instantly deny all that information."
+        mechanics: "Thrown card that applies Vulnerable (increased damage taken) and silences abilities in the area.",
+        usage: "Deny drone info, cancel Gekko ult, or shut down rushes through chokes. Push through it and enemies die faster; stop and you've bought rotation time.",
+        key_insight: "The silence is as valuable as the damage amp — throw it on a Sova about to drone to instantly deny the info."
       },
       contingency: {
-        mechanics: "Moving wall that blocks bullets. Travels forward from where it's placed.",
-        usage: "Think of it as a moving smoke. Follow it onto site and isolate close angles — clear left and right as the wall moves forward, then look ahead once it passes those angles. On defense, save it for retakes — same principle applies.",
-        key_insight: "The wall lets you entry without holding every angle simultaneously. As the wall passes an angle, you no longer need to worry about it — focus forward."
+        mechanics: "Moving wall that blocks bullets, traveling forward from where it's placed.",
+        usage: "Treat it as a moving smoke. Follow it onto site, clearing left and right as it moves, then look ahead once it passes those angles. On defense, save it for retakes.",
+        key_insight: "As the wall passes an angle you can stop worrying about it — entry without holding everything at once."
       },
       kill_contract: {
-        mechanics: "Ult. Pulls a single enemy into a 1v1 arena. Both players enter with full HP; Iso keeps his Double Tap shield if active. Arena has a central wall — both players spawn on opposite sides.",
-        usage: "Time it so your team is ready to push when you ult — if you lose the duel the enemy gets a free teammate. Prioritize targets: OP holders first, Jett with active knives, then sentinels. When ulting an OP holder, hide behind the central wall with shield up — zero risk of losing that duel. Lower ping: hold a sliver on one side of the wall so the enemy can only spawn on one side. Higher ping: hide behind wall, wait for it to drop, strafe immediately when walls fall. Either way, strafe the moment walls drop — dodge their initial flick.",
-        key_insight: "Never ult while your team is far back. If you lose the 1v1 the enemy walks out of the arena as a free defender. Ult as a closer when your team is about to push, not as a solo play."
+        mechanics: "Ult. Pulls one enemy into a 1v1 arena, both at full HP (Iso keeps an active Double Tap shield). A central wall separates the two spawn sides.",
+        usage: "Ult when your team is ready to push — losing the duel hands the enemy a free teammate. Target priority: OP holders, then Jett with active knives, then sentinels. Vs an OP holder, hide behind the central wall with shield up for a near-free duel. Low ping: hold a sliver of one side so they can only spawn on one. High ping: wait behind the wall and strafe the instant it drops to dodge their flick.",
+        key_insight: "Never ult with your team far back — a lost 1v1 frees the enemy as a defender. It's a closer for when your team is about to push, not a solo play."
       }
     }
   }
@@ -1265,7 +1264,18 @@ export const GENERAL_KNOWLEDGE = {
   terminology: {
     swinging_a_smoke: "Peeking out of a smoke — either your own or the enemy's. The player steps out from the edge of the smoke to take a fight, using the smoke as cover to obscure their position before the peek.",
   },
+  aim_training: {
+    always_recommend_trainers: "For any aim-related question or note, recommending an aim trainer (KovaaK's or Aimlabs) is always good advice. They're the standard tool for building raw aim, flicking, tracking, and consistency.",
+    the_range: "The in-game Practice Range is a legitimate, valuable tool — especially for warming up before games, which directly improves aim consistency, and for building mechanical consistency and crosshair placement habits. Do NOT dismiss it as 'only stationary targets' or imply it's a worse choice than deathmatch. Range, deathmatch, and aim trainers each serve a purpose: Range/trainers for warmup and isolated mechanics, deathmatch for live angles and decision-making. Recommend them together, not one at the expense of another.",
+    strafe_tracking: "When a player loses gunfights to strafing or counter-strafing opponents, recommend strafe tracking scenarios on KovaaK's or Aimlabs. This is an aim skill — tracking a target that changes direction — not just a movement or pre-aim problem. Pre-aim gets your crosshair to the right starting position; strafe tracking is the follow-through when the enemy moves. Both matter."
+  },
   game_sense: {
+    movement_coaching: {
+      summary: "Movement in Valorant is complex and has many facets. When a player says they 'lose gunfights due to movement' or mentions bad movement, do NOT default to 'you're probably shooting while moving.' That is rarely the actual cause. More common root causes: bad peeking mechanics (incorrect strafe timing, not stopping fully before shooting), being static between shots (not moving enough between bursts, making them an easy target), predictable peek angles (same entry every time), overpeeking (peeking too far past cover), poor pre-aim (crosshair not pre-positioned at head height on the expected angle), or not using movement to create deception. When a player specifically mentions losing to strafes or counter-strafes, it is BOTH a movement and an aim issue — pre-aim gets your crosshair to the right starting position, but tracking the strafe itself is a separate skill that requires aim training. Strafe tracking can be trained on KovaaK's or Aimlabs with strafing scenarios. Do not frame it as purely a crosshair placement problem and do not dismiss the tracking component. When the player's notes mention movement vaguely without specifics, recommend the movement resource from the RESOURCE LIBRARY rather than guessing which facet is the problem.",
+    },
+    initiator_util_info: {
+      summary: "Util does not require confirmed enemy positions before deployment — there are countless valid reasons to use util without pre-confirmation. Never coach 'you should have known where they were before sending util.' Common valid uses include: timed execute pressure (blind a common defensive spot as your duelist pushes through — whoever is there gets a free kill, no info needed); clearing common angles proactively (stun a choke, molly a default defensive spot, based on game knowledge not live info); speculative info-gathering (Sova dart, Dizzy, Prowlers sent to discover if enemies are there — enemy reactions are the value); execute plans (smokes placed for the site the team is hitting); and many more. Instead of questioning why util was sent, identify what specifically went wrong: wrong timing, wrong location, failure to act on what the util revealed, or util spent on a genuinely low-probability spot when better options existed. Enemy reactions to util (shooting it, moving away, destroying it) are themselves valuable — they reveal position and create pressure.",
+    },
     positioning: {
       summary: "Positioning is about putting question marks in the enemy's head — making them uncertain where you are and forcing them to use util or bodies to find out.",
       role_objectives: {
@@ -1277,8 +1287,8 @@ export const GENERAL_KNOWLEDGE = {
         controller_defense: "Play in position. Smoke both sides on equal buys.",
         sentinel_defense: "Anchor. If they're not pushing your site, stay near it to hear pivots. If they push, get one and live or get two and die — trust your gut."
       },
-      question_mark_positioning: "Take space across the map simultaneously with little util, then shift away and leave only the impression of control. Forces enemies to spend util or bodies reclaiming space that's already been abandoned.",
-      discipline: "High level players know they can take a 50/50 and win, but instead play patiently and force a worse fight later. Having the discipline to NOT swing when you could is what stops you from throwing rounds you should win."
+      question_mark_positioning: "Take space across the map with little util, then shift away leaving only the impression of control — forcing enemies to spend util or bodies reclaiming space you've already abandoned.",
+      discipline: "Good players can take a 50/50 and win but play patiently to force a worse fight for the enemy later. The discipline to NOT swing when you could is what stops you throwing rounds you should win."
     },
     attack_structure: {
       not_exhaustive: "These are the common, foundational structures — NOT a fixed rulebook. Any distribution of the 5 players is possible and teams improvise constantly; the labels are just descriptive conventions. The only hard requirements: the bodies total 5, and the label matches what's actually being sent (don't call a 3-man hit 'fast'). Don't present these as the only legal options.",
@@ -1289,21 +1299,21 @@ export const GENERAL_KNOWLEDGE = {
       key_insight: "Match the name to the manpower. Fast = 4-5 one entry with ≤1 true lurker; Split = e.g. 3+2 converging on one site; Slow/default = spread for info then commit. The common scripting mistake is labeling a 3-man hit 'fast'."
     },
     timing: {
-      summary: "Swing when the enemy isn't looking at you — specifically on spaces where they have to clear multiple angles while moving. Works in solo queue, not team-dependent.",
-      key_insight: "Peeking on timing is one of the most underused tools in ranked. Study where enemies have to look away from your angle to clear something else, and swing in that window."
+      summary: "Swing when the enemy isn't looking at you — on spaces where they have to clear multiple angles while moving. Works in solo queue, not team-dependent.",
+      key_insight: "Peeking on timing is underused — study where enemies look away from your angle to clear something else, and swing in that window."
     },
     conditioning: {
       summary: "Make the enemy accustomed to a pattern over multiple rounds, then exploit their adaptation.",
-      play_variety: "Varying plays keeps you unpredictable, but there is NO rule against repeating a play — including back-to-back. If a play is working, running it again is often the correct choice, and deliberately repeating to set up a later break (conditioning) is a real tool. Don't tell players they must never repeat a play or always cycle.",
-      key_insight: "Conditioning only works if you follow through on the exploit. Don't condition something you never plan to abuse."
+      play_variety: "Variety keeps you unpredictable, but there is NO rule against repeating a play, even back-to-back. If a play works, running it again is often correct, and repeating it to set up a later break (conditioning) is a real tool. Don't tell players to never repeat or always cycle.",
+      key_insight: "Conditioning only works if you follow through — don't condition something you never plan to abuse."
     },
     economy: {
-      team: "Never save on pistol. Win pistol -> force next round (outlaw strong). Lose pistol -> save, maybe force one outlaw. Always force together or save together — split economy kills rounds.",
-      hero_rifling: "Buy vandal/phantom on team eco round — don't take first contact. Let enemies shoot your teammates, be there to trade and make their deaths count. Damages enemy economy while your team barely spends."
+      team: "Never save on pistol. Win pistol → force next round (Outlaw strong). Lose pistol → save, maybe force one Outlaw. Always force together or save together — split economy kills rounds.",
+      hero_rifling: "Buy Vandal/Phantom on a team eco and don't take first contact — let enemies shoot your teammates, then trade to make their deaths count. Damages enemy economy while your team barely spends."
     },
     utility: {
-      flash_hoarding: "Unused utility at round end is wasted utility. Never advise saving flashes for hypothetical future scenarios — a flash that creates value now is better than a flash held for a clutch that may never come. 'Save your flash in case' is harmful advice that teaches bad habits.",
-      key_insight: "Agent utility is best learned by watching a pro play that specific agent and consciously understanding why they do everything. No amount of theory replaces watching TenZ for Jett or mw1 for Viper. Look up the pro who plays your agent best and study their decisions."
+      flash_hoarding: "Unused utility at round end is wasted. A flash that creates value now beats one held for a clutch that may never come — 'save your flash in case' teaches bad habits.",
+      key_insight: "Learn agent util by watching a pro on that agent and understanding why they do everything — no theory replaces watching TenZ for Jett or mw1 for Viper."
     },
     agent_comp_reads: {
       summary: "Read the enemy comp on loading screen and identify what they're missing.",
@@ -1317,44 +1327,44 @@ export const GENERAL_KNOWLEDGE = {
       key_insight: "Eco rounds are for high-risk creative plays. You're probably losing anyway — try something unpredictable. Creativity makes you impossible to read."
     },
     ultimate_economy: {
-      summary: "Check tab before making calls. If enemy is one orb from ult, don't give them the orb. If your teammate has had ult for 3 rounds, build a plan around it.",
-      when_to_ult: "Ult to secure rounds you could lose or to flip rounds you should lose. Don't ult unwinnable rounds. Don't hold ult — you're throwing free value away every round you sit on it.",
-      ult_tracking: "Track enemy ults every round. Certain ults telegraph site hits — if KJ has ult on Haven, there's an 80% chance they go A. If Phoenix is at 5/6 ult points, his team is fighting for orb control. Read these patterns and prepare counter plays."
+      summary: "Check tab before making calls. If an enemy is one orb from ult, don't give them the orb. If a teammate has held ult for 3 rounds, build a plan around it.",
+      when_to_ult: "Ult to secure rounds you could lose or flip rounds you should lose, but not unwinnable ones. Holding ult throws free value away every round you sit on it.",
+      ult_tracking: "Track enemy ults — some telegraph site hits (KJ ult on Haven ~80% A; Phoenix at 5/6 points means his team is fighting for orb control). Read the pattern and prep a counter."
     },
     movement: {
       peeking: {
-        summary: "Most players default to wide swinging everything. Wide swinging exposes you to too many angles and makes crosshair placement harder. Learn when to use each type.",
+        summary: "Most players wide-swing everything, exposing themselves to too many angles and making crosshair placement harder. Learn when to use each type.",
         types: {
-          wide_swing: "High risk — exposes you to multiple angles at once. Only use when you have strong info on one specific angle and need to get off it fast.",
-          jiggle: "Low commitment — gather info without fully exposing yourself. Use to bait shots and get info on whether someone is holding.",
-          tight_peek: "Slice a small piece of the angle at a time. Easier flick, less exposure to multiple enemies. Default to this more often."
+          wide_swing: "High risk — multiple angles at once. Only with strong info on one angle you need to get off fast.",
+          jiggle: "Low commitment — bait shots and read whether someone's holding without fully exposing yourself.",
+          tight_peek: "Slice a small piece at a time. Easier flick, less exposure. Default to this."
         },
-        key_insight: "There's no one-size-fits-all peek. The mistake is using the same peek every time — learn the scenarios for each."
+        key_insight: "No one-size-fits-all peek — the mistake is using the same one every time."
       },
       angle_advantage: {
-        summary: "Stay further from walls. When you peek or get peeked from further back, you have an extra fraction of a second to react and line up your shot.",
-        key_insight: "Valorant is a game of milliseconds. Consistently giving your opponent angle advantage is consistently giving them a free edge in every fight."
+        summary: "Stay further from walls — peeking or getting peeked from further back gives you an extra fraction of a second to react and line up.",
+        key_insight: "Valorant is a game of milliseconds; giving up angle advantage is a free edge to the enemy every fight."
       },
       strafe_battles: {
         summary: "Most players either micro step or stand still — both are wrong.",
         mistakes: [
-          "Micro stepping — barely moves you on the enemy screen, so they barely need to aim. You're making it hard for yourself while making it easy for them.",
-          "Standing still to flick — you're a static target, they have all the time in the world.",
-          "Panic spraying and crouching — only works with Phantom, not recommended otherwise."
+          "Micro stepping — barely moves you on their screen, so they barely aim. Hard for you, easy for them.",
+          "Standing still to flick — a static target with all the time in the world.",
+          "Panic spraying and crouching — only works with Phantom."
         ],
-        fix: "Take longer strafes. Give yourself half a second more to line up the shot. You'll hit it far more consistently than rushing micro steps."
+        fix: "Take longer strafes — half a second more to line up the shot lands far more consistently than rushed micro steps."
       },
       unwinnable_fights: {
-        summary: "When someone peeks you unexpectedly, don't stand still and try to flick. Move to dodge their first bullet, line up your shot while moving, then take it.",
-        key_insight: "Standing still = easy target. Movement = dodge their first shot AND gives you time to aim. Use movement as a defensive tool, not just an offensive one."
+        summary: "When peeked unexpectedly, move to dodge their first bullet, line up while moving, then shoot — don't stand still and flick.",
+        key_insight: "Movement is a defensive tool too — it dodges their first shot AND buys you time to aim."
       },
       position_for_movement: {
-        summary: "Before taking a position, ask: does this allow me to move if I get caught?",
-        key_insight: "Tight corners and ledges trap you. If you get into a fight from a position that limits your movement, you have to hit your first shot or you die. Give yourself room to move."
+        summary: "Before taking a position, ask: can I move if I get caught?",
+        key_insight: "Tight corners and ledges trap you into hitting your first shot or dying — give yourself room to move."
       },
       after_shooting: {
-        summary: "Whether you hit the shot or miss — move instantly. Never stand still after firing.",
-        key_insight: "Standing still after a shot is one of the most common ways to die in a fight you should have won. Miss or hit, move immediately and reset."
+        summary: "Hit or miss, move instantly — never stand still after firing.",
+        key_insight: "Standing still after a shot is one of the most common ways to lose a fight you should win."
       },
       rank_gaps: {
         diamond_to_radiant: "Movement is one of the biggest mechanical separators between Diamond and Radiant. Radiant players do not simply stand still and rely on aim — their movement mechanics are significantly more advanced. The gap shows up in: (1) Counter-strafe timing — Radiant players stop and shoot faster and more precisely, giving them a smaller window where they're exposed; (2) Strafe baiting — they use shoulder peeks, short jiggle baits, and directional fakes to bait enemy shots before committing; (3) Movement variety — Radiant players are far less predictable in their footwork, making it harder to pre-aim or pre-fire them; (4) Offensive movement — closing distance or creating angles using movement as an active weapon, not just reacting. 'Stillness' in Valorant refers to the moment of stopping to shoot with accuracy, not passive play — Radiant players move more and are harder to read, they just stop at the right moment. Telling a Diamond player that Radiant players win through stillness and positioning is wrong and harmful advice."
@@ -1374,10 +1384,10 @@ export const GENERAL_KNOWLEDGE = {
         "Only sentinel on minimap = probably a lurk, real hit is elsewhere",
         "Enemy spotted on C then appears on A = they rotated, likely hitting A"
       ],
-      key_insight: "Even if you spot an enemy for only 0.1 seconds, they appear on the minimap. You don't need to hard stare at angles — a glance is enough to get the info onto the map."
+      key_insight: "0.1 seconds of vision puts an enemy on the minimap — a glance gets the info, no hard staring needed."
     },
     map_control: {
-      summary: "Map control is vision — yours, your teammates', and what your utility provides. More control = more info = better decisions.",
+      summary: "Map control is vision — yours, teammates', and your utility's. More control = more info = better decisions.",
       zones: {
         opening_zone: "Contested immediately when spawn barriers drop. How you play these determines map control over everything else.",
         intermediate_zone: "Neutral space between opening zones and site. The fight for this space is where rounds are decided.",
