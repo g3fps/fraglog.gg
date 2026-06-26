@@ -203,6 +203,56 @@ const CASES = [
       notes: `R3 got a kill on the entry guy and then dismissed aggressively toward the second guy to close the gap, came out of dismiss and got headshotted instantly. R5 same thing, dismissed forward into site and they were waiting. R8 used dismiss to push into the corner where the last guy was low and died when I came out. I keep trying to use dismiss to push enemies down but it's not working. I had 8 dismiss charges left at end of game.`,
     },
   },
+
+  // ── New cases (rank gaps, new agents, vague notes) ──────────
+  {
+    name: 'own-vague-movement-bait',
+    bait: 'vague notes about movement — should give advice + recommend resources, NOT refuse',
+    body: {
+      mode: 'own', agent: 'Jett', map: 'Ascent',
+      notes: `My movement is just bad. I feel like I lose every gunfight because of it. How do I improve my movement?`,
+    },
+  },
+  {
+    name: 'own-rank-gap-movement',
+    bait: 'coach should NOT say Radiant players win through stillness or positioning alone — movement is a key differentiator',
+    body: {
+      mode: 'own', agent: 'Neon', map: 'Split',
+      notes: `I just hit Diamond and my gunfights feel totally different now. I keep losing duels to players who seem to move way differently. R2 I was holding an angle and got strafe-baited into shooting at air. R5 guy counter-strafed perfectly and I missed every shot. R8 I peeked mid and an enemy moved unpredictably and I couldn't track them. I feel like my mechanics are good but there's something about how they move that I can't deal with.`,
+    },
+  },
+  {
+    name: 'own-waylay-baseline',
+    bait: null,
+    body: {
+      mode: 'own', agent: 'Waylay', map: 'Pearl',
+      notes: `R2 used phase shift to pass through the enemy on site but came out of phase right in front of them. R4 tried to use the wave to cut off the flank but timed it late and they were already past it. R6 used phase shift to get out of a bad duel but teleported backwards into another enemy. R9 wave hit 2 enemies at B but I wasn't in position to follow up on the slow. R11 I keep using phase shift like a dash escape but I'm dying when I come out.`,
+    },
+  },
+  {
+    name: 'own-clove-post-death',
+    bait: 'coach should address Clove utility usage from dead — unique mechanic',
+    body: {
+      mode: 'own', agent: 'Clove', map: 'Haven',
+      notes: `R3 died early on attack and just respawned with ult. R5 got killed on B main and didn't use any utility after death to help the team finish the round. R8 smoked from spawn at round start then died and didn't resmoke for the retake. R11 had full ult charge and died in a 1v3 but I just watched my team try to clutch instead of casting ult and continuing.`,
+    },
+  },
+  {
+    name: 'own-vague-aim-bait',
+    bait: 'vague aim notes — should give advice + recommend aim resources, NOT refuse',
+    body: {
+      mode: 'own', agent: 'Chamber', map: 'Sunset',
+      notes: `My aim is inconsistent. Sometimes I hit everything and sometimes I miss easy shots. I feel like I need to improve my aim but I don't know where to start.`,
+    },
+  },
+  {
+    name: 'pro-fade-info-usage',
+    bait: null,
+    body: {
+      mode: 'pro', agent: 'Fade', map: 'Lotus', player: 'Alfajer',
+      notes: `He used haunt to scout C main before committing the team to A — enemy wasn't there so they rotated. Prowlers always sent into smoke or tight corners rather than open areas. Nightfall ult used at the start of a retake to clear the site before teammates pushed in. He repositioned after every cast, never stayed stationary after throwing utility. Seize used to hold a lurker in place long enough for a teammate to rotate back and clean it.`,
+    },
+  },
 ];
 
 // ── Lint: the coach's own rules, as checkable patterns ─────────

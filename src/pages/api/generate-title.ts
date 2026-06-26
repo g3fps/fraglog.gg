@@ -41,7 +41,7 @@ async function callAnthropic(prompt: string): Promise<string | null> {
       'content-type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'claude-haiku-4-5',
+      model: 'claude-haiku-4-5-20251001',
       max_tokens: 80,
       messages: [{ role: 'user', content: prompt }],
     }),
@@ -78,7 +78,8 @@ export async function POST({ request }: { request: Request }) {
     if (res.ok) ytTitle = (await res.json()).title || '';
   } catch {}
 
-  const buildPrompt = (banned: string[]) => `Generate a Valorant VOD title matching this exact style:
+  // Only pass the small set of rejected candidates back — never the full existing list
+  const buildPrompt = (recentlyRejected: string[]) => `Generate a Valorant VOD title matching this exact style:
 
 Examples:
 "demon1 Jett Ascent RADIANT OPERATOR"
@@ -109,23 +110,23 @@ Format: [TEAM] Player Agent Map RANK DESCRIPTOR
 VOD info:
 Player: ${player}
 Map: ${map}
-Agent: ${agent}${ytTitle ? `\nYouTube title: "${ytTitle}"` : ''}${banned.length > 0 ? `\n\nDo NOT generate any of these titles or anything with the same words regardless of order or team prefix:\n${banned.join('\n')}` : ''}
+Agent: ${agent}${ytTitle ? `\nYouTube title: "${ytTitle}"` : ''}${recentlyRejected.length > 0 ? `\n\nDo NOT use any of these (already taken):\n${recentlyRejected.join('\n')}` : ''}
 
 Reply with only the title.`;
 
-  // Try up to 3 times, feeding duplicates back each round
-  const banned = [...existingTitles];
+  // Check duplicates server-side — never send the full existing list to the model
+  const recentlyRejected: string[] = [];
   let title: string | null = null;
 
   for (let attempt = 0; attempt < 3; attempt++) {
-    const candidate = await callAnthropic(buildPrompt(banned));
+    const candidate = await callAnthropic(buildPrompt(recentlyRejected));
     if (!candidate) return new Response(JSON.stringify({ error: 'Anthropic API error' }), { status: 502 });
 
     if (!isDuplicate(candidate, existingTitles)) {
       title = candidate;
       break;
     }
-    banned.push(candidate);
+    recentlyRejected.push(candidate);
   }
 
   if (!title) {
