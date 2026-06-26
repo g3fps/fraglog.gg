@@ -284,8 +284,8 @@ async function callAnthropic(system, userContent, mode) {
     },
     body: JSON.stringify({
       model: MODEL,
-      max_tokens: mode === 'followup' ? 400 : 1200,
-      system,
+      max_tokens: mode === 'followup' ? 200 : 300,
+      system: [{ type: 'text', text: system, cache_control: { type: 'ephemeral' } }],
       messages: [{ role: 'user', content: userContent }],
     }),
   });

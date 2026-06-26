@@ -173,8 +173,8 @@ async function callAnthropic(systemPrompt, userContent) {
     },
     body: JSON.stringify({
       model: MODEL,
-      max_tokens: 3000,
-      system: systemPrompt,
+      max_tokens: 800,
+      system: [{ type: 'text', text: systemPrompt, cache_control: { type: 'ephemeral' } }],
       messages: [{ role: 'user', content: userContent }],
     }),
   });
