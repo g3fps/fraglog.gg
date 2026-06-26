@@ -94,7 +94,7 @@ const CASES = [
     bait: null,
     body: {
       mode: 'pro', agent: 'Cypher', map: 'Split', title: 'demon1 vod', player: 'Demon1',
-      notes: `He held tight angles on A heaven and only peeked with info. Used tripwire on B main to delay then rotated. Saved cage for retakes instead of using it on attack. His crosshair was always at head level pre-aimed at common spots.`,
+      notes: `On defense he held tight angles on A heaven and only peeked when he had info from his camera or trip. Used tripwire on B main to get the push timing then rotated to A. Saved cage for when attackers got on site and he needed to retake — didn't burn it early trying to stop the entry. His crosshair was always at head level pre-aimed at common spots.`,
     },
   },
   {
@@ -113,6 +113,62 @@ const CASES = [
       notes: `I dash too early on entries.`,
       coaching: `Your main issue is burning your dash before you have info. Hold it until you actually need the escape.`,
       followup: `What's a good drill to stop dashing too early?`,
+    },
+  },
+  {
+    name: 'own-killjoy-bad-setups',
+    bait: null,
+    body: {
+      mode: 'own', agent: 'Killjoy', map: 'Bind',
+      notes: `R1 placed turret at default spot on B site, enemy just shot it immediately from the box. R3 alarm bot got cleared before anyone pushed. R6 set up the same spots again and lost the round. R8 on attack I tried to nano swarm under the spike but i placed it too early and it went off before they defused. R11 held the same angle with op all game and enemies started wide swinging me. I feel like my setups arent doing anything.`,
+    },
+  },
+  {
+    name: 'own-reyna-passive',
+    bait: null,
+    body: {
+      mode: 'own', agent: 'Reyna', map: 'Icebox',
+      notes: `Keep dying and not being able to snowball. R2 got a kill but then backed off instead of pushing the next guy. R5 dismissed away after first kill even though the second enemy was right there and low. R7 healed after a kill when I shouldve gone for the trade. R10 team entry fragged and I was way at the back instead of going in second. I have 20 dismiss charges at end of game and only used 3.`,
+    },
+  },
+  {
+    name: 'own-sova-no-followup',
+    bait: null,
+    body: {
+      mode: 'own', agent: 'Sova', map: 'Haven',
+      notes: `R1 recon dart hit C long and scanned 2 enemies, nobody rotated. R4 drone found both defenders on A but I didn't tell teammates in time. R6 scanned mid and saw an OP, teammates still pushed anyway. R9 used dart on B and it scanned nothing so I assumed B was empty but they were just outside the cone. R11 arrow landed perfectly on site and hit 3 people, we still lost the round because I wasn't ready to push off my own info.`,
+    },
+  },
+  {
+    name: 'own-mixed-comms-bait',
+    bait: 'mixed comms + gameplay — should coach the gameplay, not trigger comms rejection',
+    body: {
+      mode: 'own', agent: 'Omen', map: 'Split',
+      notes: `R2 smoked the wrong side of mid and our entry got beamed. R4 called a B execute but teleported to A mid instead because I panicked. R6 teammates said my smokes were late, and honestly they were right. R8 got info on a lurker from our sentinel but I didn't adjust my position. R10 teleport into site but enemy heard it and pre-aimed. I think I'm telegraphing my teleports too much. R12 blind smoked B without knowing where enemies were and they just ran through.`,
+    },
+  },
+  {
+    name: 'own-structured-notes-bait',
+    bait: 'well-structured notes with headers — should NOT be rejected',
+    body: {
+      mode: 'own', agent: 'Chamber', map: 'Pearl',
+      notes: `## A site defense\nHeld A main with op all half. Got first pick R1 but got swung and died R3 when I slow-peeked. Didn't have a tp down R5 and got caught with no escape.\n\n## Mid control\nLost mid every round. Enemies kept getting into mid link and I had no angle to contest with op.\n\n## Retakes\nR8 and R11 showed up super late to retakes because I was playing too far back. By the time I got on site the spike was almost planted.\n\n## Pattern\nI think I'm staying on my op angles too long and not moving between rounds. Enemies adapted fast.`,
+    },
+  },
+  {
+    name: 'pro-viper-controller',
+    bait: null,
+    body: {
+      mode: 'pro', agent: 'Viper', map: 'Breeze', player: 'Poizon',
+      notes: `He placed the wall diagonally across mid to cut off rotations and then played off the side that his team wasn't pushing. Kept snake bite for post plant almost every round. On attack when the wall was up he would position right at the edge of his own wall to swing enemies who tried to peek through. His ult placement was always in a corner with good sightlines so he could pick off retakers before they fully cleared the site.`,
+    },
+  },
+  {
+    name: 'own-iso-first-entry-bait',
+    bait: 'Iso playing first entry — coach should correct this based on his kit',
+    body: {
+      mode: 'own', agent: 'Iso', map: 'Lotus',
+      notes: `I keep dying as the first one into site. R2 went in first through A main before my teammate even threw util and got one tapped. R5 hard entry A with shield and died before I could collect an orb. R7 same thing, first into B and got beamed from the corner. R10 tried to entry C and my shield did nothing because there was no kill orb yet. I pop shield and just go in first every round but it never works. What am I doing wrong?`,
     },
   },
 ];
