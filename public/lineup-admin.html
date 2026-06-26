@@ -6,6 +6,7 @@
 <title>fraglog.gg — Lineup Admin</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onTurnstileLoad" async defer></script>
 <style>
 :root {
   --red: #FF4655;
@@ -451,21 +452,45 @@ let recentLineups = [];
     status.classList.add('connected');
   } else {
     status.innerHTML = `
-      <div style="display:flex;gap:8px;align-items:center">
-        <input type="email" id="admin-email" placeholder="email" style="background:var(--surface);border:1px solid var(--border);color:var(--text);font-family:'DM Mono',monospace;font-size:11px;padding:5px 10px;border-radius:6px;outline:none;width:180px">
-        <input type="password" id="admin-pass" placeholder="password" style="background:var(--surface);border:1px solid var(--border);color:var(--text);font-family:'DM Mono',monospace;font-size:11px;padding:5px 10px;border-radius:6px;outline:none;width:130px">
-        <button onclick="adminSignIn()" style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;padding:5px 12px;background:var(--red);color:#fff;border:none;border-radius:6px;cursor:pointer">Sign In</button>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="email" id="admin-email" placeholder="email" style="background:var(--surface);border:1px solid var(--border);color:var(--text);font-family:'DM Mono',monospace;font-size:11px;padding:5px 10px;border-radius:6px;outline:none;width:180px">
+          <input type="password" id="admin-pass" placeholder="password" style="background:var(--surface);border:1px solid var(--border);color:var(--text);font-family:'DM Mono',monospace;font-size:11px;padding:5px 10px;border-radius:6px;outline:none;width:130px">
+          <button onclick="adminSignIn()" style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;padding:5px 12px;background:var(--red);color:#fff;border:none;border-radius:6px;cursor:pointer">Sign In</button>
+        </div>
+        <div id="turnstile-widget"></div>
+        <div id="signin-error" style="font-family:'DM Mono',monospace;font-size:11px;color:#FF4655;min-height:14px"></div>
       </div>`;
   }
   buildAgentGrid();
   loadRecent();
 })();
 
+function onTurnstileLoad() {}
+
+function getTurnstileToken() {
+  return new Promise((resolve, reject) => {
+    const el = document.getElementById('turnstile-widget');
+    el.innerHTML = '';
+    turnstile.render(el, {
+      sitekey: '0x4AAAAAADfLzeMlyfoAvDRy',
+      theme: 'dark',
+      callback: resolve,
+      'error-callback': (code) => reject(new Error(`CAPTCHA error: ${code}`)),
+    });
+  });
+}
+
 async function adminSignIn() {
   const email = document.getElementById('admin-email').value;
   const pass = document.getElementById('admin-pass').value;
-  const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
-  if (error) { alert('Sign in failed: ' + error.message); return; }
+  const errEl = document.getElementById('signin-error');
+  if (errEl) errEl.textContent = 'Verifying…';
+  let captchaToken;
+  try { captchaToken = await getTurnstileToken(); }
+  catch (e) { if (errEl) errEl.textContent = e.message; return; }
+  const { data, error } = await sb.auth.signInWithPassword({ email, password: pass, options: { captchaToken } });
+  if (error) { if (errEl) errEl.textContent = error.message; return; }
   const status = document.getElementById('header-status');
   status.textContent = `✓ ${data.user.email}`;
   status.className = 'header-status connected';

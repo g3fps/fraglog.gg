@@ -443,7 +443,7 @@ function extractVideoId() {
     img.src = `https://img.youtube.com/vi/${currentVideoId}/mqdefault.jpg`;
     preview.classList.add("visible");
     if (!document.getElementById("inp-date").value) {
-      document.getElementById("inp-date").valueAsDate = new Date();
+      document.getElementById("inp-date").value = new Date().toLocaleDateString('en-CA');
     }
     checkDuplicates();
   } else {
@@ -575,8 +575,8 @@ function clearSession() {
   }
 }
 
-// Set today's date as default
-document.getElementById("inp-date").valueAsDate = new Date();
+// Set today's date as default (use local date string to avoid UTC offset shifting day)
+document.getElementById("inp-date").value = new Date().toLocaleDateString('en-CA');
 if (sessionLog.length) renderLog();
 
 document.addEventListener("keydown", e => {
@@ -606,7 +606,7 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     status.style.color = '#FF4655';
     document.getElementById('signin-card').style.display = 'block';
   }
-  document.getElementById('pro-date').valueAsDate = new Date();
+  document.getElementById('pro-date').value = new Date().toLocaleDateString('en-CA');
   loadProRecent();
   if (session) { loadVodRecent(); loadGameplanData(0); }
 })();

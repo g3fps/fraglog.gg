@@ -98,8 +98,8 @@ let verifiedUserId: string | null = null;
     body: JSON.stringify({
       model: 'claude-sonnet-4-6',
       max_tokens: 3000,
-      system: systemPrompt,
-      messages: [{ role: 'user', content: userContent }]
+      system: [{ type: 'text', text: systemPrompt, cache_control: { type: 'ephemeral' } }],
+      messages: [{ role: 'user', content: userContent }],
     })
   });
 

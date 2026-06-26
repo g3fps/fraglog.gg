@@ -8,7 +8,6 @@ import { getAllVods } from '../../lib/vods.js';
 import { getPremium, getLimits, featureLocked } from '../../lib/premium.js';
 
 export const POST: APIRoute = async ({ request, clientAddress }) => {
-  // Require auth — verify session server-side, never trust a client-supplied id
   const authHeader = request.headers.get('authorization');
   const accessToken = authHeader?.replace('Bearer ', '').trim();
 
@@ -37,7 +36,6 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
   const { isPremium } = await getPremium(sb, verifiedUserId, isAdmin);
   const DAILY_ASK_LIMIT = getLimits(isPremium).ask;
 
-  // ── Burst rate limit (serverless-safe, Postgres-backed) ──────
   if (!isAdmin) {
     const ip = getClientIp(request, clientAddress);
     const okUser = await checkRateLimit(sb, `ask:user:${verifiedUserId}`, 15, 60);
@@ -47,20 +45,29 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
     }
   }
 
-  // Fetch user's notes for context
+  const body = await request.json().catch(() => ({}));
+  const { conversationId } = body;
+
+  // ── Build premium cross-context (VOD notes + other conversations) ──
   const allLibVods = await getAllVods();
   const libVodMap = new Map(allLibVods.map((v: any) => [v.id, v]));
 
-  const [{ data: videoNotes }, { data: notebookNotes }, { data: userVods }] = await Promise.all([
+  const [{ data: videoNotes }, { data: userVods }, { data: otherConvs }] = await Promise.all([
     sb.from('notes').select('video_id, content').eq('user_id', verifiedUserId).limit(30),
-    sb.from('notebook').select('title, content').eq('user_id', verifiedUserId).order('updated_at', { ascending: false }).limit(40),
     sb.from('user_vods').select('video_id, title, map_id, agent_id').eq('user_id', verifiedUserId),
+    // Other conversations (exclude current) for cross-conversation context
+    sb.from('conversations')
+      .select('title, history')
+      .eq('user_id', verifiedUserId)
+      .order('updated_at', { ascending: false })
+      .limit(8),
   ]);
 
   const userVodMap = new Map((userVods || []).map((v: any) => [v.video_id, v]));
 
-  let playerNotesContext = '';
+  let crossContext = '';
 
+  // VOD notes
   if (videoNotes?.length) {
     const formatted = videoNotes.map((n: any) => {
       const uv = userVodMap.get(n.video_id);
@@ -70,7 +77,6 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
         : lv
         ? `[${lv.title} | Map: ${lv.mapName} | Agent: ${lv.agentName} | Player: ${lv.player}]`
         : `[video: ${n.video_id}]`;
-
       let text = meta + '\n';
       try {
         const parsed = JSON.parse(n.content);
@@ -92,22 +98,26 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
       }
       return text.trim();
     }).filter(Boolean);
-
-    if (formatted.length) playerNotesContext += `Player's VOD notes (${formatted.length} games):\n${formatted.join('\n\n')}`;
+    if (formatted.length) crossContext += `Player's VOD notes (${formatted.length} games):\n${formatted.join('\n\n')}`;
   }
 
-  if (notebookNotes?.length) {
-    const formatted = (notebookNotes as any[]).map(n =>
-      `${n.title ? `[${n.title}] ` : ''}${(n.content || '').trim().slice(0, 1500)}`
-    ).filter((t: string) => t.trim());
-    if (formatted.length) playerNotesContext += `\n\nPlayer's notebook entries:\n${formatted.join('\n\n')}`;
+  // Other conversations (exclude the current one)
+  const relevantConvs = (otherConvs || []).filter((c: any) => c.id !== conversationId);
+  if (relevantConvs.length) {
+    const snippets = relevantConvs.map((c: any) => {
+      const lastUser = [...(c.history || [])].reverse().find((m: any) => m.role === 'user');
+      return `[${c.title}]${lastUser ? `: ${String(lastUser.content).slice(0, 200)}` : ''}`;
+    }).filter(Boolean);
+    if (snippets.length) crossContext += `\n\nPlayer's recent conversation topics:\n${snippets.join('\n')}`;
   }
 
-  const body = await request.json().catch(() => ({}));
-  // Cross-note referencing (the AI reading across the player's OTHER notes) is a
-  // premium-only feature. The currently-open note (body.openNote) is always sent.
-  const crossNoteContext = featureLocked(isPremium) ? '' : playerNotesContext;
-  const { system, messages, safeQuestion } = buildAskPrompt({ ...body, playerNotesContext: crossNoteContext });
+  // Cross-context (VOD notes + other conversations) is premium-only
+  const locked = featureLocked(isPremium);
+  const finalContext = locked ? '' : crossContext;
+  const { system, messages, safeQuestion } = buildAskPrompt(
+    { ...body, playerNotesContext: finalContext },
+    { isPremium }
+  );
 
   if (!safeQuestion.trim()) {
     return new Response(JSON.stringify({ error: 'No question provided' }), { status: 400 });
@@ -125,11 +135,10 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
   const askCount = usage?.ask_count ?? 0;
 
   if (!isAdmin && askCount >= DAILY_ASK_LIMIT) {
-    const upsell = featureLocked(isPremium);
     return new Response(JSON.stringify({
-      error: `You've used all ${DAILY_ASK_LIMIT} Ask AI questions for today. Resets at midnight UTC.${upsell ? ' Go Premium for 20/day.' : ''}`,
+      error: `You've used all ${DAILY_ASK_LIMIT} Ask AI questions for today. Resets at midnight UTC.${locked ? ' Go Premium for 20/day.' : ''}`,
       limitReached: true,
-      upsell,
+      upsell: locked,
     }), { status: 429 });
   }
 
@@ -143,8 +152,8 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
     body: JSON.stringify({
       model: 'claude-sonnet-4-6',
       max_tokens: 600,
-      system,
-      messages
+      system: [{ type: 'text', text: system, cache_control: { type: 'ephemeral' } }],
+      messages,
     })
   });
 
@@ -160,7 +169,6 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
     return new Response(JSON.stringify({ error: 'No response generated.' }), { status: 502 });
   }
 
-  // Count this question against the daily limit (preserve coach counts)
   const isRejection = text.startsWith('Ask me anything about Valorant');
   if (!isRejection) {
     await sb.from('coaching_usage').upsert(
@@ -175,7 +183,9 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
     );
   }
 
-  return new Response(JSON.stringify({ text, askRemaining: Math.max(0, DAILY_ASK_LIMIT - (askCount + 1)) }), {
+  // contextLocked = free user has premium context that's being stripped
+  const contextLocked = locked && crossContext !== '';
+  return new Response(JSON.stringify({ text, askRemaining: Math.max(0, DAILY_ASK_LIMIT - (askCount + 1)), contextLocked }), {
     headers: { 'Content-Type': 'application/json' }
   });
 };

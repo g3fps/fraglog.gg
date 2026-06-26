@@ -1,0 +1,345 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Nav from '../components/Nav.astro';
+import Footer from '../components/Footer.astro';
+import { getSessionUser } from '../lib/auth.js';
+
+const { user } = await getSessionUser(Astro.cookies);
+---
+<BaseLayout title="Coach — fraglog.gg" description="AI Valorant coach on FragLog.gg" user={user}>
+  <Nav crumbs={[{ label: 'ALL MAPS', href: '/' }, { label: 'COACH' }]} user={user} />
+  <div class="page-content">
+
+    <div class="nb-gate" id="nb-gate" style="display:none;">
+      <strong>Create a free account to chat with Coach</strong>
+      <span>Ask anything about Valorant — agents, maps, aim, economy, and how to improve.</span>
+      <div class="nb-gate-actions">
+        <button class="auth-btn primary empty-cta" onclick="openAuth('register')">Create account</button>
+        <button class="auth-btn empty-cta" onclick="openAuth()">Sign in</button>
+      </div>
+    </div>
+
+    <div class="coach-root" id="coach-root" style="display:none;">
+
+      <!-- Conversation sidebar -->
+      <aside class="conv-sidebar">
+        <div class="conv-sidebar-head">
+          <button class="conv-new-btn" onclick="startNewConv()">+ New chat</button>
+        </div>
+        <div class="conv-list" id="conv-list"></div>
+      </aside>
+
+      <!-- Main chat -->
+      <div class="coach-main">
+        <div class="nb-chat coach-full-chat">
+          <div class="conv-chat-header">
+            <div class="conv-title-wrap">
+              <span class="ask-ctx-icon">✦</span>
+              <span class="conv-header-title" id="conv-header-title">Coach</span>
+            </div>
+            <button class="ask-clear-btn" onclick="clearChat()">Clear</button>
+          </div>
+          <div class="ask-chat-thread" id="ask-chat-thread">
+            <div class="ask-chat-empty">Ask anything about Valorant — agents, maps, aim, economy, or how to improve.</div>
+          </div>
+          <div class="coach-locked-bar" id="coach-locked-bar" style="display:none;">
+            ✦ Upgrade to <a href="/premium" class="coach-locked-link">Premium</a> to let Coach reference your VOD notes and conversation history
+          </div>
+          <div class="ask-bar-inner">
+            <span class="ask-bar-icon">✦</span>
+            <textarea id="ask-input" class="ask-bar-input" placeholder="Ask Coach anything…  (Shift+Enter for new line)" autocomplete="off" maxlength="600" rows="1"></textarea>
+            <button class="ask-bar-send" id="ask-send" onclick="askAI()">Ask</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+  <Footer />
+</BaseLayout>
+
+<script is:inline>
+let conversations = [];
+let activeConvId = null;
+let activeHistory = [];
+
+function onAuthChange() { loadData(); }
+
+function esc(s) {
+  return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function relDate(ts) {
+  if (!ts) return '';
+  const diff = Date.now() - new Date(ts).getTime();
+  const m = Math.floor(diff / 60000);
+  if (m < 1) return 'just now';
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  const d = Math.floor(h / 24);
+  if (d < 7) return `${d}d ago`;
+  return new Date(ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+async function loadData() {
+  const gate = document.getElementById('nb-gate');
+  const root = document.getElementById('coach-root');
+  if (!currentUser) {
+    gate.style.display = 'flex';
+    root.style.display = 'none';
+    return;
+  }
+  gate.style.display = 'none';
+  root.style.display = 'flex';
+
+  const sb = initSupabase();
+  const { data: convs } = await sb.from('conversations')
+    .select('id, title, updated_at')
+    .eq('user_id', currentUser.id)
+    .order('updated_at', { ascending: false });
+
+  conversations = convs || [];
+
+  // Migrate from general_chat if no conversations exist yet
+  if (!conversations.length) {
+    const { data: gc } = await sb.from('general_chat')
+      .select('history').eq('user_id', currentUser.id).maybeSingle();
+    if (gc?.history?.length) {
+      const firstMsg = gc.history.find(m => m.role === 'user');
+      const title = autoTitle(firstMsg?.content || '');
+      const { data: migrated } = await sb.from('conversations')
+        .insert({ user_id: currentUser.id, title, history: gc.history })
+        .select('id, title, updated_at').single();
+      if (migrated) conversations = [migrated];
+    }
+  }
+
+  renderConvList();
+
+  if (conversations.length) {
+    await selectConv(conversations[0].id);
+  } else {
+    startNewConv();
+  }
+}
+
+function autoTitle(text) {
+  const t = (text || '').trim().slice(0, 45);
+  return t ? (text.length > 45 ? t + '…' : t) : 'New conversation';
+}
+
+// ── Conversations ─────────────────────────────────────────────
+function renderConvList() {
+  const list = document.getElementById('conv-list');
+  if (!conversations.length) {
+    list.innerHTML = '<div class="conv-list-empty">No conversations yet</div>';
+    return;
+  }
+  list.innerHTML = conversations.map(c => `
+    <div class="conv-item${activeConvId === c.id ? ' active' : ''}" onclick="selectConv('${c.id}')">
+      <span class="conv-item-title">${esc(c.title || 'New conversation')}</span>
+      <span class="conv-item-date">${relDate(c.updated_at)}</span>
+      <button class="conv-item-del" onclick="event.stopPropagation();deleteConv('${c.id}')" title="Delete">✕</button>
+    </div>
+  `).join('');
+}
+
+async function selectConv(id) {
+  if (activeConvId === id) return;
+  activeConvId = id;
+  const sb = initSupabase();
+  const { data } = await sb.from('conversations')
+    .select('history').eq('id', id).single();
+  activeHistory = Array.isArray(data?.history) ? data.history : [];
+  renderChatThread();
+  renderConvList();
+  updateHeaderTitle();
+}
+
+function startNewConv() {
+  // Free users are capped at 1 conversation
+  if (!window.__isPremium && conversations.length >= 1) {
+    if (confirm('Multiple conversations are a Premium feature.\n\nUpgrade to get unlimited conversations + cross-conversation context.\n\nGo to Premium now?')) {
+      window.location.href = '/premium';
+    }
+    return;
+  }
+  activeConvId = null;
+  activeHistory = [];
+  renderChatThread();
+  renderConvList();
+  updateHeaderTitle();
+  document.getElementById('ask-input').focus();
+}
+
+function updateHeaderTitle() {
+  const el = document.getElementById('conv-header-title');
+  if (!el) return;
+  const conv = conversations.find(c => c.id === activeConvId);
+  el.textContent = conv ? conv.title : 'New conversation';
+}
+
+async function deleteConv(id) {
+  if (!confirm('Delete this conversation?')) return;
+  const sb = initSupabase();
+  await sb.from('conversations').delete().eq('id', id).eq('user_id', currentUser.id);
+  conversations = conversations.filter(c => c.id !== id);
+  if (activeConvId === id) {
+    if (conversations.length) await selectConv(conversations[0].id);
+    else startNewConv();
+  }
+  renderConvList();
+}
+
+async function clearChat() {
+  if (!activeHistory.length) return;
+  if (!confirm('Clear this conversation?')) return;
+  activeHistory = [];
+  renderChatThread();
+  if (activeConvId) {
+    const sb = initSupabase();
+    const now = new Date().toISOString();
+    await sb.from('conversations')
+      .update({ history: [], title: 'New conversation', updated_at: now })
+      .eq('id', activeConvId);
+    const conv = conversations.find(c => c.id === activeConvId);
+    if (conv) { conv.title = 'New conversation'; conv.updated_at = now; }
+    renderConvList();
+    updateHeaderTitle();
+  }
+}
+
+// ── Chat ──────────────────────────────────────────────────────
+function renderChatThread() {
+  const thread = document.getElementById('ask-chat-thread');
+  if (!thread) return;
+  if (!activeHistory.length) {
+    thread.innerHTML = '<div class="ask-chat-empty">Ask anything about Valorant — agents, maps, aim, economy, or how to improve.</div>';
+    return;
+  }
+  thread.innerHTML = activeHistory.map(m => {
+    const isUser = m.role === 'user';
+    const body = !isUser && typeof renderCoachHtml === 'function'
+      ? renderCoachHtml(m.content)
+      : esc(m.content);
+    return `<div class="ask-msg ${isUser ? 'user' : 'ai'}"><div class="ask-msg-label">${isUser ? 'You' : 'Coach'}</div><div class="ask-msg-body">${body}</div></div>`;
+  }).join('');
+  thread.scrollTop = thread.scrollHeight;
+}
+
+async function persistConv(history) {
+  if (!currentUser) return;
+  const sb = initSupabase();
+  const now = new Date().toISOString();
+
+  if (activeConvId) {
+    const updates = { history, updated_at: now };
+    // Auto-title after first exchange
+    const conv = conversations.find(c => c.id === activeConvId);
+    if (conv && conv.title === 'New conversation' && history.length === 2) {
+      const t = autoTitle(history[0]?.content || '');
+      updates.title = t;
+      conv.title = t;
+      updateHeaderTitle();
+    }
+    if (conv) conv.updated_at = now;
+    await sb.from('conversations').update(updates).eq('id', activeConvId);
+  } else {
+    const title = autoTitle(history[0]?.content || '');
+    const { data } = await sb.from('conversations')
+      .insert({ user_id: currentUser.id, title, history })
+      .select('id, title, updated_at').single();
+    if (data) {
+      activeConvId = data.id;
+      conversations.unshift(data);
+      updateHeaderTitle();
+    }
+  }
+  // Keep sidebar sorted by recency
+  conversations.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
+  renderConvList();
+}
+
+async function askAI() {
+  const input = document.getElementById('ask-input');
+  const q = input.value.trim();
+  if (!q) return;
+  if (!currentUser) { openAuth(); return; }
+
+  const sendBtn = document.getElementById('ask-send');
+  sendBtn.disabled = true;
+  input.value = '';
+  resizeAskInput();
+
+  const history = [...activeHistory, { role: 'user', content: q }];
+  activeHistory = history;
+  renderChatThread();
+
+  const thread = document.getElementById('ask-chat-thread');
+  const loadingEl = document.createElement('div');
+  loadingEl.className = 'ask-msg ai';
+  loadingEl.innerHTML = '<div class="ask-msg-label">Coach</div><div class="ask-msg-body"><span class="ask-loading">Thinking…</span></div>';
+  thread.appendChild(loadingEl);
+  thread.scrollTop = thread.scrollHeight;
+
+  try {
+    const session = (await initSupabase().auth.getSession()).data.session;
+    // Only send the tail we'll actually use — saves transfer on long conversations
+    const histCap = window.__isPremium ? 20 : 10;
+    const trimmedHistory = history.slice(0, -1).slice(-histCap);
+    const res = await fetch('/api/ask', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (session?.access_token || '') },
+      body: JSON.stringify({ question: q, history: trimmedHistory, conversationId: activeConvId }),
+    });
+    loadingEl.remove();
+    if (res.status === 401) { openAuth(); return; }
+    const data = await res.json();
+
+    if (data.contextLocked) document.getElementById('coach-locked-bar').style.display = '';
+
+    if (!res.ok) {
+      activeHistory = history.slice(0, -1);
+      renderChatThread();
+      const errEl = document.createElement('div');
+      errEl.className = 'ask-msg ai';
+      errEl.innerHTML = `<div class="ask-msg-label">Coach</div><div class="ask-msg-body ask-error">${esc(data.error || 'Something went wrong. Try again.')}</div>`;
+      thread.appendChild(errEl);
+      thread.scrollTop = thread.scrollHeight;
+      return;
+    }
+
+    const updated = [...history, { role: 'assistant', content: data.text }];
+    activeHistory = updated;
+    renderChatThread();
+    await persistConv(updated);
+  } catch (e) {
+    loadingEl.remove();
+    activeHistory = history.slice(0, -1);
+    renderChatThread();
+    const errEl = document.createElement('div');
+    errEl.className = 'ask-msg ai';
+    errEl.innerHTML = '<div class="ask-msg-label">Coach</div><div class="ask-msg-body ask-error">Network error. Try again.</div>';
+    thread.appendChild(errEl);
+    thread.scrollTop = thread.scrollHeight;
+  } finally {
+    sendBtn.disabled = false;
+  }
+}
+
+document.getElementById('ask-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); askAI(); }
+});
+
+function resizeAskInput() {
+  const el = document.getElementById('ask-input');
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 140) + 'px';
+}
+document.getElementById('ask-input').addEventListener('input', resizeAskInput);
+
+window.deleteConv = deleteConv;
+window.__onAuthReady = loadData;
+if (window.__authReady) loadData();
+</script>

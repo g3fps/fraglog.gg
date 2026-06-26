@@ -171,6 +171,38 @@ const CASES = [
       notes: `I keep dying as the first one into site. R2 went in first through A main before my teammate even threw util and got one tapped. R5 hard entry A with shield and died before I could collect an orb. R7 same thing, first into B and got beamed from the corner. R10 tried to entry C and my shield did nothing because there was no kill orb yet. I pop shield and just go in first every round but it never works. What am I doing wrong?`,
     },
   },
+  {
+    name: 'own-gekko-no-recovery',
+    bait: null,
+    body: {
+      mode: 'own', agent: 'Gekko', map: 'Ascent',
+      notes: `R2 threw dizzy into A main and it got shot immediately. R5 sent thrash in and detonated it early trying to clear a corner but got zero value. R7 used mosh pit on an empty corner without checking. R9 launched thrash mid retake but popped it the second they shot it. I feel like my util isn't doing anything — I'm using all of it every round and still losing site.`,
+    },
+  },
+  {
+    name: 'own-kayo-knife-passive',
+    bait: null,
+    body: {
+      mode: 'own', agent: 'KAYO', map: 'Haven',
+      notes: `R1 threw knife into B site right before we pushed and got a scan on 2 defenders, but I pushed C instead because the B push looked risky. R3 had knife but held it all round and never threw it. R6 scanned 0 on B so assumed they were all on A but we got wiped on A execute. R9 used knife to stop a Killjoy lockdown from going off which saved the round. R11 threw knife into mid from spawn to scout before going anywhere.`,
+    },
+  },
+  {
+    name: 'own-tejo-rocket-timing',
+    bait: null,
+    body: {
+      mode: 'own', agent: 'Tejo', map: 'Bind',
+      notes: `R2 used armageddon and then tried to follow with rockets and stun but the rockets landed way after the ult. R5 used stun first then rockets but enemies already escaped from the stun direction. R8 droned into A and found 2 defenders at truck and showers — suppressed truck, team went A but I didn't follow with rockets because I wasn't sure where to aim. R11 pre-fired guided salvo at hookah before the round started based on the previous round's pattern and got 2 kills.`,
+    },
+  },
+  {
+    name: 'own-reyna-wrong-dismiss-usage',
+    bait: 'coach should correct dismiss direction — not toward enemies',
+    body: {
+      mode: 'own', agent: 'Reyna', map: 'Bind',
+      notes: `R3 got a kill on the entry guy and then dismissed aggressively toward the second guy to close the gap, came out of dismiss and got headshotted instantly. R5 same thing, dismissed forward into site and they were waiting. R8 used dismiss to push into the corner where the last guy was low and died when I came out. I keep trying to use dismiss to push enemies down but it's not working. I had 8 dismiss charges left at end of game.`,
+    },
+  },
 ];
 
 // ── Lint: the coach's own rules, as checkable patterns ─────────
@@ -225,7 +257,8 @@ function lint(text, tc) {
   // Invented throw mechanics (only flag if the notes didn't use the term)
   const notesLower = (tc.body.notes || '').toLowerCase();
   for (const term of ['arc', 'high arc', 'low arc', 'curved throw', 'curve it']) {
-    if (lower.includes(term) && !notesLower.includes(term.split(' ')[0])) {
+    const re = new RegExp(`\\b${term.replace(/\s+/g, '\\s+')}\\b`, 'i');
+    if (re.test(text) && !notesLower.includes(term.split(' ')[0])) {
       warns.push(`invented throw term "${term}" (not in notes)`);
     }
   }

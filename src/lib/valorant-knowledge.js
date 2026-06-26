@@ -1355,6 +1355,9 @@ export const GENERAL_KNOWLEDGE = {
       after_shooting: {
         summary: "Whether you hit the shot or miss — move instantly. Never stand still after firing.",
         key_insight: "Standing still after a shot is one of the most common ways to die in a fight you should have won. Miss or hit, move immediately and reset."
+      },
+      rank_gaps: {
+        diamond_to_radiant: "Movement is one of the biggest mechanical separators between Diamond and Radiant. Radiant players do not simply stand still and rely on aim — their movement mechanics are significantly more advanced. The gap shows up in: (1) Counter-strafe timing — Radiant players stop and shoot faster and more precisely, giving them a smaller window where they're exposed; (2) Strafe baiting — they use shoulder peeks, short jiggle baits, and directional fakes to bait enemy shots before committing; (3) Movement variety — Radiant players are far less predictable in their footwork, making it harder to pre-aim or pre-fire them; (4) Offensive movement — closing distance or creating angles using movement as an active weapon, not just reacting. 'Stillness' in Valorant refers to the moment of stopping to shoot with accuracy, not passive play — Radiant players move more and are harder to read, they just stop at the right moment. Telling a Diamond player that Radiant players win through stillness and positioning is wrong and harmful advice."
       }
     },
     minimap: {
@@ -1421,7 +1424,11 @@ export const GENERAL_KNOWLEDGE = {
   }
 };
 
+// RESOURCES — keyword → video guides. The coach recommends these when a player's notes or question
+// matches the topic. Each category name is the keyword the coach uses to match topics.
+// Add entries as objects: { title, url, creator, description }
 export const RESOURCES = {
+  // Mechanics: crosshair placement, pre-aiming corners
   preaim: [
     {
       title: "How to Pre-Aim the RIGHT way",
@@ -1430,22 +1437,43 @@ export const RESOURCES = {
       description: "In-depth breakdown of crosshair placement fundamentals"
     }
   ],
+  // Mechanics: movement, counter-strafing, strafe shooting, footwork
   movement: [
     {
       title: "i am begging you to train your movement (here's how.)",
       url: "https://www.youtube.com/watch?v=8lgwinmOFMI",
       creator: "korey",
-      description: "In depth breakdown of movement with drills - best for higher ranks but good for all players to understand"
+      description: "In-depth movement breakdown with drills — counter-strafing, strafe shooting, footwork"
     }
   ],
+  // Mechanics: raw aim, flicking, tracking, aim training
+  aim: [],
+  // Mechanics: recoil control, spray patterns, burst firing
+  recoil: [],
+  // Mechanics: peeking — jiggle, wide, shoulder, tight
+  peeking: [],
+  // Gamesense: reading the round, decision-making, macro
+  gamesense: [],
+  // Gamesense: economy — when to buy, save, force
+  economy: [],
+  // Gamesense: map control, taking neutral space, info gathering
+  map_control: [],
+  // Gamesense: positioning — site anchoring, off-angles, crossfire setups
+  positioning: [],
+  // Mental: consistency under pressure, tilt, focus
+  mental: [],
+  // Agent guides (add per-agent entries as needed)
   cypher_utility: [
     {
       title: "The COMPLETE Cypher Guide",
       url: "https://www.youtube.com/watch?v=YjsZlMQDraM",
       creator: "ItsFlameBTW",
-      description: "Comprehensive Cypher guide covering camera placement, cage lineups, and trap wire setups across all maps"
+      description: "Camera placement, cage lineups, and trap wire setups across all maps"
     }
-  ]
+  ],
+  jett_movement: [],
+  viper_setups: [],
+  sova_lineups: [],
 };
 
 export const ECONOMY_KNOWLEDGE = {

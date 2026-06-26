@@ -98,8 +98,8 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
       body: JSON.stringify({
         model: 'claude-sonnet-4-6',
         max_tokens: 400,
-        system,
-        messages: [{ role: 'user', content: userContent }]
+        system: [{ type: 'text', text: system, cache_control: { type: 'ephemeral' } }],
+        messages: [{ role: 'user', content: userContent }],
       })
     });
 
@@ -154,8 +154,8 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
     body: JSON.stringify({
       model: 'claude-sonnet-4-6',
       max_tokens: 1200,
-      system,
-      messages: [{ role: 'user', content: userContent }]
+      system: [{ type: 'text', text: system, cache_control: { type: 'ephemeral' } }],
+      messages: [{ role: 'user', content: userContent }],
     })
   });
 

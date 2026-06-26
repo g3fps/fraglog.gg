@@ -33,7 +33,7 @@ const { crumbs = [], user = null } = Astro.props as { crumbs: { label: string; h
       <a class="feature-tab" href="/" id="tab-vods">Ranked</a>
       <a class="feature-tab" href="/pro" id="tab-pro">Pro</a>
       <a class="feature-tab" href="/gameplan" id="tab-gameplan">Gameplan</a>
-      <a class="feature-tab" href="/notes" id="tab-notes">Notes</a>
+      <a class="feature-tab" href="/coach" id="tab-coach">Coach</a>
     </div>
     <div class="nav-bottom-right">
       <a class="feature-tab feature-tab--premium" href="/premium" id="tab-premium">✦ Premium</a>
@@ -53,7 +53,7 @@ function handleNavSearch(val) {
 // Active tab
 (function() {
   const path = window.location.pathname;
-  const map = { '/pro': 'tab-pro', '/gameplan': 'tab-gameplan', '/favorites': 'tab-favorites', '/notes': 'tab-notes', '/my-vods': 'tab-myvods', '/playlists': 'tab-playlists', '/premium': 'tab-premium' };
+  const map = { '/pro': 'tab-pro', '/gameplan': 'tab-gameplan', '/favorites': 'tab-favorites', '/coach': 'tab-coach', '/notes': 'tab-coach', '/my-vods': 'tab-myvods', '/playlists': 'tab-playlists', '/premium': 'tab-premium' };
   const matched = Object.entries(map).find(([p]) => path.startsWith(p));
   document.getElementById(matched ? matched[1] : 'tab-vods')?.classList.add('active');
 })();
