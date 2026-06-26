@@ -12,7 +12,7 @@ const PRICES = { monthly: '$6.99', yearly: '$59.99', lifetime: '$129.99' };
 
 <BaseLayout
   title="Premium — fraglog.gg"
-  description="Go Premium on fraglog.gg — higher AI coaching limits, cross-note AI, unlimited VOD uploads, and VOD playlists."
+  description="Go Premium on fraglog.gg — higher AI limits, unlimited conversations, cross-context AI, unlimited VOD uploads, and VOD playlists."
   canonical="https://fraglog.gg/premium/"
   user={user}>
   <Nav crumbs={[{ label: 'Premium' }]} user={user} />
@@ -23,7 +23,7 @@ const PRICES = { monthly: '$6.99', yearly: '$59.99', lifetime: '$129.99' };
       <div class="premium-hero">
         <div class="header-eyebrow">fraglog Premium</div>
         <h1 class="header-title">Train without limits</h1>
-        <p class="header-sub">More AI coaching, cross-note insights, unlimited VODs, and playlists — built for players who are serious about climbing.</p>
+        <p class="header-sub">More AI coaching, unlimited conversations, cross-context insights, unlimited VODs, and playlists — built for players who are serious about climbing.</p>
       </div>
 
       <div class="premium-status-banner" id="premium-banner" style="display:none"></div>
@@ -58,16 +58,67 @@ const PRICES = { monthly: '$6.99', yearly: '$59.99', lifetime: '$129.99' };
         </div>
       )}
 
-      <div class="premium-features">
-        <div class="premium-features-title">What Premium unlocks</div>
-        <ul class="premium-feature-list">
-          <li><strong>Higher AI limits</strong> — 10 coaching sessions, 25 follow-ups, and 20 Ask AI questions per day, plus 3 gameplan generations.</li>
-          <li><strong>Cross-note AI</strong> — the AI reads across all your notes to spot patterns and give answers grounded in your history.</li>
-          <li><strong>Unlimited VOD uploads</strong> — build out your whole personal library, no cap.</li>
-          <li><strong>VOD playlists</strong> — organize VODs into study sets (e.g. "Jett fundamentals").</li>
-        </ul>
-        <p class="premium-fineprint">Free always includes the core VOD library, notes, gameplan, and daily AI coaching.</p>
+      <div class="compare-table">
+        <div class="compare-header">
+          <div></div>
+          <div class="compare-col-head">Free</div>
+          <div class="compare-col-head compare-col-head--premium">Premium</div>
+        </div>
+
+        <div class="compare-section">AI Coaching</div>
+        <div class="compare-row">
+          <div class="compare-feat">VOD coaching / day</div>
+          <div class="compare-free">3</div>
+          <div class="compare-prem">10</div>
+        </div>
+        <div class="compare-row">
+          <div class="compare-feat">Follow-up questions / day</div>
+          <div class="compare-free">5</div>
+          <div class="compare-prem">25</div>
+        </div>
+
+        <div class="compare-section">Coach Chat</div>
+        <div class="compare-row">
+          <div class="compare-feat">Ask AI / day</div>
+          <div class="compare-free">5</div>
+          <div class="compare-prem">20</div>
+        </div>
+        <div class="compare-row">
+          <div class="compare-feat">Conversations</div>
+          <div class="compare-free">1</div>
+          <div class="compare-prem compare-yes">Unlimited</div>
+        </div>
+        <div class="compare-row">
+          <div class="compare-feat">Cross-context AI <span class="compare-feat-sub">reads your VOD notes + history</span></div>
+          <div class="compare-free compare-no">—</div>
+          <div class="compare-prem compare-yes">✦</div>
+        </div>
+
+        <div class="compare-section">VOD Library</div>
+        <div class="compare-row">
+          <div class="compare-feat">Personal VOD uploads</div>
+          <div class="compare-free">10</div>
+          <div class="compare-prem compare-yes">Unlimited</div>
+        </div>
+        <div class="compare-row">
+          <div class="compare-feat">VOD playlists</div>
+          <div class="compare-free compare-no">—</div>
+          <div class="compare-prem compare-yes">✦</div>
+        </div>
+
+        <div class="compare-section">Gameplan</div>
+        <div class="compare-row">
+          <div class="compare-feat">Routine generations / day</div>
+          <div class="compare-free">1</div>
+          <div class="compare-prem">3</div>
+        </div>
+        <div class="compare-row">
+          <div class="compare-feat">Routine fine-tunes / day</div>
+          <div class="compare-free">3</div>
+          <div class="compare-prem">10</div>
+        </div>
       </div>
+      <p class="premium-fineprint">Free always includes the full VOD library, AI coaching, gameplan, and one Coach conversation.</p>
 
     </div>
   </main>
