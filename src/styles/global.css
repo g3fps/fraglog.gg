@@ -723,7 +723,7 @@ footer { border-top: 1px solid var(--border); padding: 3rem 2.5rem; margin-top: 
 .vm-notes-textarea {
   width: 100%; background: var(--darker); border: 1px solid var(--border); color: var(--text);
   font-family: 'Barlow', sans-serif; font-size: 14px; padding: 14px; border-radius: 4px;
-  outline: none; resize: none; min-height: 100px; flex: 1; line-height: 1.6; transition: border-color 0.15s;
+  outline: none; resize: none; min-height: 80px; flex: 1; line-height: 1.6; transition: border-color 0.15s;
 }
 .vm-notes-textarea:focus { border-color: rgba(255,70,85,0.4); }
 .vm-login-prompt { font-size: 14px; color: var(--muted); padding: 1rem 0; text-align: center; }
@@ -746,6 +746,18 @@ footer { border-top: 1px solid var(--border); padding: 3rem 2.5rem; margin-top: 
 .vm-notes-tab-bar { display: none; }
 .vm-notes-panel { display: flex; flex: 1; min-height: 0; flex-direction: column; }
 .vm-collapse-btn { display: none; }
+
+/* ── PANEL DIVIDER + SIZE RESET ──────────────────────────── */
+.vm-panels-wrapper { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+.vm-panel-divider { height: 14px; flex-shrink: 0; cursor: row-resize; display: flex; align-items: center; justify-content: center; gap: 8px; user-select: none; }
+.vm-panel-divider-line { flex: 1; height: 1px; background: var(--border); transition: background 0.15s; pointer-events: none; }
+.vm-panel-divider-reset { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 1px; text-transform: uppercase; background: none; border: none; color: var(--muted); cursor: pointer; padding: 0; transition: color 0.15s; flex-shrink: 0; display: none; line-height: 1; }
+.vm-panel-divider.is-custom .vm-panel-divider-reset { display: block; }
+.vm-panel-divider:hover .vm-panel-divider-line { background: rgba(255,255,255,0.15); }
+.vm-panel-divider:hover .vm-panel-divider-reset { color: var(--text); }
+.vm-panel-divider.is-dragging .vm-panel-divider-line { background: var(--red); }
+.vm-size-reset-btn { background: none; border: 1px solid var(--border); color: var(--muted); width: 26px; height: 26px; cursor: pointer; font-size: 14px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: all 0.15s; border-radius: 4px; }
+.vm-size-reset-btn:hover { color: var(--text); border-color: rgba(255,255,255,0.3); }
 
 /* ── ROUND TABLE ─────────────────────────────────────────── */
 .vm-rounds-scroll { flex: 1; min-height: 0; overflow-y: auto; border: 1px solid var(--border); border-radius: 4px; background: var(--darker); display: flex; flex-direction: column; }
@@ -972,6 +984,9 @@ footer { border-top: 1px solid var(--border); padding: 3rem 2.5rem; margin-top: 
   .vm-notes-panel { display: none; flex: 1; min-height: 0; flex-direction: column; }
   .vm-notes-panel.active { display: flex; }
   .vm-notes-label { display: none; }
+  .vm-panel-divider { display: none; }
+  .vm-panels-wrapper { overflow-y: auto; }
+  .vm-size-reset-btn { display: none; }
 }
 @media (max-width: 480px) {
   .agent-grid { grid-template-columns: repeat(2, 1fr); }

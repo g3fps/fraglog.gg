@@ -153,6 +153,7 @@ const TURNSTILE_SITE_KEY = import.meta.env.TURNSTILE_SITE_KEY || '';
               </div>
             </div>
             <button class="vm-collapse-btn" id="vm-collapse-btn" onclick="vmToggleVideo()" title="Toggle video">▾</button>
+            <button class="vm-size-reset-btn" onclick="vmResetModalSize()" title="Reset size">↺</button>
             <button class="video-modal-close" onclick="closeVideoModalDirect()">✕</button>
           </div>
         </div>
@@ -1149,11 +1150,17 @@ const TURNSTILE_SITE_KEY = import.meta.env.TURNSTILE_SITE_KEY || '';
       <button onclick="vmSwitchTab('rounds', this)">Round by Round</button>
     </div>`;
 
+    // Panels wrapper (desktop: both visible with drag divider; mobile: tabs switch active panel)
+    html += `<div class="vm-panels-wrapper">`;
+
     // General notes panel
-    html += `<div class="vm-notes-panel active" id="vm-panel-general" style="flex:1;min-height:0">
+    html += `<div class="vm-notes-panel active" id="vm-panel-general" style="flex:0 0 50%;min-height:0;overflow:hidden">
       <div class="vm-notes-label" style="margin-bottom:4px">General Notes</div>
       <textarea class="vm-notes-textarea" id="vm-textarea" placeholder="Overall observations, patterns, things to study..." style="flex:1">${savedGeneral}</textarea>
     </div>`;
+
+    // Drag divider
+    html += `<div class="vm-panel-divider" id="vm-panel-divider"><div class="vm-panel-divider-line"></div><button class="vm-panel-divider-reset" onclick="vmResetPanelSplit()" title="Reset split">reset</button><div class="vm-panel-divider-line"></div></div>`;
 
     // Round-by-round panel
     const ROUND_CATEGORIES = ['Positioning & Decision Making', 'Economy', 'Utility'];
@@ -1224,6 +1231,7 @@ const TURNSTILE_SITE_KEY = import.meta.env.TURNSTILE_SITE_KEY || '';
     html += `</div>
         <button class="vm-add-round-btn" onclick="vmAddRound()">+ Add OT Round</button>
       </div>
+    </div>
     </div>`;
 
     body.innerHTML = html;
@@ -1252,6 +1260,91 @@ const TURNSTILE_SITE_KEY = import.meta.env.TURNSTILE_SITE_KEY || '';
     });
     // Resize any pre-filled textareas on load
     document.querySelectorAll('.vm-round-input.active').forEach(vmAutoResize);
+    initVmPanelResize();
+  }
+
+  let _vmDragCleanup = null;
+
+  function initVmPanelResize() {
+    if (_vmDragCleanup) { _vmDragCleanup(); _vmDragCleanup = null; }
+    const divider = document.getElementById('vm-panel-divider');
+    if (!divider) return;
+    const wrapper = document.querySelector('.vm-panels-wrapper');
+    const panelG = document.getElementById('vm-panel-general');
+    if (!wrapper || !panelG) return;
+
+    const saved = parseFloat(localStorage.getItem('vmPanelSplit') || '0.5');
+    if (Math.abs(saved - 0.5) > 0.01) divider.classList.add('is-custom');
+
+    requestAnimationFrame(() => {
+      const wh = wrapper.getBoundingClientRect().height;
+      const dh = divider.getBoundingClientRect().height;
+      if (wh > 0) panelG.style.flex = '0 0 ' + Math.round((wh - dh) * saved) + 'px';
+    });
+
+    let dragging = false, startY = 0, startH = 0;
+
+    function onMove(e) {
+      if (!dragging) return;
+      const wh = wrapper.getBoundingClientRect().height;
+      const dh = divider.getBoundingClientRect().height;
+      const avail = wh - dh;
+      const minH = 80;
+      const newH = Math.min(avail - minH, Math.max(minH, startH + (e.clientY - startY)));
+      panelG.style.flex = '0 0 ' + newH + 'px';
+    }
+
+    function onUp() {
+      if (!dragging) return;
+      dragging = false;
+      divider.classList.remove('is-dragging');
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+      const wh = wrapper.getBoundingClientRect().height;
+      const dh = divider.getBoundingClientRect().height;
+      const split = panelG.getBoundingClientRect().height / (wh - dh);
+      if (Math.abs(split - 0.5) > 0.01) {
+        localStorage.setItem('vmPanelSplit', split.toFixed(4));
+        divider.classList.add('is-custom');
+      } else {
+        localStorage.removeItem('vmPanelSplit');
+        divider.classList.remove('is-custom');
+      }
+    }
+
+    divider.addEventListener('mousedown', e => {
+      if (e.target.closest('.vm-panel-divider-reset')) return;
+      dragging = true;
+      startY = e.clientY;
+      startH = panelG.getBoundingClientRect().height;
+      divider.classList.add('is-dragging');
+      document.body.style.cursor = 'row-resize';
+      document.body.style.userSelect = 'none';
+      e.preventDefault();
+    });
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+    _vmDragCleanup = () => {
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+    };
+  }
+
+  function vmResetPanelSplit() {
+    localStorage.removeItem('vmPanelSplit');
+    const divider = document.getElementById('vm-panel-divider');
+    const wrapper = document.querySelector('.vm-panels-wrapper');
+    const panelG = document.getElementById('vm-panel-general');
+    if (!divider || !wrapper || !panelG) return;
+    divider.classList.remove('is-custom');
+    const wh = wrapper.getBoundingClientRect().height;
+    const dh = divider.getBoundingClientRect().height;
+    panelG.style.flex = '0 0 ' + Math.round((wh - dh) * 0.5) + 'px';
+  }
+
+  function vmResetModalSize() {
+    const modal = document.querySelector('.video-modal');
+    if (modal) { modal.style.width = ''; modal.style.height = ''; }
   }
 
   function vmToggleVideo() {
