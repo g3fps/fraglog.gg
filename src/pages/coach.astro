@@ -195,19 +195,13 @@ async function deleteConv(id) {
 async function clearChat() {
   if (!activeHistory.length) return;
   if (!confirm('Clear this conversation?')) return;
-  activeHistory = [];
-  renderChatThread();
   if (activeConvId) {
     const sb = initSupabase();
-    const now = new Date().toISOString();
-    await sb.from('conversations')
-      .update({ history: [], title: 'New conversation', updated_at: now })
-      .eq('id', activeConvId);
-    const conv = conversations.find(c => c.id === activeConvId);
-    if (conv) { conv.title = 'New conversation'; conv.updated_at = now; }
-    renderConvList();
-    updateHeaderTitle();
+    await sb.from('conversations').delete().eq('id', activeConvId).eq('user_id', currentUser.id);
+    conversations = conversations.filter(c => c.id !== activeConvId);
   }
+  startNewConv();
+  renderConvList();
 }
 
 // ── Chat ──────────────────────────────────────────────────────

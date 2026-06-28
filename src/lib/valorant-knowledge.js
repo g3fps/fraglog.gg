@@ -1447,22 +1447,24 @@ export const RESOURCES = {
       description: "In-depth movement breakdown with drills — counter-strafing, strafe shooting, footwork"
     }
   ],
-  // Mechanics: raw aim, flicking, tracking, aim training
-  aim: [],
-  // Mechanics: recoil control, spray patterns, burst firing
-  recoil: [],
   // Mechanics: peeking — jiggle, wide, shoulder, tight
-  peeking: [],
+  peeking: [
+    {
+      title: "Peeking Guide",
+      url: "https://www.youtube.com/watch?v=sh4JQ9WMKKc",
+      creator: "Zasko",
+      description: "Peeking mechanics and technique breakdown"
+    }
+  ],
   // Gamesense: reading the round, decision-making, macro
-  gamesense: [],
-  // Gamesense: economy — when to buy, save, force
-  economy: [],
-  // Gamesense: map control, taking neutral space, info gathering
-  map_control: [],
-  // Gamesense: positioning — site anchoring, off-angles, crossfire setups
-  positioning: [],
-  // Mental: consistency under pressure, tilt, focus
-  mental: [],
+  gamesense: [
+    {
+      title: "Gamesense Guide",
+      url: "https://www.youtube.com/watch?v=ssf8nMXdZd8",
+      creator: "Prime",
+      description: "Gamesense framework and concepts"
+    }
+  ],
   // Agent guides (add per-agent entries as needed)
   cypher_utility: [
     {
@@ -1472,16 +1474,13 @@ export const RESOURCES = {
       description: "Camera placement, cage lineups, and trap wire setups across all maps"
     }
   ],
-  jett_movement: [],
-  viper_setups: [],
-  sova_lineups: [],
 };
 
 export const ECONOMY_KNOWLEDGE = {
   match_structure: {
     summary: "First team to 13 rounds wins. Up to 24 rounds in regulation, split into two halves of 12; teams swap attack/defense after round 12. A 12-12 tie goes to overtime.",
     pistol_rounds: "ONLY round 1 and round 13 are pistol rounds — the first round of each half. Round 12 is the LAST round of the FIRST half, not a pistol. Round 24 (if reached) is the last round of the second half. Never label round 12 a pistol round.",
-    after_pistol: "Round 2 and round 14 are the rounds right after a pistol — bonus/anti-eco or save depending on the pistol result, but they are NOT pistols themselves."
+    after_pistol: "Round 2 and round 14 are the rounds right after a pistol — anti-eco (if you won) or save (if you lost), but they are NOT pistols themselves."
   },
   armor: {
     light_shield: "25 shield, costs 400. Buy when you can't afford heavy shield.",
@@ -1493,15 +1492,15 @@ export const ECONOMY_KNOWLEDGE = {
     save: "Full save — pistol only or buy nothing. Goal is to bank credits for next round."
   },
   round_flow: {
-    win_pistol: "After winning the pistol, round 2 is a BONUS round — buy with leftover + win bonus (typically an SMG like the Spectre, or an Outlaw, + light shield), NOT a full rifle buy (you can't afford one yet). Don't spread out and 'default' after a pistol WIN: playing spread invites isolated 1v1s where an enemy on a save can win a free rifle off you. Play together and take map control as a group so every fight is traded.",
-    win_pistol_win_round_2: "Won rounds 1 AND 2: do NOT full buy round 3. Ride the bonus — players who SURVIVED keep their guns, and only the players who DIED light buy (cheap SMG + light shield) so the whole team can comfortably full buy round 4. Over-buying round 3 when already ahead risks an economy dip if you lose it.",
+    win_pistol: "After winning the pistol, round 2 is the ANTI-ECO — buy as much as leftover credits + win bonus allow to maximize the chance of winning the round and carrying good guns into round 3. Typically an SMG or Outlaw, though a Vandal is viable if the credits are there. Don't spread out and 'default' after a pistol WIN: playing spread invites isolated 1v1s where an enemy on a save can win a free rifle off you. Play together and take map control as a group so every fight is traded.",
+    win_pistol_win_round_2: "Won rounds 1 AND 2: round 3 is the BONUS ROUND — survivors keep their guns from round 2, players who died light buy (cheap SMG + light shield). It's winnable but you'll lose it a decent amount of the time. The team can comfortably full buy round 4 regardless.",
     win_pistol_lose_round_2: "Won round 1 but lost round 2: the default is to SAVE, not force. Throwing a partial buy into the enemy's full buy is usually -EV — save to bank credits and come back with a proper full buy the following round. Don't be the lone forcer when the team is saving.",
-    lose_pistol: "Save round 2, or run a default light buy. Defaulting and playing for info is fine here precisely because you're not risking expensive guns. Buy round 3 with stacked credits.",
+    lose_pistol: "Saving round 2 is the default — bank credits for a full buy round 3. Forcing after losing pistol can be correct if you're confident in winning the round or are losing by a large margin and need to start winning rounds to salvage the game. Defaulting on a light buy is fine since you're not risking expensive guns.",
     lose_pistol_and_round_2: "Still buy round 3 — two save rounds bank enough for a full buy.",
     carry_over: "Weapons carry between rounds — a player who survives keeps their gun into the next round, so the team rarely needs everyone to re-buy. When ahead, survivors hold their guns and only the players who died spend; this is how you 'ride' a winning economy.",
-    round_3_is_never_anti_eco: "Round 3's buy is fully determined by rounds 1-2 and is never a clean 'anti-eco': won both -> ride the bonus (survivors keep guns, deaths light buy, full buy round 4); lost both -> your first full buy; won 1 / lost 1 -> usually a SAVE (especially if you won the pistol then lost the bonus) or a light force. Do not script round 3 as an anti-eco.",
     loss_bonus: "Lose a round = +1900 the next round, stacking to +2400 then +2900 on consecutive losses. Winning a round resets the loss bonus back to +1900.",
-    bonus_round: "A bonus round is the round right after winning a pistol or eco: you have leftover credits + win bonus but usually NOT full-buy money. Buy SMGs/Outlaw + light shield ('bonus buy'); don't drain credits forcing a full buy on a bonus."
+    bonus_round: "The bonus round is round 3 after winning rounds 1 and 2 — survivors keep their guns from the anti-eco, deaths light buy. It's a winnable round but teams lose it fairly often. Round 4 is typically the first full buy.",
+    anti_eco: "Any round where you are buying (rifles, SMGs) against an enemy who is saving (pistols/sheriffs only). Round 2 after winning the pistol is always an anti-eco. Any other round where the enemy is forced to save also counts as an anti-eco. Anti-eco rounds are not throw rounds — losing one is an economy disaster."
   },
   playbook_caveat: "You CANNOT pre-assign a fixed economy state (eco / anti-eco / save / bonus / full buy) to a specific round NUMBER in an attack playbook. After round 1, every round's buy depends on who won the previous rounds — only rounds 1 and 13 are guaranteed pistols. Write a round-by-round playbook as CONDITIONAL plays keyed to the buy state ('on a full buy do X', 'on a force/eco do Y'), not as fixed labels like 'R3 anti-eco' or 'R10 eco'.",
   when_to_force: [
@@ -1514,12 +1513,7 @@ export const ECONOMY_KNOWLEDGE = {
     "You lost a buy round with heavy spend and cannot afford a meaningful weapon next round"
   ],
   eco_rounds: {
-    summary: "Full save opponents will likely have pistols and sheriffs only.",
-    rules: [
-      "Do not overcommit expensive util on eco rounds",
-      "Winning an eco round with rifles is expected — losing one is an economy disaster",
-      "Anti-eco rounds are not throw rounds — play them seriously"
-    ]
+    summary: "Full save opponents will likely have pistols and sheriffs only. Anti-eco rounds are not throw rounds — losing one is an economy disaster."
   }
 };
 
