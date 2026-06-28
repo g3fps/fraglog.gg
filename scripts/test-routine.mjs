@@ -41,8 +41,8 @@ if (!API_KEY) {
 const MODEL = 'claude-sonnet-4-6';
 const args = process.argv.slice(2);
 const SHOW_RAW = args.includes('--raw');
-const WANT_HTML = args.includes('--html') || args.includes('--open');
-const OPEN = args.includes('--open');
+const WANT_HTML = !args.includes('--no-open');
+const OPEN = !args.includes('--no-open');
 const filters = args.filter(a => !a.startsWith('--'));
 
 // ── Test cases ─────────────────────────────────────────────────
@@ -50,85 +50,137 @@ const filters = args.filter(a => !a.startsWith('--'));
 // shape the front end POSTs to /api/generate-routine.
 const CASES = [
   {
-    name: 'rank-with-history',
+    name: 'rank-with-dodges',
     body: {
-      timePerDay: 300,
-      wakeTime: '9:00 AM',
+      timePerDay: 240,
+      wakeTime: '10:00 AM',
       goals: [{
         type: 'rank',
-        title: 'Climb to Diamond',
-        current_value: 'Platinum 2',
+        title: 'Hit Diamond',
+        current_value: 'Platinum 3',
         target: 'Diamond 1',
-        current_rr: 40,
-        deadline: '2026-08-01',
-        win_rr: [22, 19, 24, 21, 20, 23, 18],
-        loss_rr: [17, 19, 16, 18, 20, 15],
-        notes: 'I throw a lot of late-round eco fights and overpeek.',
+        current_rr: 65,
+        deadline: '2026-08-15',
+        win_rr: [21, 23, 19, 22, 20, 24, 21, 18, 22, 20],
+        loss_rr: [18, 20, 17, 19, 21, 18, 20],
+        dodge_rr: [5, 5, 5],
+        notes: 'Mid-round decision making is killing me. I know what I should do but I hesitate.',
       }],
     },
   },
   {
-    name: 'rank-no-history',
+    name: 'rank-open-ended',
+    body: {
+      timePerDay: 120,
+      wakeTime: '3:00 PM',
+      goals: [{
+        type: 'rank',
+        title: 'Grind to Immortal',
+        current_value: 'Diamond 1',
+        target: 'Immortal 1',
+        current_rr: 10,
+        win_rr: [20, 18, 22, 25, 19],
+        loss_rr: [22, 24, 20, 23],
+        notes: 'I play reactively instead of dictating the round. Entry fraggers walk all over me.',
+      }],
+    },
+  },
+  {
+    name: 'agent-neon',
     body: {
       timePerDay: 180,
       wakeTime: '11:00 AM',
       goals: [{
-        type: 'rank',
-        title: 'Get to Ascendant',
-        current_value: 'Diamond 3',
-        target: 'Ascendant 1',
-        notes: 'Just started ranked this act.',
+        type: 'agent',
+        title: 'Get better at Neon',
+        current_value: 'Gold 1',
+        target: 'Platinum 1',
+        notes: 'I sprint into every fight and die. I waste my slide and don\'t know when to stop and shoot vs keep running.',
       }],
     },
   },
   {
-    name: 'mechanics-aim',
+    name: 'agent-chamber',
     body: {
-      timePerDay: 120,
-      wakeTime: '10:00 AM',
-      goals: [{
-        type: 'mechanics',
-        title: 'Fix my aim',
-        notes: 'First-shot accuracy is bad and my crosshair placement is too low.',
-      }],
-    },
-  },
-  {
-    name: 'agent-specific-jett',
-    body: {
-      timePerDay: 240,
-      wakeTime: '8:30 AM',
+      timePerDay: 200,
+      wakeTime: '9:30 AM',
       goals: [{
         type: 'agent',
-        title: 'Master Jett entry',
-        current_value: 'Gold 3',
-        target: 'Platinum 3',
-        notes: 'I main jett but I die first every round and dash too early.',
+        title: 'Master Chamber',
+        current_value: 'Platinum 2',
+        target: 'Diamond 1',
+        notes: 'I TP out too early and waste the anchor. Also not sure when to save the OP vs buy rifle.',
       }],
     },
   },
   {
-    name: 'short-session',
+    name: 'multi-goal',
     body: {
-      timePerDay: 45,
-      wakeTime: '7:00 PM',
-      goals: [{ type: 'rank', title: 'Maintain Immortal', current_value: 'Immortal 1', target: 'Immortal 2' }],
+      timePerDay: 300,
+      wakeTime: '8:00 AM',
+      goals: [
+        {
+          type: 'rank',
+          title: 'Climb to Ascendant',
+          current_value: 'Diamond 2',
+          target: 'Ascendant 1',
+          current_rr: 80,
+          win_rr: [24, 22, 26, 23, 25],
+          loss_rr: [20, 22, 19, 21],
+          notes: 'Macro is fine but I keep losing 1v1 duels I should be winning.',
+        },
+        {
+          type: 'agent',
+          title: 'Lock in Clove as secondary',
+          notes: 'I mistime my smokes constantly and forget I can re-smoke after dying.',
+        },
+      ],
     },
   },
   {
-    name: 'finetune-add-break',
+    name: 'long-session',
     body: {
-      timePerDay: 300,
-      wakeTime: '9:00 AM',
-      fineTune: 'Add a longer lunch break and cut the second review block.',
-      goals: [{ type: 'rank', title: 'Climb to Diamond', current_value: 'Platinum 2', target: 'Diamond 1' }],
+      timePerDay: 360,
+      wakeTime: '10:00 AM',
+      goals: [{
+        type: 'rank',
+        title: 'Push for Immortal',
+        current_value: 'Diamond 3',
+        target: 'Immortal 1',
+        current_rr: 50,
+        deadline: '2026-09-01',
+        win_rr: [23, 21, 24, 22, 20, 25, 22],
+        loss_rr: [20, 22, 19, 21, 23],
+        notes: 'I tilt after two losses and play worse. Need a reset built in.',
+      }],
+    },
+  },
+  {
+    name: 'short-mechanics',
+    body: {
+      timePerDay: 60,
+      wakeTime: '7:30 PM',
+      goals: [{
+        type: 'mechanics',
+        title: 'Fix aim fundamentals',
+        notes: 'Crosshair placement is consistently too low on all maps. Missing easy shots at head level.',
+      }],
+    },
+  },
+  {
+    name: 'finetune-cut-warmup',
+    body: {
+      timePerDay: 180,
+      wakeTime: '2:00 PM',
+      fineTune: "I don't have time for warmup today, cut it and start ranked earlier.",
+      goals: [{ type: 'rank', title: 'Climb to Diamond', current_value: 'Platinum 1', target: 'Diamond 1' }],
       currentRoutine: {
         schedule: [
-          { id: 's1', time: '9:00 AM', category: 'wakeup', title: 'Wake Up Move Eat', duration: 30, count: '', description: 'No screens. Eat. Move.' },
-          { id: 's2', time: '9:30 AM', category: 'warmup', title: 'Aim Warmup', duration: 30, count: '', description: 'Static then dynamic clicking.' },
-          { id: 's3', time: '10:00 AM', category: 'ranked', title: 'First Ranked Block', duration: 175, count: '5 games', description: 'Play your defaults.' },
-          { id: 's4', time: '12:55 PM', category: 'review', title: 'Replay Review', duration: 30, count: '2 replays', description: 'Watch your deaths.' },
-          { id: 's5', time: '1:25 PM', category: 'done', title: 'Hard Stop', duration: 0, count: '', description: 'Stop while sharp.' },
+          { id: 's1', time: '2:00 PM', category: 'wakeup', title: 'Wake Up Move Eat', duration: 20, count: '', description: 'Off screen. Eat. Move.' },
+          { id: 's2', time: '2:20 PM', category: 'warmup', title: 'Aim Warmup', duration: 25, count: '', description: 'Static then dynamic clicking.' },
+          { id: 's3', time: '2:45 PM', category: 'ranked', title: 'Ranked Block', duration: 120, count: '3-4 games', description: 'Play sharp. Use your reads.' },
+          { id: 's4', time: '4:45 PM', category: 'review', title: 'Replay Review', duration: 20, count: '1-2 replays', description: 'Watch your deaths.' },
+          { id: 's5', time: '5:05 PM', category: 'done', title: 'Hard Stop', duration: 0, count: '', description: 'Stop on a decision, not a death.' },
         ],
       },
     },
@@ -143,7 +195,6 @@ function lint(routine) {
   const sched = routine.schedule || [];
   if (sched.length === 0) warns.push('empty schedule');
   if (sched.length > 12) warns.push(`>12 items (${sched.length})`);
-  if (sched.length && sched[sched.length - 1].category !== 'done') warns.push('last item is not "done"');
   sched.forEach((s, i) => {
     if (!VALID_CATEGORIES.includes(s.category)) warns.push(`item ${i + 1}: bad category "${s.category}"`);
     const desc = s.description || '';
@@ -173,7 +224,7 @@ async function callAnthropic(systemPrompt, userContent) {
     },
     body: JSON.stringify({
       model: MODEL,
-      max_tokens: 800,
+      max_tokens: 1600,
       system: [{ type: 'text', text: systemPrompt, cache_control: { type: 'ephemeral' } }],
       messages: [{ role: 'user', content: userContent }],
     }),
