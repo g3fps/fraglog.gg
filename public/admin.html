@@ -4,873 +4,1404 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>fraglog.gg — Admin</title>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onTurnstileLoad" async defer></script>
 <style>
 :root {
-  --red: #FF4655;
-  --darker: #080E14;
-  --surface: #151E27;
-  --surface2: #1C2733;
-  --border: rgba(255,255,255,0.08);
-  --text: #ECE8E1;
-  --muted: #7B8FA1;
+  --red:#FF4655; --darker:#080E14; --surface:#151E27; --surface2:#1C2733;
+  --border:rgba(255,255,255,0.08); --text:#ECE8E1; --muted:#7B8FA1;
+  --green:#6BCF6B; --gold:#E8C547; --blue:#5B9CF6;
 }
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { background: var(--darker); color: var(--text); font-family: 'DM Sans', sans-serif; min-height: 100vh; padding: 2rem; }
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--darker);color:var(--text);font-family:'Barlow',sans-serif;min-height:100vh}
 
-header { display: flex; align-items: center; gap: 12px; margin-bottom: 2.5rem; border-bottom: 1px solid var(--border); padding-bottom: 1.5rem; }
-.logo { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 3px; }
-.logo span { color: var(--red); }
-.badge { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; background: rgba(255,70,85,0.15); color: var(--red); padding: 3px 10px; border-radius: 20px; border: 1px solid rgba(255,70,85,0.3); }
+/* ── Auth overlay ── */
+.auth-overlay{position:fixed;inset:0;background:var(--darker);display:flex;align-items:center;justify-content:center;z-index:1000}
+.auth-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:2rem;width:360px}
+.auth-logo{font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:1.5rem}
+.auth-logo span{color:var(--red)}
+.auth-badge{display:inline-block;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;background:rgba(255,70,85,0.15);color:var(--red);padding:3px 10px;border-radius:20px;border:1px solid rgba(255,70,85,0.3);margin-bottom:1.5rem}
+.auth-error{font-family:'DM Mono',monospace;font-size:11px;color:var(--red);margin-top:8px;min-height:14px}
 
-.container { max-width: 700px; margin: 0 auto; }
+/* ── Hub header ── */
+.hub-header{position:sticky;top:0;z-index:100;background:rgba(8,14,20,0.97);border-bottom:1px solid var(--border);backdrop-filter:blur(8px);display:flex;align-items:center;height:48px;padding:0 20px}
+.hub-logo{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text);margin-right:20px;flex-shrink:0}
+.hub-logo span{color:var(--red)}
+.hub-tabs{display:flex;height:100%;gap:0}
+.hub-tab{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:1px;text-transform:uppercase;background:none;border:none;border-bottom:2px solid transparent;color:var(--muted);cursor:pointer;padding:0 14px;transition:color .15s,border-color .15s;height:100%}
+.hub-tab:hover{color:var(--text)}
+.hub-tab.active{color:var(--text);border-bottom-color:var(--red)}
+.hub-auth{margin-left:auto;font-family:'DM Mono',monospace;font-size:11px;color:var(--green);flex-shrink:0}
 
-.section-title { font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 1rem; }
+/* ── Tab panels ── */
+.hub-panel{display:none}
+.hub-panel.active{display:block}
+.panel-inner{max-width:720px;margin:0 auto;padding:2rem}
+.panel-wide{max-width:1000px;margin:0 auto;padding:2rem}
 
-.card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; }
+/* ── Sub-tabs ── */
+.sub-tabs{display:flex;gap:4px;margin-bottom:20px}
+.sub-tab{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;padding:6px 14px;border-radius:6px;border:1px solid var(--border);background:none;color:var(--muted);cursor:pointer;transition:all .15s}
+.sub-tab.active{background:var(--surface2);color:var(--text);border-color:rgba(255,255,255,0.15)}
+.sub-tab:hover:not(.active){color:var(--text)}
+.sub-panel{display:none}
+.sub-panel.active{display:block}
 
-.field { margin-bottom: 1.25rem; }
-.field:last-child { margin-bottom: 0; }
-label { display: block; font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+/* ── Shared form styles ── */
+.section-label{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1.25rem 1.5rem;margin-bottom:1.25rem}
+.field{margin-bottom:1.1rem}
+.field:last-child{margin-bottom:0}
+label{display:block;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+input,select,textarea{width:100%;background:var(--darker);border:1px solid var(--border);color:var(--text);font-family:'Barlow',sans-serif;font-size:14px;padding:9px 12px;border-radius:8px;outline:none;transition:border-color .15s}
+input:focus,select:focus,textarea:focus{border-color:rgba(255,70,85,0.5)}
+select option{background:var(--surface)}
+textarea{resize:vertical;min-height:70px;line-height:1.5}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.btn{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:1px;text-transform:uppercase;padding:10px 18px;border:none;border-radius:8px;cursor:pointer;transition:all .15s;white-space:nowrap}
+.btn-primary{background:var(--red);color:#fff}
+.btn-primary:hover{background:#e03040}
+.btn-secondary{background:var(--surface2);color:var(--muted);border:1px solid var(--border)}
+.btn-secondary:hover{color:var(--text)}
+.btn-sm{font-size:10px;padding:5px 12px}
+.btn-full{width:100%;padding:13px}
+.btn-ai{background:rgba(255,70,85,0.12);color:var(--red);border:1px solid rgba(255,70,85,0.3)}
+.btn-ai:hover{background:rgba(255,70,85,0.2)}
+.btn-ai:disabled{opacity:.5;cursor:not-allowed}
+.url-row{display:flex;gap:8px}
+.url-row input{flex:1}
+.title-row{display:flex;gap:8px;align-items:flex-end}
+.title-row input{flex:1}
+.vid-id{font-family:'DM Mono',monospace;font-size:12px;color:var(--red);margin-top:6px;min-height:18px}
+.thumb-preview{display:none;margin-top:12px}
+.thumb-preview img{width:100%;border-radius:8px;border:1px solid var(--border)}
+.thumb-preview.visible{display:block}
+.entries-list{display:flex;flex-direction:column;gap:6px}
+.entry-item{background:var(--darker);border:1px solid var(--border);border-radius:8px;padding:9px 13px;font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);display:flex;justify-content:space-between;align-items:center;gap:8px}
+.entry-text{flex:1;word-break:break-all;color:var(--green)}
+.entry-remove{cursor:pointer;color:var(--red);font-size:14px;flex-shrink:0}
+.entry-remove:hover{opacity:.7}
+.empty-state{text-align:center;padding:2rem;color:var(--muted);font-size:13px}
+.status-msg{font-family:'DM Mono',monospace;font-size:11px;text-align:center;margin-top:10px;min-height:16px}
+.tip{font-size:12px;color:var(--muted);margin-top:8px;line-height:1.5}
+.tip strong{color:var(--text)}
 
-input, select, textarea {
-  width: 100%;
-  background: var(--darker);
-  border: 1px solid var(--border);
-  color: var(--text);
-  font-family: 'DM Sans', sans-serif;
-  font-size: 14px;
-  padding: 10px 12px;
-  border-radius: 8px;
-  outline: none;
-  transition: border-color 0.15s;
-}
-input:focus, select:focus, textarea:focus { border-color: rgba(255,70,85,0.5); }
-select option { background: var(--surface); }
+/* ── Lineup panel ── */
+.lineup-panel.active{display:grid;grid-template-columns:1fr 400px;height:calc(100vh - 48px);overflow:hidden}
+.lu-map-panel{padding:1.25rem;border-right:1px solid var(--border);display:flex;flex-direction:column;gap:1rem;overflow:hidden}
+.lu-map-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.lu-minimap-wrap{position:relative;flex:1;background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;cursor:crosshair;user-select:none;display:flex;align-items:center;justify-content:center;min-height:0}
+.lu-minimap-wrap.placing-stand{border-color:rgba(100,200,255,0.5)}
+.lu-minimap-wrap.placing-land{border-color:rgba(255,120,0,0.5)}
+#lu-img{max-width:100%;max-height:100%;object-fit:contain;display:block;pointer-events:none}
+#lu-canvas{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none}
+.lu-placeholder{display:flex;flex-direction:column;align-items:center;gap:10px;color:var(--muted);padding:3rem}
+.lu-placeholder-icon{font-size:36px;opacity:.3}
+.lu-placeholder-text{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:1px}
+.marker-modes{display:flex;gap:6px}
+.mode-btn{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;padding:7px 12px;border-radius:8px;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--muted);transition:all .15s;display:flex;align-items:center;gap:6px}
+.mode-btn:hover{color:var(--text)}
+.mode-btn.active-stand{background:rgba(100,200,255,0.15);border-color:rgba(100,200,255,0.5);color:#64C8FF}
+.mode-btn.active-land{background:rgba(255,120,0,0.15);border-color:rgba(255,120,0,0.5);color:#FF7800}
+.mode-btn .dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.coords-display{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);display:flex;gap:1rem;flex-wrap:wrap;align-items:center}
+.coord-val.set{color:var(--green)}
+.lu-form-panel{padding:1.25rem;overflow-y:auto;display:flex;flex-direction:column;gap:1rem}
+.lu-form-title{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;letter-spacing:1px;text-transform:uppercase}
+.agent-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:4px}
+.agent-btn{aspect-ratio:1;border-radius:50%;border:1px solid var(--border);background:var(--surface);cursor:pointer;overflow:hidden;padding:0;transition:all .15s}
+.agent-btn:hover{border-color:rgba(255,70,85,0.4);transform:scale(1.08)}
+.agent-btn.active{border-color:var(--red);box-shadow:0 0 0 2px rgba(255,70,85,0.3)}
+.agent-btn img{width:100%;height:100%;object-fit:cover;object-position:top;display:block}
+.ability-picker{display:flex;gap:7px;flex-wrap:wrap}
+.ability-btn{width:46px;height:46px;border-radius:8px;border:1px solid var(--border);background:var(--surface);cursor:pointer;overflow:hidden;padding:0;transition:all .15s}
+.ability-btn:hover{border-color:rgba(255,70,85,0.4);transform:scale(1.05)}
+.ability-btn.active{border-color:var(--red);box-shadow:0 0 0 2px rgba(255,70,85,0.3)}
+.ability-btn img{width:100%;height:100%;object-fit:contain;padding:5px;filter:brightness(0.8)}
+.ability-btn.active img{filter:brightness(1)}
+.lu-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:4px}
+.lu-tag{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;padding:3px 8px;border-radius:4px;background:var(--surface2);border:1px solid var(--border);color:var(--muted);cursor:pointer;transition:all .15s}
+.lu-tag.active{background:rgba(255,70,85,0.15);border-color:rgba(255,70,85,0.4);color:var(--red)}
+.lu-recent-list{display:flex;flex-direction:column;gap:6px}
+.lu-recent-item{background:var(--darker);border:1px solid var(--border);border-radius:8px;padding:9px 12px;display:flex;align-items:center;gap:8px}
+.lu-recent-info{flex:1}
+.lu-recent-name{font-family:'DM Mono',monospace;font-size:11px;color:var(--text);text-transform:capitalize}
+.lu-recent-meta{font-size:11px;color:var(--muted);margin-top:2px}
+.lu-yt-preview{display:none;margin-top:8px}
+.lu-yt-preview img{width:100%;border-radius:6px;border:1px solid var(--border)}
+.lu-yt-preview.visible{display:block}
+.lu-yt-id{font-family:'DM Mono',monospace;font-size:11px;color:var(--red);margin-top:4px}
 
-.row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+/* ── Data tab ── */
+.data-filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:1.25rem}
+.data-filters select{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:1px;text-transform:uppercase;background:var(--surface);border:1px solid var(--border);color:var(--text);padding:7px 12px;border-radius:8px;outline:none;cursor:pointer}
+.data-stat{margin-left:auto;font-family:'DM Mono',monospace;font-size:11px;color:var(--muted)}
+.data-entry{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1rem 1.25rem;margin-bottom:10px}
+.data-meta{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
+.dtag{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;padding:2px 8px;border-radius:20px;border:1px solid}
+.dtag-mode{color:var(--muted);border-color:var(--border)}
+.dtag-agent{color:#7EC8E3;border-color:rgba(126,200,227,0.3)}
+.dtag-map{color:#A8C5A0;border-color:rgba(168,197,160,0.3)}
+.dtag-shared{color:var(--green);border-color:rgba(107,207,107,0.3);background:rgba(107,207,107,0.08)}
+.dtag-private{color:var(--muted);border-color:var(--border)}
+.data-entry-date{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);margin-left:auto}
+.data-section{margin-top:10px}
+.data-label{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+.data-body{font-size:13px;line-height:1.6;color:var(--text);background:var(--darker);border:1px solid var(--border);border-radius:6px;padding:10px 12px;white-space:pre-wrap;word-break:break-word}
+.data-body.collapsed{max-height:80px;overflow:hidden;position:relative}
+.data-body.collapsed::after{content:'';position:absolute;bottom:0;left:0;right:0;height:30px;background:linear-gradient(transparent,var(--darker))}
+.expand-btn{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;background:none;border:none;color:var(--red);cursor:pointer;padding:4px 0;margin-top:4px}
+.expand-btn:hover{opacity:.7}
+.del-btn{font-family:'DM Mono',monospace;font-size:11px;background:none;border:1px solid var(--border);color:var(--muted);padding:2px 8px;border-radius:6px;cursor:pointer;transition:all .15s;margin-left:auto;flex-shrink:0}
+.del-btn:hover{border-color:var(--red);color:var(--red)}
+.load-more{width:100%;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:1px;text-transform:uppercase;background:var(--surface);border:1px solid var(--border);color:var(--muted);padding:12px;border-radius:8px;cursor:pointer;margin-top:4px;transition:all .15s}
+.load-more:hover{border-color:var(--red);color:var(--red)}
+.load-more:disabled{opacity:.4;cursor:not-allowed}
 
-.url-row { display: flex; gap: 8px; }
-.url-row input { flex: 1; }
+/* ── Roadmap ── */
+.rm-board{display:flex;gap:18px;align-items:flex-start;overflow-x:auto;padding-bottom:20px}
+.rm-col{flex-shrink:0;width:300px}
+.rm-col-head{display:flex;align-items:center;gap:8px;margin-bottom:12px;padding-bottom:10px;border-bottom:2px solid var(--border)}
+.rm-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.dot-shipped{background:var(--green);box-shadow:0 0 5px rgba(107,207,107,0.4)}
+.dot-progress{background:var(--gold);box-shadow:0 0 5px rgba(232,197,71,0.4)}
+.dot-planned{background:var(--blue);box-shadow:0 0 5px rgba(91,156,246,0.4)}
+.dot-idea{background:var(--muted)}
+.rm-col-title{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--muted)}
+.rm-count{margin-left:auto;font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);background:var(--surface2);padding:2px 7px;border-radius:10px;border:1px solid var(--border)}
+.rm-cards{display:flex;flex-direction:column;gap:7px}
+.rm-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 14px;cursor:pointer;transition:border-color .15s;user-select:none}
+.rm-card:hover{border-color:rgba(255,255,255,0.15)}
+.rm-card.expanded{border-color:rgba(255,255,255,0.2)}
+.rm-card-top{display:flex;align-items:flex-start;gap:6px}
+.rm-card-title{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:600;color:var(--text);flex:1;line-height:1.2}
+.rm-chevron{color:var(--muted);font-size:10px;transition:transform .2s;flex-shrink:0;margin-top:3px}
+.rm-card.expanded .rm-chevron{transform:rotate(180deg)}
+.rm-badges{display:flex;gap:4px;flex-wrap:wrap;margin-top:7px}
+.rb{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.5px;text-transform:uppercase;padding:2px 6px;border-radius:4px}
+.rb-prem{background:rgba(255,70,85,0.12);color:var(--red);border:1px solid rgba(255,70,85,0.2)}
+.rb-free{background:rgba(107,207,107,0.1);color:var(--green);border:1px solid rgba(107,207,107,0.15)}
+.rb-ai{background:rgba(91,156,246,0.1);color:var(--blue);border:1px solid rgba(91,156,246,0.15)}
+.rb-page{background:var(--surface2);color:var(--muted);border:1px solid var(--border)}
+.rm-body{display:none;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);font-size:12px;color:var(--muted);line-height:1.55}
+.rm-card.expanded .rm-body{display:block}
+.rm-body code{font-family:'DM Mono',monospace;font-size:10px;background:var(--surface2);padding:1px 5px;border-radius:3px;color:var(--text)}
 
-.btn {
-  font-family: 'DM Mono', monospace;
-  font-size: 11px;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  padding: 10px 18px;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.15s;
-  white-space: nowrap;
-}
-.btn-primary { background: var(--red); color: #fff; }
-.btn-primary:hover { background: #e03040; }
-.btn-secondary { background: var(--surface2); color: var(--muted); border: 1px solid var(--border); }
-.btn-secondary:hover { color: var(--text); }
-.btn-copy { background: var(--surface2); color: var(--text); border: 1px solid var(--border); width: 100%; margin-top: 10px; padding: 12px; font-size: 12px; }
-.btn-copy:hover { border-color: var(--red); color: var(--red); }
-.btn-copy.copied { background: rgba(107,207,107,0.15); border-color: #6BCF6B; color: #6BCF6B; }
-.btn-ai { background: rgba(255,70,85,0.12); color: var(--red); border: 1px solid rgba(255,70,85,0.3); padding: 10px 14px; }
-.btn-ai:hover { background: rgba(255,70,85,0.2); }
-.btn-ai:disabled { opacity: 0.5; cursor: not-allowed; }
-.title-row { display: flex; gap: 8px; align-items: flex-end; }
-.title-row input { flex: 1; }
+/* Compare table */
+.cmp-table{width:100%;max-width:700px;border-collapse:collapse;border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.cmp-table th{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;padding:10px 16px;background:var(--surface2);color:var(--muted);border-bottom:1px solid var(--border);text-align:center}
+.cmp-table th:first-child{text-align:left}
+.cmp-table th.th-prem{color:var(--red);background:rgba(255,70,85,0.08)}
+.cmp-table td{padding:10px 16px;border-top:1px solid var(--border);font-size:13px;vertical-align:middle}
+.cmp-table td:not(:first-child){text-align:center;font-family:'DM Mono',monospace;font-size:12px}
+.cmp-table td.td-prem{background:rgba(255,70,85,0.04)}
+.cmp-table tr:hover td{background:rgba(255,255,255,0.02)}
+.cmp-table tr:hover td.td-prem{background:rgba(255,70,85,0.06)}
+.cmp-sec-row td{background:var(--surface)!important;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);padding:8px 16px!important}
+.cmp-yes{color:var(--red);font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700}
+.cmp-no{color:var(--muted);opacity:.35}
+.cmp-prem{color:var(--gold)}
+.feat-sub{display:block;font-size:11px;color:var(--muted);font-style:italic;margin-top:2px}
+.cmp-note{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);margin-top:14px;line-height:1.6}
+.cmp-note code{background:var(--surface2);padding:1px 5px;border-radius:3px;color:var(--text)}
 
-.thumb-preview { display: none; margin-top: 12px; }
-.thumb-preview img { width: 100%; border-radius: 8px; border: 1px solid var(--border); }
-.thumb-preview.visible { display: block; }
+/* Pages table */
+.pages-table{width:100%;max-width:680px;border-collapse:collapse;border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.pages-table th{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);padding:10px 16px;background:var(--surface2);text-align:left;border-bottom:1px solid var(--border)}
+.pages-table td{padding:8px 16px;border-top:1px solid var(--border);font-size:13px}
+.pages-table td:not(:first-child){font-family:'DM Mono',monospace;font-size:11px;text-align:center}
+.pages-table code{font-family:'DM Mono',monospace;font-size:11px;background:var(--surface2);padding:1px 5px;border-radius:3px}
+.pages-table tr:hover td{background:var(--surface)}
+.pg-yes{color:var(--gold)}
+.pg-admin{color:var(--red)}
+.pg-no{color:var(--muted);opacity:.45}
+.pg-full{color:var(--red)}
+.pg-partial{color:var(--gold)}
+.pg-note{font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;margin-left:6px}
 
-.video-id-display {
-  font-family: 'DM Mono', monospace;
-  font-size: 12px;
-  color: var(--red);
-  margin-top: 6px;
-  min-height: 18px;
-}
+/* ── Ideas ── */
+.ideas-add-form{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1.25rem 1.5rem;margin-bottom:1.25rem;display:none}
+.ideas-add-form.open{display:block}
+.ideas-filters{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:1.25rem;align-items:center}
+.ideas-pill{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;padding:5px 12px;border-radius:20px;border:1px solid var(--border);background:none;color:var(--muted);cursor:pointer;transition:all .15s}
+.ideas-pill.active{background:var(--surface2);color:var(--text);border-color:rgba(255,255,255,0.2)}
+.ideas-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+.idea-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;display:flex;flex-direction:column;gap:8px}
+.idea-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.idea-title{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:600;color:var(--text);line-height:1.2}
+.idea-del{background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px;flex-shrink:0;opacity:.5;transition:opacity .15s;padding:0}
+.idea-del:hover{opacity:1;color:var(--red)}
+.idea-notes{font-size:13px;color:var(--muted);line-height:1.5}
+.idea-footer{display:flex;align-items:center;gap:8px;margin-top:4px}
+.icat{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:2px 7px;border-radius:4px}
+.icat-feature{background:rgba(91,156,246,0.12);color:var(--blue);border:1px solid rgba(91,156,246,0.2)}
+.icat-social{background:rgba(107,207,107,0.1);color:var(--green);border:1px solid rgba(107,207,107,0.2)}
+.icat-content{background:rgba(232,197,71,0.1);color:var(--gold);border:1px solid rgba(232,197,71,0.2)}
+.icat-promo{background:rgba(255,70,85,0.1);color:var(--red);border:1px solid rgba(255,70,85,0.2)}
+.icat-partner{background:rgba(168,85,247,0.1);color:#c084fc;border:1px solid rgba(168,85,247,0.2)}
+.icat-other{background:var(--surface2);color:var(--muted);border:1px solid var(--border)}
+.idea-date{margin-left:auto;font-family:'DM Mono',monospace;font-size:10px;color:var(--muted)}
+.ideas-empty{text-align:center;padding:3rem;color:var(--muted);font-family:'DM Mono',monospace;font-size:12px;grid-column:1/-1}
 
-.output-box {
-  background: var(--darker);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 14px;
-  font-family: 'DM Mono', monospace;
-  font-size: 12px;
-  color: #6BCF6B;
-  line-height: 1.6;
-  word-break: break-all;
-  min-height: 60px;
-  white-space: pre-wrap;
-}
-
-.tip { font-size: 12px; color: var(--muted); margin-top: 8px; line-height: 1.5; }
-.tip strong { color: var(--text); }
-
-.entries-list { display: flex; flex-direction: column; gap: 8px; }
-.entry-item {
-  background: var(--darker);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 10px 14px;
-  font-family: 'DM Mono', monospace;
-  font-size: 11px;
-  color: var(--muted);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 8px;
-}
-.entry-item .entry-text { flex: 1; word-break: break-all; color: #6BCF6B; }
-.entry-remove { cursor: pointer; color: var(--red); font-size: 14px; flex-shrink: 0; }
-.entry-remove:hover { opacity: 0.7; }
-
-.empty-state { text-align: center; padding: 2rem; color: var(--muted); font-size: 13px; }
-
-.full-output {
-  background: var(--darker);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 14px;
-  font-family: 'DM Mono', monospace;
-  font-size: 11px;
-  color: #6BCF6B;
-  white-space: pre-wrap;
-  word-break: break-all;
-  max-height: 300px;
-  overflow-y: auto;
-  line-height: 1.7;
-}
+/* ── Aliases / missing ── */
+.agent-cell{aspect-ratio:1;border-radius:50%;border:1px solid var(--border);background:var(--surface);cursor:pointer;overflow:hidden;padding:0;transition:all .15s}
+.agent-cell:hover{border-color:rgba(255,70,85,0.4);transform:scale(1.08)}
+.agent-cell.selected{border-color:var(--red);box-shadow:0 0 0 2px rgba(255,70,85,0.3)}
+.agent-cell img{width:100%;height:100%;object-fit:cover;object-position:top;display:block}
+.ability-opt{padding:6px 10px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--muted);cursor:pointer;transition:all .15s;white-space:nowrap}
+.ability-opt:hover{color:var(--text);border-color:rgba(255,255,255,0.15)}
+.ability-opt.selected{background:rgba(255,70,85,0.15);border-color:rgba(255,70,85,0.4);color:var(--red)}
+.data-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+.dtag-date{color:var(--muted);border-color:var(--border);opacity:.7}
+.lu-recent-row{display:flex;align-items:center;gap:8px;background:var(--darker);border:1px solid var(--border);border-radius:8px;padding:9px 12px}
+.lu-recent-title{font-family:'DM Mono',monospace;font-size:11px;color:var(--text)}
+.lu-recent-meta{font-size:11px;color:var(--muted);margin-top:2px}
+.lu-recent-actions{display:flex;gap:6px;flex-shrink:0;margin-left:auto}
+.idea-card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.active-wall{background:rgba(168,85,247,0.15);border-color:rgba(168,85,247,0.5);color:#c084fc}
+.lu-yt-preview{display:none;flex-direction:column;gap:4px;margin-top:8px}
+.lu-yt-preview img{width:100%;border-radius:6px;border:1px solid var(--border)}
+pre{white-space:pre-wrap;word-break:break-word;font-family:'DM Mono',monospace;font-size:11px;line-height:1.55;color:var(--text)}
+/* card open state alias */
+.rm-card.open .rm-body{display:block}
+.rm-card.open .rm-chevron{transform:rotate(180deg)}
+/* entry rows in session/recent lists */
+.entry-row{background:var(--darker);border:1px solid var(--border);border-radius:8px;padding:9px 13px;display:flex;align-items:center;gap:8px}
+.entry-main{flex:1;min-width:0}
+.entry-title{font-family:'DM Mono',monospace;font-size:11px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.entry-meta{font-size:11px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.entry-link{font-family:'DM Mono',monospace;font-size:13px;color:var(--muted);text-decoration:none;flex-shrink:0;transition:color .15s}
+.entry-link:hover{color:var(--red)}
+/* lu-yt-preview override to flex when shown */
+.lu-yt-preview[style*="flex"]{display:flex!important}
 </style>
 </head>
 <body>
 
-<div class="container">
-  <header>
-    <div class="logo">fraglog<span>.</span>gg</div>
-    <div class="badge">admin</div>
-    <div id="auth-status" style="margin-left:auto;font-family:'DM Mono',monospace;font-size:11px;color:var(--muted)">Connecting...</div>
-  </header>
-
-  <div id="signin-card" class="card" style="display:none;margin-bottom:1.5rem">
-    <div class="row">
-      <div class="field" style="margin-bottom:0">
-        <label>Email</label>
-        <input type="email" id="auth-email" placeholder="you@email.com">
-      </div>
-      <div class="field" style="margin-bottom:0">
-        <label>Password</label>
-        <input type="password" id="auth-pass" placeholder="••••••••">
-      </div>
-    </div>
+<!-- ── Auth overlay ── -->
+<div class="auth-overlay" id="auth-overlay">
+  <div class="auth-card">
+    <div class="auth-logo">fraglog<span>.</span>gg</div>
+    <div class="auth-badge">Admin</div>
+    <div class="field"><label>Email</label><input type="email" id="auth-email" placeholder="you@email.com"></div>
+    <div class="field"><label>Password</label><input type="password" id="auth-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doSignIn()"></div>
     <div id="turnstile-widget" style="margin-top:12px"></div>
-    <button class="btn btn-primary" style="width:100%;margin-top:12px" onclick="adminSignIn()">Sign In</button>
-    <div id="auth-error" style="font-family:'DM Mono',monospace;font-size:11px;color:#FF4655;margin-top:8px;min-height:14px"></div>
-  </div>
-
-  <!-- STEP 1: YouTube URL -->
-  <div class="section-title">Step 1 — Paste YouTube URL</div>
-  <div class="card">
-    <div class="field">
-      <label>YouTube URL</label>
-      <div class="url-row">
-        <input type="text" id="yt-url" placeholder="https://youtube.com/watch?v=PQa14R8HKFU" oninput="extractVideoId()">
-        <button class="btn btn-secondary" onclick="clearUrl()">Clear</button>
-      </div>
-      <div class="video-id-display" id="video-id-display"></div>
-    </div>
-    <div class="thumb-preview" id="thumb-preview">
-      <img id="thumb-img" src="" alt="Thumbnail">
-    </div>
-  </div>
-
-  <!-- STEP 2: VOD Details -->
-  <div class="section-title">Step 2 — Fill in details</div>
-  <div class="card">
-    <div class="row">
-      <div class="field">
-        <label>Map</label>
-        <select id="sel-map">
-          <option value="">Select map...</option>
-          <option value="ascent">Ascent</option>
-          <option value="bind">Bind</option>
-          <option value="haven">Haven</option>
-          <option value="split">Split</option>
-          <option value="fracture">Fracture</option>
-          <option value="pearl">Pearl</option>
-          <option value="icebox">Icebox</option>
-          <option value="breeze">Breeze</option>
-          <option value="lotus">Lotus</option>
-          <option value="sunset">Sunset</option>
-          <option value="abyss">Abyss</option>
-          <option value="corrode">Corrode</option>
-          <option value="summit">Summit</option>
-        </select>
-      </div>
-      <div class="field">
-        <label>Agent</label>
-        <select id="sel-agent">
-          <option value="">Select agent...</option>
-          <optgroup label="Duelists">
-            <option value="jett">Jett</option>
-            <option value="reyna">Reyna</option>
-            <option value="raze">Raze</option>
-            <option value="neon">Neon</option>
-            <option value="phoenix">Phoenix</option>
-            <option value="yoru">Yoru</option>
-            <option value="iso">Iso</option>
-            <option value="waylay">Waylay</option>
-          </optgroup>
-          <optgroup label="Controllers">
-            <option value="omen">Omen</option>
-            <option value="viper">Viper</option>
-            <option value="brimstone">Brimstone</option>
-            <option value="astra">Astra</option>
-            <option value="harbor">Harbor</option>
-            <option value="clove">Clove</option>
-            <option value="miks">Miks</option>
-          </optgroup>
-          <optgroup label="Sentinels">
-            <option value="sage">Sage</option>
-            <option value="cypher">Cypher</option>
-            <option value="killjoy">Killjoy</option>
-            <option value="chamber">Chamber</option>
-            <option value="deadlock">Deadlock</option>
-            <option value="vyse">Vyse</option>
-            <option value="veto">Veto</option>
-          </optgroup>
-          <optgroup label="Initiators">
-            <option value="sova">Sova</option>
-            <option value="breach">Breach</option>
-            <option value="skye">Skye</option>
-            <option value="kayo">KAY/O</option>
-            <option value="fade">Fade</option>
-            <option value="gekko">Gekko</option>
-            <option value="tejo">Tejo</option>
-          </optgroup>
-        </select>
-      </div>
-    </div>
-    <div class="field">
-      <label>Player / Channel name</label>
-      <input type="text" id="inp-player" placeholder="tarik">
-    </div>
-    <div class="row">
-      <div class="field">
-        <label>Title</label>
-        <div class="title-row">
-          <input type="text" id="inp-title" placeholder="Auto-generated — or type your own" oninput="checkDuplicates()">
-          <button class="btn btn-ai" id="gen-title-btn" onclick="generateTitle()" title="Generate title with AI">AI</button>
-        </div>
-      </div>
-      <div class="field">
-        <label>Date</label>
-        <input type="date" id="inp-date">
-      </div>
-    </div>
-  </div>
-
-  <!-- STEP 3: Save -->
-  <div class="section-title">Step 3 — Save to Supabase</div>
-  <div class="card">
-    <button class="btn btn-primary" style="width:100%;padding:14px" onclick="saveVod()">+ Save VOD to Supabase</button>
-    <div id="save-status" style="font-family:'DM Mono',monospace;font-size:11px;text-align:center;margin-top:10px;min-height:16px"></div>
-    <p class="tip" style="margin-top:12px">Saves to the <strong>vods</strong> Supabase table. Duplicate IDs are rejected automatically. Press <strong>Ctrl+Enter</strong> to save quickly.</p>
-  </div>
-
-  <!-- Session log -->
-  <div class="section-title" style="display:flex;justify-content:space-between;align-items:center">
-    <span>Saved this session (<span id="entry-count">0</span>)</span>
-    <button class="btn btn-secondary" style="font-size:10px;padding:5px 12px" onclick="clearSession()">Clear log</button>
-  </div>
-  <div class="card">
-    <div class="entries-list" id="entries-list">
-      <div class="empty-state">No VODs saved yet — fill in the form above and hit Save.</div>
-    </div>
-  </div>
-
-  <div class="section-title" style="display:flex;justify-content:space-between;align-items:center;margin-top:2rem">
-    <span>Recent VODs (<span id="vod-recent-count">0</span>)</span>
-    <button class="btn btn-secondary" style="font-size:10px;padding:5px 12px" onclick="loadVodRecent()">Refresh</button>
-  </div>
-  <div class="card">
-    <div class="entries-list" id="vod-recent-list"><div class="empty-state">Loading...</div></div>
-  </div>
-
-  <hr style="border:none;border-top:1px solid var(--border);margin:2.5rem 0">
-
-  <div class="section-title">Pro Match VODs</div>
-
-  <div class="section-title" style="margin-top:1.5rem">Teams & Event</div>
-  <div class="card">
-    <div class="row">
-      <div class="field"><label>Team 1</label><input type="text" id="pro-team1" placeholder="Sentinels"></div>
-      <div class="field"><label>Team 2</label><input type="text" id="pro-team2" placeholder="NRG"></div>
-    </div>
-    <div class="row">
-      <div class="field"><label>Event</label><input type="text" id="pro-event" placeholder="VCT Americas 2025"></div>
-      <div class="field"><label>Date</label><input type="date" id="pro-date"></div>
-    </div>
-  </div>
-
-  <div class="section-title">Map 1</div>
-  <div class="card">
-    <div class="row">
-      <div class="field"><label>Map</label><select id="pro-map1"><option value="">Select map...</option><option value="ascent">Ascent</option><option value="bind">Bind</option><option value="haven">Haven</option><option value="split">Split</option><option value="fracture">Fracture</option><option value="pearl">Pearl</option><option value="icebox">Icebox</option><option value="breeze">Breeze</option><option value="lotus">Lotus</option><option value="sunset">Sunset</option><option value="abyss">Abyss</option><option value="corrode">Corrode</option><option value="summit">Summit</option></select></div>
-      <div class="field"><label>YouTube URL</label><input type="text" id="pro-yt1" placeholder="https://youtube.com/..." oninput="proHandleYT('1')"></div>
-    </div>
-    <div class="field" style="margin-top:10px"><label>Start Time (MM:SS or seconds)</label><input type="text" id="pro-ts1" placeholder="0:00 or 0"></div>
-    <div class="thumb-preview" id="pro-preview1"><img id="pro-thumb1" src="" alt=""><div class="video-id-display" id="pro-id1"></div></div>
-  </div>
-
-  <div class="section-title">Map 2</div>
-  <div class="card">
-    <div class="row">
-      <div class="field"><label>Map</label><select id="pro-map2"><option value="">Select map...</option><option value="ascent">Ascent</option><option value="bind">Bind</option><option value="haven">Haven</option><option value="split">Split</option><option value="fracture">Fracture</option><option value="pearl">Pearl</option><option value="icebox">Icebox</option><option value="breeze">Breeze</option><option value="lotus">Lotus</option><option value="sunset">Sunset</option><option value="abyss">Abyss</option><option value="corrode">Corrode</option><option value="summit">Summit</option></select></div>
-      <div class="field"><label>YouTube URL</label><input type="text" id="pro-yt2" placeholder="https://youtube.com/..." oninput="proHandleYT('2')"></div>
-    </div>
-    <div class="field" style="margin-top:10px"><label>Start Time (MM:SS or seconds)</label><input type="text" id="pro-ts2" placeholder="0:00 or 0"></div>
-    <div class="thumb-preview" id="pro-preview2"><img id="pro-thumb2" src="" alt=""><div class="video-id-display" id="pro-id2"></div></div>
-  </div>
-
-  <div class="section-title">Map 3 (optional)</div>
-  <div class="card">
-    <div class="row">
-      <div class="field"><label>Map</label><select id="pro-map3"><option value="">Select map...</option><option value="ascent">Ascent</option><option value="bind">Bind</option><option value="haven">Haven</option><option value="split">Split</option><option value="fracture">Fracture</option><option value="pearl">Pearl</option><option value="icebox">Icebox</option><option value="breeze">Breeze</option><option value="lotus">Lotus</option><option value="sunset">Sunset</option><option value="abyss">Abyss</option><option value="corrode">Corrode</option><option value="summit">Summit</option></select></div>
-      <div class="field"><label>YouTube URL</label><input type="text" id="pro-yt3" placeholder="https://youtube.com/..." oninput="proHandleYT('3')"></div>
-    </div>
-    <div class="field" style="margin-top:10px"><label>Start Time (MM:SS or seconds)</label><input type="text" id="pro-ts3" placeholder="0:00 or 0"></div>
-    <div class="thumb-preview" id="pro-preview3"><img id="pro-thumb3" src="" alt=""><div class="video-id-display" id="pro-id3"></div></div>
-  </div>
-
-  <div class="section-title">Map 4 (optional)</div>
-  <div class="card">
-    <div class="row">
-      <div class="field"><label>Map</label><select id="pro-map4"><option value="">Select map...</option><option value="ascent">Ascent</option><option value="bind">Bind</option><option value="haven">Haven</option><option value="split">Split</option><option value="fracture">Fracture</option><option value="pearl">Pearl</option><option value="icebox">Icebox</option><option value="breeze">Breeze</option><option value="lotus">Lotus</option><option value="sunset">Sunset</option><option value="abyss">Abyss</option><option value="corrode">Corrode</option><option value="summit">Summit</option></select></div>
-      <div class="field"><label>YouTube URL</label><input type="text" id="pro-yt4" placeholder="https://youtube.com/..." oninput="proHandleYT('4')"></div>
-    </div>
-    <div class="field" style="margin-top:10px"><label>Start Time (MM:SS or seconds)</label><input type="text" id="pro-ts4" placeholder="0:00 or 0"></div>
-    <div class="thumb-preview" id="pro-preview4"><img id="pro-thumb4" src="" alt=""><div class="video-id-display" id="pro-id4"></div></div>
-  </div>
-
-  <div class="section-title">Map 5 (optional)</div>
-  <div class="card">
-    <div class="row">
-      <div class="field"><label>Map</label><select id="pro-map5"><option value="">Select map...</option><option value="ascent">Ascent</option><option value="bind">Bind</option><option value="haven">Haven</option><option value="split">Split</option><option value="fracture">Fracture</option><option value="pearl">Pearl</option><option value="icebox">Icebox</option><option value="breeze">Breeze</option><option value="lotus">Lotus</option><option value="sunset">Sunset</option><option value="abyss">Abyss</option><option value="corrode">Corrode</option><option value="summit">Summit</option></select></div>
-      <div class="field"><label>YouTube URL</label><input type="text" id="pro-yt5" placeholder="https://youtube.com/..." oninput="proHandleYT('5')"></div>
-    </div>
-    <div class="field" style="margin-top:10px"><label>Start Time (MM:SS or seconds)</label><input type="text" id="pro-ts5" placeholder="0:00 or 0"></div>
-    <div class="thumb-preview" id="pro-preview5"><img id="pro-thumb5" src="" alt=""><div class="video-id-display" id="pro-id5"></div></div>
-  </div>
-
-  <div class="section-title">Save</div>
-  <div class="card">
-    <button class="btn btn-primary" style="width:100%;padding:14px" onclick="saveProMatch()">Save Pro Match to Supabase</button>
-    <div id="pro-status" style="font-family:'DM Mono',monospace;font-size:11px;text-align:center;margin-top:10px;min-height:16px"></div>
-  </div>
-
-  <div class="section-title" style="display:flex;justify-content:space-between;align-items:center">
-    <span>Recent Pro Matches (<span id="pro-recent-count">0</span>)</span>
-  </div>
-  <div class="card">
-    <div class="entries-list" id="pro-recent-list"><div class="empty-state">No pro matches yet.</div></div>
-  </div>
-
-  <hr style="border:none;border-top:1px solid var(--border);margin:2.5rem 0">
-
-  <div class="section-title" style="display:flex;justify-content:space-between;align-items:center">
-    <span>Gameplan Training Data (<span id="gameplan-count">0</span> total)</span>
-    <button class="btn btn-secondary" style="font-size:10px;padding:5px 12px" onclick="loadGameplanData(0)">Refresh</button>
-  </div>
-  <div class="card" id="gameplan-data-card">
-    <div class="empty-state">Loading...</div>
-  </div>
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2rem">
-    <button class="btn btn-secondary" id="gameplan-prev-btn" style="font-size:10px;padding:5px 12px;display:none" onclick="gameplanPage(-1)">← Prev</button>
-    <span id="gameplan-page-info" style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted)"></span>
-    <button class="btn btn-secondary" id="gameplan-next-btn" style="font-size:10px;padding:5px 12px;display:none" onclick="gameplanPage(1)">Next →</button>
+    <button class="btn btn-primary btn-full" style="margin-top:12px" onclick="doSignIn()">Sign In</button>
+    <div class="auth-error" id="auth-error"></div>
   </div>
 </div>
 
+<!-- ── App ── -->
+<div id="app" style="display:none">
+
+  <header class="hub-header">
+    <div class="hub-logo">fraglog<span>.</span>gg</div>
+    <nav class="hub-tabs">
+      <button class="hub-tab active" onclick="switchTab('vods',this)">VODs</button>
+      <button class="hub-tab" onclick="switchTab('pro',this)">Pro</button>
+      <button class="hub-tab" onclick="switchTab('lineups',this)">Lineups</button>
+      <button class="hub-tab" onclick="switchTab('data',this)">Data</button>
+      <button class="hub-tab" onclick="switchTab('roadmap',this)">Roadmap</button>
+      <button class="hub-tab" onclick="switchTab('ideas',this)">Ideas</button>
+    </nav>
+    <div class="hub-auth" id="hub-auth"></div>
+  </header>
+
+  <!-- ══ VODs tab ══ -->
+  <div class="hub-panel active" id="tab-vods">
+  <div class="panel-inner">
+    <div class="section-label" style="margin-bottom:1.25rem">Step 1 — Paste YouTube URL</div>
+    <div class="card">
+      <div class="field">
+        <label>YouTube URL</label>
+        <div class="url-row">
+          <input type="text" id="yt-url" placeholder="https://youtube.com/watch?v=..." oninput="extractVideoId()">
+          <button class="btn btn-secondary" onclick="clearUrl()">Clear</button>
+        </div>
+        <div class="vid-id" id="vid-id"></div>
+      </div>
+      <div class="thumb-preview" id="thumb-preview"><img id="thumb-img" src="" alt=""></div>
+    </div>
+
+    <div class="section-label" style="margin-bottom:1.25rem">Step 2 — Details</div>
+    <div class="card">
+      <div class="row2">
+        <div class="field"><label>Map</label><select id="sel-map">
+          <option value="">Select map...</option>
+          <option value="ascent">Ascent</option><option value="bind">Bind</option><option value="haven">Haven</option>
+          <option value="split">Split</option><option value="fracture">Fracture</option><option value="pearl">Pearl</option>
+          <option value="icebox">Icebox</option><option value="breeze">Breeze</option><option value="lotus">Lotus</option>
+          <option value="sunset">Sunset</option><option value="abyss">Abyss</option><option value="corrode">Corrode</option>
+          <option value="summit">Summit</option>
+        </select></div>
+        <div class="field"><label>Agent</label><select id="sel-agent">
+          <option value="">Select agent...</option>
+          <optgroup label="Duelists"><option value="jett">Jett</option><option value="reyna">Reyna</option><option value="raze">Raze</option><option value="neon">Neon</option><option value="phoenix">Phoenix</option><option value="yoru">Yoru</option><option value="iso">Iso</option><option value="waylay">Waylay</option></optgroup>
+          <optgroup label="Controllers"><option value="omen">Omen</option><option value="viper">Viper</option><option value="brimstone">Brimstone</option><option value="astra">Astra</option><option value="harbor">Harbor</option><option value="clove">Clove</option><option value="miks">Miks</option></optgroup>
+          <optgroup label="Sentinels"><option value="sage">Sage</option><option value="cypher">Cypher</option><option value="killjoy">Killjoy</option><option value="chamber">Chamber</option><option value="deadlock">Deadlock</option><option value="vyse">Vyse</option><option value="veto">Veto</option></optgroup>
+          <optgroup label="Initiators"><option value="sova">Sova</option><option value="breach">Breach</option><option value="skye">Skye</option><option value="kayo">KAY/O</option><option value="fade">Fade</option><option value="gekko">Gekko</option><option value="tejo">Tejo</option></optgroup>
+        </select></div>
+      </div>
+      <div class="field"><label>Player</label><input type="text" id="inp-player" placeholder="tarik"></div>
+      <div class="row2">
+        <div class="field"><label>Title</label>
+          <div class="title-row">
+            <input type="text" id="inp-title" placeholder="Auto or type your own" oninput="checkDups()">
+            <button class="btn btn-ai" id="gen-btn" onclick="generateTitle()">AI</button>
+          </div>
+        </div>
+        <div class="field"><label>Date</label><input type="date" id="inp-date"></div>
+      </div>
+    </div>
+
+    <div class="section-label" style="margin-bottom:1.25rem">Step 3 — Save</div>
+    <div class="card">
+      <button class="btn btn-primary btn-full" onclick="saveVod()">+ Save VOD to Supabase</button>
+      <div class="status-msg" id="vod-status"></div>
+      <p class="tip">Saves to the <strong>vods</strong> table. Duplicate IDs rejected. <strong>Ctrl+Enter</strong> to save quickly.</p>
+    </div>
+
+    <div class="section-label"><span>Saved this session (<span id="entry-count">0</span>)</span><button class="btn btn-secondary btn-sm" onclick="clearSession()">Clear log</button></div>
+    <div class="card"><div class="entries-list" id="session-list"><div class="empty-state">No VODs saved yet.</div></div></div>
+
+    <div class="section-label" style="margin-top:1.5rem"><span>Recent VODs (<span id="vod-recent-count">0</span>)</span><button class="btn btn-secondary btn-sm" onclick="loadVodRecent()">Refresh</button></div>
+    <div class="card"><div class="entries-list" id="vod-recent-list"><div class="empty-state">Loading...</div></div></div>
+  </div>
+  </div>
+
+  <!-- ══ Pro tab ══ -->
+  <div class="hub-panel" id="tab-pro">
+  <div class="panel-inner">
+    <div class="section-label" style="margin-bottom:1.25rem">Teams &amp; Event</div>
+    <div class="card">
+      <div class="row2"><div class="field"><label>Team 1</label><input type="text" id="pro-team1" placeholder="Sentinels"></div><div class="field"><label>Team 2</label><input type="text" id="pro-team2" placeholder="NRG"></div></div>
+      <div class="row2"><div class="field"><label>Event</label><input type="text" id="pro-event" placeholder="VCT Americas 2025"></div><div class="field"><label>Date</label><input type="date" id="pro-date"></div></div>
+    </div>
+    <div id="pro-maps-wrap">
+      <!-- Maps 1-5 injected by JS -->
+    </div>
+    <div class="card">
+      <button class="btn btn-primary btn-full" onclick="saveProMatch()">Save Pro Match</button>
+      <div class="status-msg" id="pro-status"></div>
+    </div>
+    <div class="section-label"><span>Recent Matches (<span id="pro-recent-count">0</span>)</span></div>
+    <div class="card"><div class="entries-list" id="pro-recent-list"><div class="empty-state">No matches yet.</div></div></div>
+  </div>
+  </div>
+
+  <!-- ══ Lineups tab ══ -->
+  <div class="hub-panel lineup-panel" id="tab-lineups">
+    <!-- Left: minimap -->
+    <div class="lu-map-panel">
+      <div class="lu-map-row">
+        <select id="lu-sel-map" onchange="luLoadMap()" style="background:var(--surface);border:1px solid var(--border);color:var(--text);font-family:'DM Mono',monospace;font-size:11px;padding:8px 12px;border-radius:8px;outline:none;letter-spacing:1px;text-transform:uppercase">
+          <option value="">Select map...</option>
+          <option value="ascent">Ascent</option><option value="bind">Bind</option><option value="haven">Haven</option>
+          <option value="split">Split</option><option value="fracture">Fracture</option><option value="pearl">Pearl</option>
+          <option value="icebox">Icebox</option><option value="breeze">Breeze</option><option value="lotus">Lotus</option>
+          <option value="sunset">Sunset</option><option value="abyss">Abyss</option><option value="corrode">Corrode</option>
+        </select>
+        <button class="mode-btn active-stand" id="lu-side-attack" onclick="luSetSide('attack')">Attack</button>
+        <button class="mode-btn" id="lu-side-defense" onclick="luSetSide('defense')">Defense</button>
+      </div>
+      <div class="marker-modes">
+        <button class="mode-btn active-stand" id="lu-mode-stand" onclick="luSetMode('stand')"><div class="dot" style="background:#64C8FF"></div>Stand</button>
+        <button class="mode-btn" id="lu-mode-land" onclick="luSetMode('land')"><div class="dot" style="background:#FF7800"></div>Land</button>
+        <button class="mode-btn" id="lu-mode-wall" onclick="luSetMode('wall-end')" style="display:none"><div class="dot" style="background:#A855F7"></div>Wall End</button>
+      </div>
+      <div class="lu-minimap-wrap" id="lu-minimap-wrap"
+        onmousedown="luMouseDown(event)" onmousemove="luMouseMove(event)"
+        onmouseup="luMouseUp(event)" onmouseleave="luMouseUp(event)">
+        <div class="lu-placeholder" id="lu-placeholder"><div class="lu-placeholder-icon">🗺</div><div class="lu-placeholder-text">Select a map to begin</div></div>
+        <img id="lu-img" src="" alt="" style="display:none">
+        <canvas id="lu-canvas"></canvas>
+      </div>
+      <div class="coords-display">
+        <div style="display:flex;gap:6px;align-items:center"><div class="dot" style="width:7px;height:7px;border-radius:50%;background:#64C8FF;flex-shrink:0"></div><span style="color:var(--muted)">Stand:</span><span class="coord-val" id="lu-stand-coords">not set</span></div>
+        <div style="display:flex;gap:6px;align-items:center"><div class="dot" style="width:7px;height:7px;border-radius:50%;background:#FF7800;flex-shrink:0"></div><span style="color:var(--muted)">Land:</span><span class="coord-val" id="lu-land-coords">not set</span></div>
+        <div style="display:flex;gap:6px;align-items:center;display:none" id="lu-wall-coord-item"><div class="dot" style="width:7px;height:7px;border-radius:50%;background:#A855F7;flex-shrink:0"></div><span style="color:var(--muted)">Wall:</span><span class="coord-val" id="lu-wall-coords">not set</span></div>
+        <button onclick="luClearMarkers()" style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;background:none;border:1px solid var(--border);color:var(--muted);padding:4px 10px;border-radius:4px;cursor:pointer;margin-left:auto">Clear</button>
+      </div>
+    </div>
+    <!-- Right: form -->
+    <div class="lu-form-panel">
+      <div class="lu-form-title" id="lu-form-title">Add Lineup</div>
+      <div class="field"><label>Agent</label><div class="agent-grid" id="lu-agent-grid"></div><div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--red);margin-top:5px;min-height:14px" id="lu-agent-name"></div></div>
+      <div class="field" id="lu-ability-field" style="display:none"><label>Ability</label><div class="ability-picker" id="lu-ability-picker"></div><div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--red);margin-top:5px;min-height:14px" id="lu-ability-name"></div></div>
+      <div class="field"><label>YouTube URL or ID</label><input type="text" id="lu-yt" placeholder="https://youtube.com/..." oninput="luHandleYT()"><div class="lu-yt-preview" id="lu-yt-preview"><img id="lu-yt-thumb" src="" alt=""><div class="lu-yt-id" id="lu-yt-id"></div></div></div>
+      <div class="field"><label>Title</label><input type="text" id="lu-title" placeholder="e.g. Viper B site default from spawn"></div>
+      <div class="field"><label>Description</label><textarea id="lu-desc" placeholder="e.g. Wall covering A main and CT"></textarea></div>
+      <div class="field"><label>Tags</label><div class="lu-tags" id="lu-tags">
+        <div class="lu-tag" data-tag="A site" onclick="luToggleTag(this)">A site</div>
+        <div class="lu-tag" data-tag="B site" onclick="luToggleTag(this)">B site</div>
+        <div class="lu-tag" data-tag="C site" onclick="luToggleTag(this)">C site</div>
+        <div class="lu-tag" data-tag="mid" onclick="luToggleTag(this)">Mid</div>
+        <div class="lu-tag" data-tag="attack" onclick="luToggleTag(this)">Attack</div>
+        <div class="lu-tag" data-tag="defense" onclick="luToggleTag(this)">Defense</div>
+        <div class="lu-tag" data-tag="default" onclick="luToggleTag(this)">Default</div>
+        <div class="lu-tag" data-tag="post-plant" onclick="luToggleTag(this)">Post-plant</div>
+        <div class="lu-tag" data-tag="retake" onclick="luToggleTag(this)">Retake</div>
+        <div class="lu-tag" data-tag="eco" onclick="luToggleTag(this)">Eco</div>
+      </div></div>
+      <button class="btn btn-primary btn-full" id="lu-submit-btn" onclick="luSubmit()">Save Lineup</button>
+      <button id="lu-cancel-btn" onclick="luCancelEdit()" style="display:none;width:100%;margin-top:8px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;padding:9px;background:none;border:1px solid var(--border);color:var(--muted);border-radius:8px;cursor:pointer">Cancel edit</button>
+      <div class="status-msg" id="lu-status"></div>
+      <div style="margin-top:1rem"><div class="section-label"><span>Recent (<span id="lu-recent-count">0</span>)</span></div><div class="lu-recent-list" id="lu-recent-list"></div></div>
+    </div>
+  </div>
+
+  <!-- ══ Data tab ══ -->
+  <div class="hub-panel" id="tab-data">
+  <div class="panel-wide">
+    <div class="sub-tabs">
+      <button class="sub-tab active" onclick="dataSubTab('coaching',this)">Coaching</button>
+      <button class="sub-tab" onclick="dataSubTab('gameplan',this)">Gameplan</button>
+    </div>
+    <!-- Coaching sub-panel -->
+    <div class="sub-panel active" id="data-coaching">
+      <div class="data-filters">
+        <select id="coach-mode" onchange="coachReload()"><option value="">All Modes</option><option value="own">Own VOD</option><option value="pro">Pro VOD</option><option value="followup">Follow-up</option></select>
+        <select id="coach-agent" onchange="coachReload()">
+          <option value="">All Agents</option>
+          <optgroup label="Duelists"><option value="jett">Jett</option><option value="reyna">Reyna</option><option value="raze">Raze</option><option value="neon">Neon</option><option value="phoenix">Phoenix</option><option value="yoru">Yoru</option><option value="iso">Iso</option><option value="waylay">Waylay</option></optgroup>
+          <optgroup label="Controllers"><option value="omen">Omen</option><option value="viper">Viper</option><option value="brimstone">Brimstone</option><option value="astra">Astra</option><option value="harbor">Harbor</option><option value="clove">Clove</option><option value="miks">Miks</option></optgroup>
+          <optgroup label="Sentinels"><option value="sage">Sage</option><option value="cypher">Cypher</option><option value="killjoy">Killjoy</option><option value="chamber">Chamber</option><option value="deadlock">Deadlock</option><option value="vyse">Vyse</option><option value="veto">Veto</option></optgroup>
+          <optgroup label="Initiators"><option value="sova">Sova</option><option value="breach">Breach</option><option value="skye">Skye</option><option value="kayo">KAY/O</option><option value="fade">Fade</option><option value="gekko">Gekko</option><option value="tejo">Tejo</option></optgroup>
+        </select>
+        <div class="data-stat" id="coach-stat"></div>
+      </div>
+      <div id="coach-entries"></div>
+      <button class="load-more" id="coach-load-more" onclick="coachLoadMore()" style="display:none">Load more</button>
+    </div>
+    <!-- Gameplan sub-panel -->
+    <div class="sub-panel" id="data-gameplan">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem">
+        <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted)">Total: <span id="gp-count">0</span></span>
+        <button class="btn btn-secondary btn-sm" onclick="loadGameplanData(0)">Refresh</button>
+      </div>
+      <div id="gp-data-list"><div class="empty-state">Loading...</div></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:1rem">
+        <button class="btn btn-secondary btn-sm" id="gp-prev" style="display:none" onclick="gpPage(-1)">← Prev</button>
+        <span id="gp-page-info" style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted)"></span>
+        <button class="btn btn-secondary btn-sm" id="gp-next" style="display:none" onclick="gpPage(1)">Next →</button>
+      </div>
+    </div>
+  </div>
+  </div>
+
+  <!-- ══ Roadmap tab ══ -->
+  <div class="hub-panel" id="tab-roadmap">
+  <div class="panel-wide">
+    <div class="sub-tabs">
+      <button class="sub-tab active" onclick="rmSubTab('board',this)">Board</button>
+      <button class="sub-tab" onclick="rmSubTab('compare',this)">Compare</button>
+      <button class="sub-tab" onclick="rmSubTab('pages',this)">Pages</button>
+    </div>
+
+    <!-- Board -->
+    <div class="sub-panel active" id="rm-board">
+    <div class="rm-board">
+      <div class="rm-col">
+        <div class="rm-col-head"><div class="rm-dot dot-shipped"></div><span class="rm-col-title">Shipped</span><span class="rm-count" id="rm-count-shipped"></span></div>
+        <div class="rm-cards" id="rm-shipped">
+          <div class="rm-card" onclick="rmToggle(this)"><div class="rm-card-top"><span class="rm-card-title">VOD Library</span><span class="rm-chevron">▾</span></div><div class="rm-badges"><span class="rb rb-free">Free</span><span class="rb rb-page">/[map]/[agent]</span></div><div class="rm-body"><p>Public browse by map + agent. All VODs from <code>vods</code> table. No account needed.</p></div></div>
+          <div class="rm-card" onclick="rmToggle(this)"><div class="rm-card-top"><span class="rm-card-title">Pro Match VODs</span><span class="rm-chevron">▾</span></div><div class="rm-badges"><span class="rb rb-free">Free</span><span class="rb rb-page">/pro</span></div><div class="rm-body"><p>Pro match VOD library. Best-of-5 support. Managed via <code>public/admin.html</code>.</p></div></div>
+          <div class="rm-card" onclick="rmToggle(this)"><div class="rm-card-top"><span class="rm-card-title">AI Coach</span><span class="rm-chevron">▾</span></div><div class="rm-badges"><span class="rb rb-free">Free</span><span class="rb rb-ai">AI</span><span class="rb rb-page">VOD modal</span></div><div class="rm-body"><p>Round-by-round coaching on VOD notes. Valorant knowledge base injected. 3/day free, 10/day premium. Comms-only detection + canned response.</p></div></div>
+          <div class="rm-card" onclick="rmToggle(this)"><div class="rm-card-top"><span class="rm-card-title">Coach Page</span><span class="rm-chevron">▾</span></div><div class="rm-badges"><span class="rb rb-free">Free</span><span class="rb rb-ai">AI</span><span class="rb rb-page">/coach</span></div><div class="rm-body"><p>AI chat as primary UI. Notes as collapsible right panel. Named conversations via <code>conversations</code> table (migrated from <code>general_chat</code>). Per-note chat removed. 5/day free, 20/day premium. Open note always sent as context; other notes premium-gated. <code>notesLocked</code> bar for upsell.</p></div></div>
+          <div class="rm-card" onclick="rmToggle(this)"><div class="rm-card-top"><span class="rm-card-title">Freeform Notes</span><span class="rm-chevron">▾</span></div><div class="rm-badges"><span class="rb rb-free">Free</span><span class="rb rb-page">/coach panel</span></div><div class="rm-body"><p>Collapsible right sidebar on /coach. Autosaves to <code>notebook</code> table. Open note title shown in header. Content always sent to AI as context.</p></div></div>
+          <div class="rm-card" onclick="rmToggle(this)"><div class="rm-card-top"><span class="rm-card-title">VOD Notes</span><span class="rm-chevron">▾</span></div><div class="rm-badges"><span class="rb rb-free">Free</span><span class="rb rb-page">VOD modal</span></div><div class="rm-body"><p>Round-by-round notes per video. Saved to <code>notes</code> table. Shareable via <code>/vod-note/[share_id]</code>.</p></div></div>
+          <div class="rm-card" onclick="rmToggle(this)"><div class="rm-card-top"><span class="rm-card-title">Gameplan + Goals</span><span class="rm-chevron">▾</span></div><div class="rm-badges"><span class="rb rb-free">Free</span><span class="rb rb-ai">AI</span><span class="rb rb-page">/gameplan</span></div><div class="rm-body"><p>Rank goals with W/L/dodge RR tracking. Projects days-to-goal. AI-generated daily routine. 1 generate/day free, 3/day premium.</p></div></div>
+          <div class="rm-card" onclick="rmToggle(this)"><div class="rm-card-top"><span class="rm-card-title">Favorites</span><span class="rm-chevron">▾</span></div><div class="rm-badges"><span class="rb rb-free">Free</span><span class="rb rb-page">/favorites</span></div><div class="rm-body"><p>Save VODs. Filter by Role/Agent/Map/Player/Sort. Filters sync to URL.</p></div></div>
+          <div class="rm-card" onclick="rmToggle(this)"><div class="rm-card-top"><span class="rm-card-title">My VODs</span><span class="rm-chevron">▾</span></div><div class="rm-badges"><span class="rb rb-free">Free (10 cap)</span><span class="rb rb-prem">Unlimited</span><span class="rb rb-page">/my-vods</span></div><div class="rm-body"><p>Private VOD library. YouTube/Twitch. Inline edit. 10 cap free, unlimited premium.</p></div></div>
+          <div class="rm-card" onclick="rmToggle(this)"><div class="rm-card-top"><span class="rm-card-title">VOD Playlists</span><span class="rm-chevron">▾</span></div><div class="rm-badges"><span class="rb rb-prem">Premium</span><span class="rb rb-page">/playlists</span></div><div class="rm-body"><p>Curated ordered VOD study sets. Search library + own VODs. Reorder, play in sequence. Fully premium-gated.</p></div></div>
+          <div class="rm-card" onclick="rmToggle(this)"><div class="rm-card-top"><span class="rm-card-title">Clip Timestamps</span><span class="rm-chevron">▾</span></div><div class="rm-badges"><span class="rb rb-free">Free</span><span class="rb rb-page">VOD modal</span></div><div class="rm-body"><p>Mark moments while watching. Seeks on click. Stored in <code>vod_marks</code> table. Dots in the progress bar.</p></div></div>
+          <div class="rm-card" onclick="rmToggle(this)"><div class="rm-card-top"><span class="rm-card-title">Watch Progress</span><span class="rm-chevron">▾</span></div><div class="rm-badges"><span class="rb rb-free">Free</span><span class="rb rb-page">VOD modal</span></div><div class="rm-body"><p>Resume position per video in <code>watched</code> table. Progress bar on VOD cards.</p></div></div>
+          <div class="rm-card" onclick="rmToggle(this)"><div class="rm-card-top"><span class="rm-card-title">Lineup Library</span><span class="rm-chevron">▾</span></div><div class="rm-badges"><span class="rb rb-free">Allowlist</span><span class="rb rb-page">/util</span></div><div class="rm-body"><p>Top-down map lineups. Canvas-drawn agent portrait + ability icon markers. Email allowlist gated.</p></div></div>
+          <div class="rm-card" onclick="rmToggle(this)"><div class="rm-card-top"><span class="rm-card-title">Premium + Stripe</span><span class="rm-chevron">▾</span></div><div class="rm-badges"><span class="rb rb-prem">Billing</span><span class="rb rb-page">/premium</span></div><div class="rm-body"><p>Monthly/yearly/lifetime tiers. Stripe Checkout + webhook. <code>PREMIUM_ENABLED</code> master switch. Subscriptions table. Billing portal.</p></div></div>
+          <div class="rm-card" onclick="rmToggle(this)"><div class="rm-card-top"><span class="rm-card-title">VOD Search</span><span class="rm-chevron">▾</span></div><div class="rm-badges"><span class="rb rb-free">Free</span><span class="rb rb-page">/search</span></div><div class="rm-body"><p>Token-based AND match. Order-independent across title/player/map/agent.</p></div></div>
+          <div class="rm-card" onclick="rmToggle(this)"><div class="rm-card-top"><span class="rm-card-title">Shared Notes</span><span class="rm-chevron">▾</span></div><div class="rm-badges"><span class="rb rb-free">Free</span><span class="rb rb-page">/vod-note, /n/[id]</span></div><div class="rm-body"><p>Unlisted link sharing for VOD notes and notebook entries. No auth required to view. Noindex.</p></div></div>
+          <div class="rm-card" onclick="rmToggle(this)"><div class="rm-card-top"><span class="rm-card-title">Public VOD Sharing</span><span class="rm-chevron">▾</span></div><div class="rm-badges"><span class="rb rb-free">Free</span><span class="rb rb-page">/watch?v=ID</span></div><div class="rm-body"><p>Direct permalink to any VOD. Server-side looks up metadata; falls back to ID. Canonical share URL: <code>/watch?v=ID&amp;note=SHARE_ID</code>.</p></div></div>
+        </div>
+      </div>
+      <div class="rm-col">
+        <div class="rm-col-head"><div class="rm-dot dot-progress"></div><span class="rm-col-title">In Progress</span><span class="rm-count" id="rm-count-progress"></span></div>
+        <div class="rm-cards" id="rm-progress"></div>
+      </div>
+      <div class="rm-col">
+        <div class="rm-col-head"><div class="rm-dot dot-planned"></div><span class="rm-col-title">Planned</span><span class="rm-count" id="rm-count-planned"></span></div>
+        <div class="rm-cards" id="rm-planned">
+          <div class="rm-card" onclick="rmToggle(this)"><div class="rm-card-top"><span class="rm-card-title">Learn Hub</span><span class="rm-chevron">▾</span></div><div class="rm-badges"><span class="rb rb-free">Free</span><span class="rb rb-page">/learn</span><span class="rb rb-page">/learn/[slug]</span></div><div class="rm-body"><p>Hosted patch notes and guides. Index at <code>/learn</code> with cards by category. Individual pages at <code>/learn/[slug]</code> with markdown content. <code>guides</code> table: id, slug, title, excerpt, content, category, published_at.</p></div></div>
+          <div class="rm-card" onclick="rmToggle(this)"><div class="rm-card-top"><span class="rm-card-title">Pattern Detection</span><span class="rm-chevron">▾</span></div><div class="rm-badges"><span class="rb rb-prem">Premium</span><span class="rb rb-ai">AI</span></div><div class="rm-body"><p>Cross-note AI analysis to surface recurring mistakes across a user's VOD notes history.</p></div></div>
+        </div>
+      </div>
+      <div class="rm-col">
+        <div class="rm-col-head"><div class="rm-dot dot-idea"></div><span class="rm-col-title">Ideas</span><span class="rm-count" id="rm-count-ideas"></span></div>
+        <div class="rm-cards" id="rm-ideas">
+          <div class="rm-card" onclick="rmToggle(this)"><div class="rm-card-top"><span class="rm-card-title">AI-Curated Playlists</span><span class="rm-chevron">▾</span></div><div class="rm-badges"><span class="rb rb-prem">Premium</span><span class="rb rb-ai">AI</span></div><div class="rm-body"><p>User describes what they want to study and AI builds a custom playlist from the VOD library.</p></div></div>
+          <div class="rm-card" onclick="rmToggle(this)"><div class="rm-card-top"><span class="rm-card-title">Team Function</span><span class="rm-chevron">▾</span></div><div class="rm-badges"><span class="rb rb-prem">Premium</span></div><div class="rm-body"><p>Collaborative teams: shared notes, shared uploaded VODs, members can contribute to shared resources.</p></div></div>
+          <div class="rm-card" onclick="rmToggle(this)"><div class="rm-card-top"><span class="rm-card-title">Stats Page</span><span class="rm-chevron">▾</span></div><div class="rm-badges"><span class="rb rb-prem">Premium</span></div><div class="rm-body"><p>Agent tier list by ranked winrate per rank, rank distribution. Needs Riot API or Henrik Dev's unofficial API.</p></div></div>
+          <div class="rm-card" onclick="rmToggle(this)"><div class="rm-card-top"><span class="rm-card-title">Affiliate Program</span><span class="rm-chevron">▾</span></div><div class="rm-badges"><span class="rb rb-free">Free</span></div><div class="rm-body"><p>Referral links giving users a % of subscription revenue they bring in. Stripe has built-in support.</p></div></div>
+          <div class="rm-card" onclick="rmToggle(this)"><div class="rm-card-top"><span class="rm-card-title">Deadlock Expansion</span><span class="rm-chevron">▾</span></div><div class="rm-badges"><span class="rb rb-free">Free</span></div><div class="rm-body"><p>Expand to cover Deadlock (Valve hero shooter). Scope TBD — likely a separate section similar to the Valorant VOD library.</p></div></div>
+        </div>
+      </div>
+    </div>
+    </div>
+
+    <!-- Compare -->
+    <div class="sub-panel" id="rm-compare">
+      <table class="cmp-table">
+        <thead><tr><th>Feature</th><th>Free</th><th class="th-prem">Premium</th></tr></thead>
+        <tbody>
+          <tr class="cmp-sec-row"><td colspan="3">AI Coaching</td></tr>
+          <tr><td>VOD sessions / day</td><td>3</td><td class="td-prem cmp-prem">10</td></tr>
+          <tr><td>Follow-up questions / day</td><td>5</td><td class="td-prem cmp-prem">25</td></tr>
+          <tr class="cmp-sec-row"><td colspan="3">Coach Chat</td></tr>
+          <tr><td>Questions / day</td><td>5</td><td class="td-prem cmp-prem">20</td></tr>
+          <tr><td>Named conversations</td><td>1</td><td class="td-prem cmp-prem">Unlimited</td></tr>
+          <tr><td>Cross-context AI<span class="feat-sub">reads your VOD notes + history</span></td><td><span class="cmp-no">—</span></td><td class="td-prem"><span class="cmp-yes">✦</span></td></tr>
+          <tr class="cmp-sec-row"><td colspan="3">VOD Library</td></tr>
+          <tr><td>Browse + search</td><td><span class="cmp-yes">✓</span></td><td class="td-prem"><span class="cmp-yes">✓</span></td></tr>
+          <tr><td>Personal VOD uploads</td><td>10</td><td class="td-prem cmp-prem">Unlimited</td></tr>
+          <tr><td>VOD playlists</td><td><span class="cmp-no">—</span></td><td class="td-prem"><span class="cmp-yes">✦</span></td></tr>
+          <tr class="cmp-sec-row"><td colspan="3">Gameplan</td></tr>
+          <tr><td>Routine generates / day</td><td>1</td><td class="td-prem cmp-prem">3</td></tr>
+          <tr><td>Routine fine-tunes / day</td><td>3</td><td class="td-prem cmp-prem">10</td></tr>
+        </tbody>
+      </table>
+      <p class="cmp-note">Admins (<code>ADMIN_EMAILS</code> env var) bypass all limits and are treated as premium.</p>
+    </div>
+
+    <!-- Pages -->
+    <div class="sub-panel" id="rm-pages">
+      <table class="pages-table">
+        <thead><tr><th>Route</th><th>Auth</th><th>Premium</th></tr></thead>
+        <tbody>
+          <tr><td><code>/</code></td><td><span class="pg-no">No</span></td><td><span class="pg-no">—</span></td></tr>
+          <tr><td><code>/[map]/[agent]</code></td><td><span class="pg-no">No</span></td><td><span class="pg-no">—</span></td></tr>
+          <tr><td><code>/pro</code></td><td><span class="pg-no">No</span></td><td><span class="pg-no">—</span></td></tr>
+          <tr><td><code>/search</code></td><td><span class="pg-no">No</span></td><td><span class="pg-no">—</span></td></tr>
+          <tr><td><code>/util</code></td><td><span class="pg-yes">Allowlist</span></td><td><span class="pg-no">—</span></td></tr>
+          <tr><td><code>/submit</code></td><td><span class="pg-no">No</span></td><td><span class="pg-no">—</span></td></tr>
+          <tr><td><code>/faq</code></td><td><span class="pg-no">No</span></td><td><span class="pg-no">—</span></td></tr>
+          <tr><td><code>/contact</code></td><td><span class="pg-no">No</span></td><td><span class="pg-no">—</span></td></tr>
+          <tr><td><code>/coach</code></td><td><span class="pg-yes">Yes</span></td><td><span class="pg-partial">Partial</span></td></tr>
+          <tr><td><code>/gameplan</code></td><td><span class="pg-yes">Yes</span></td><td><span class="pg-partial">Partial</span></td></tr>
+          <tr><td><code>/favorites</code></td><td><span class="pg-yes">Yes</span></td><td><span class="pg-no">—</span></td></tr>
+          <tr><td><code>/my-vods</code></td><td><span class="pg-yes">Yes</span></td><td><span class="pg-partial">Partial</span></td></tr>
+          <tr><td><code>/playlists</code></td><td><span class="pg-yes">Yes</span></td><td><span class="pg-full">Full</span></td></tr>
+          <tr><td><code>/settings</code></td><td><span class="pg-yes">Yes</span></td><td><span class="pg-no">—</span></td></tr>
+          <tr><td><code>/premium</code></td><td><span class="pg-no">No</span></td><td><span class="pg-no">—</span></td></tr>
+          <tr><td><code>/watch</code></td><td><span class="pg-no">No</span></td><td><span class="pg-no">—</span></td></tr>
+          <tr><td><code>/vod-note/[id]</code></td><td><span class="pg-no">No</span></td><td><span class="pg-no">—</span></td></tr>
+          <tr><td><code>/n/[id]</code></td><td><span class="pg-no">No</span></td><td><span class="pg-no">—</span></td></tr>
+          <tr><td><code>/learn</code> + <code>/learn/[slug]</code></td><td><span class="pg-no">No</span></td><td><span class="pg-no">—</span></td></tr>
+          <tr><td><code>/player/[name]</code></td><td><span class="pg-no">No</span></td><td><span class="pg-no">—</span></td></tr>
+          <tr><td><code>public/admin.html</code><span class="pg-note">(local only)</span></td><td><span class="pg-admin">Admin</span></td><td><span class="pg-no">—</span></td></tr>
+          <tr><td><code>public/lineup-admin.html</code><span class="pg-note">(legacy)</span></td><td><span class="pg-admin">Admin</span></td><td><span class="pg-no">—</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  </div>
+
+  <!-- ══ Ideas tab ══ -->
+  <div class="hub-panel" id="tab-ideas">
+  <div class="panel-wide">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem">
+      <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted)">Content &amp; promotion ideas — saved locally</span>
+      <button class="btn btn-primary btn-sm" onclick="ideasToggleForm()">+ Add idea</button>
+    </div>
+    <div class="ideas-add-form" id="ideas-add-form">
+      <div class="row2" style="margin-bottom:1rem">
+        <div class="field" style="margin-bottom:0"><label>Title</label><input type="text" id="idea-title" placeholder="e.g. Tweet about clip timestamps"></div>
+        <div class="field" style="margin-bottom:0"><label>Category</label><select id="idea-cat">
+          <option value="content">Content</option>
+          <option value="social">Social</option>
+          <option value="promo">Promo</option>
+          <option value="feature">Feature</option>
+          <option value="partner">Partnership</option>
+          <option value="other">Other</option>
+        </select></div>
+      </div>
+      <div class="field"><label>Notes</label><textarea id="idea-notes" placeholder="Any details, links, inspiration..."></textarea></div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-primary" onclick="ideasAdd()">Save idea</button>
+        <button class="btn btn-secondary" onclick="ideasToggleForm()">Cancel</button>
+      </div>
+    </div>
+    <div class="ideas-filters" id="ideas-filters">
+      <button class="ideas-pill active" onclick="ideasFilter('all',this)">All</button>
+      <button class="ideas-pill" onclick="ideasFilter('content',this)">Content</button>
+      <button class="ideas-pill" onclick="ideasFilter('social',this)">Social</button>
+      <button class="ideas-pill" onclick="ideasFilter('promo',this)">Promo</button>
+      <button class="ideas-pill" onclick="ideasFilter('feature',this)">Feature</button>
+      <button class="ideas-pill" onclick="ideasFilter('partner',this)">Partnership</button>
+      <button class="ideas-pill" onclick="ideasFilter('other',this)">Other</button>
+    </div>
+    <div class="ideas-grid" id="ideas-grid"></div>
+  </div>
+  </div>
+
+</div><!-- /app -->
+
 <script>
-let sessionLog = JSON.parse(localStorage.getItem('fraglog-admin-log') || '[]');
-let currentVideoId = "";
-let existingIds = [];
-let existingTitles = [];
+// ── Config ──────────────────────────────────────────────────────────────────
+const SB_URL  = 'https://cvdtykmkajmhlxydhzzl.supabase.co';
+const SB_KEY  = 'sb_publishable_I16eAnYgsA9fd8ZMlmFQtA_RxepSaXi';
+const TURNSTILE_SITEKEY = '0x4AAAAAADfLzeMlyfoAvDRy';
 
-async function loadExisting() {
-  const token = await getAccessToken();
-  if (!token) return;
-  try {
-    const res = await fetch("/api/admin-vod", { headers: { "Authorization": `Bearer ${token}` } });
-    if (res.ok) {
-      const data = await res.json();
-      existingIds = data.ids || [];
-      existingTitles = data.titles || [];
-    }
-  } catch {}
+let _sb = null;
+function getSB() {
+  if (!_sb) _sb = supabase.createClient(SB_URL, SB_KEY);
+  return _sb;
 }
-
-function checkDuplicates() {
-  const idDup = currentVideoId && existingIds.includes(currentVideoId);
-  const title = document.getElementById("inp-title").value.trim().toLowerCase();
-  const titleDup = title && existingTitles.some(t => t.toLowerCase() === title);
-  const display = document.getElementById("video-id-display");
-  if (idDup) {
-    display.textContent = "⚠ Duplicate — this video ID is already in Supabase";
-    display.style.color = "#FF4655";
-  } else if (titleDup) {
-    display.textContent = "⚠ Duplicate — this title already exists in Supabase";
-    display.style.color = "#FF4655";
-  } else if (currentVideoId) {
-    display.textContent = "Video ID: " + currentVideoId;
-    display.style.color = "var(--red)";
-  }
-}
-
-function extractVideoId() {
-  const url = document.getElementById("yt-url").value.trim();
-  const match = url.match(/(?:v=|youtu\.be\/|embed\/)([a-zA-Z0-9_-]{11})/);
-  const display = document.getElementById("video-id-display");
-  const preview = document.getElementById("thumb-preview");
-  const img = document.getElementById("thumb-img");
-
-  if (match) {
-    currentVideoId = match[1];
-    display.textContent = "Video ID: " + currentVideoId;
-    display.style.color = "var(--red)";
-    img.src = `https://img.youtube.com/vi/${currentVideoId}/mqdefault.jpg`;
-    preview.classList.add("visible");
-    if (!document.getElementById("inp-date").value) {
-      document.getElementById("inp-date").value = new Date().toLocaleDateString('en-CA');
-    }
-    checkDuplicates();
-  } else {
-    currentVideoId = "";
-    display.textContent = url.length > 5 ? "No video ID found — paste a full YouTube URL" : "";
-    display.style.color = "var(--red)";
-    preview.classList.remove("visible");
-  }
-}
-
-function clearUrl() {
-  document.getElementById("yt-url").value = "";
-  document.getElementById("video-id-display").textContent = "";
-  document.getElementById("thumb-preview").classList.remove("visible");
-  currentVideoId = "";
-}
-
 async function getAccessToken() {
-  const { data: { session } } = await sb.auth.getSession();
+  const { data: { session } } = await getSB().auth.getSession();
   return session?.access_token || null;
 }
 
-async function generateTitle() {
-  if (!currentVideoId) { setSaveStatus("Paste a YouTube URL first.", "#FF4655"); return; }
-  const map = document.getElementById("sel-map").value;
-  const agent = document.getElementById("sel-agent").value;
-  const player = document.getElementById("inp-player").value.trim();
-  const btn = document.getElementById("gen-title-btn");
-  btn.disabled = true;
-  btn.textContent = "...";
-
-  const token = await getAccessToken();
-  if (!token) { setSaveStatus("Sign in first.", "#FF4655"); btn.disabled = false; btn.textContent = "AI"; return; }
-
-  try {
-    const res = await fetch("/api/generate-title", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ videoId: currentVideoId, map, agent, player, accessToken: token, existingTitles }),
-    });
-    const data = await res.json();
-    if (data.title) {
-      document.getElementById("inp-title").value = data.title;
-      checkDuplicates();
-    } else {
-      setSaveStatus("Title generation failed.", "#FF4655");
-    }
-  } catch {
-    setSaveStatus("Title generation error.", "#FF4655");
-  } finally {
-    btn.disabled = false;
-    btn.textContent = "AI";
-  }
+// ── Tab switching ────────────────────────────────────────────────────────────
+const tabInitialized = new Set();
+function switchTab(id, btn) {
+  document.querySelectorAll('.hub-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.hub-panel').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-' + id).classList.add('active');
+  if (!tabInitialized.has(id)) { tabInitialized.add(id); initTab(id); }
+}
+function initTab(id) {
+  if (id === 'vods')     { loadVodRecent(); setDefaultDate('inp-date'); }
+  if (id === 'pro')      { buildProMaps(); loadProRecent(); setDefaultDate('pro-date'); }
+  if (id === 'lineups')  { luBuildAgentGrid(); }
+  if (id === 'data')     { coachLoad(0); }
+  if (id === 'roadmap')  { rmCountCards(); }
+  if (id === 'ideas')    { ideasRender(); }
+}
+function setDefaultDate(id) {
+  const el = document.getElementById(id);
+  if (el && !el.value) el.value = new Date().toISOString().slice(0,10);
 }
 
-function setSaveStatus(msg, color = "#6BCF6B") {
-  const el = document.getElementById("save-status");
-  el.textContent = msg;
-  el.style.color = color;
-  if (color === "#6BCF6B") setTimeout(() => { if (el.textContent === msg) el.textContent = ""; }, 3000);
+// sub-tab helpers
+function dataSubTab(id, btn) {
+  document.querySelectorAll('#tab-data .sub-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('#tab-data .sub-panel').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('data-' + id).classList.add('active');
+  if (id === 'gameplan' && !tabInitialized.has('gp-data')) { tabInitialized.add('gp-data'); loadGameplanData(0); }
+}
+function rmSubTab(id, btn) {
+  document.querySelectorAll('#tab-roadmap .sub-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('#tab-roadmap .sub-panel').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('rm-' + id).classList.add('active');
+}
+
+// ── Auth ────────────────────────────────────────────────────────────────────
+let tsToken = null;
+window.onTurnstileLoad = () => {
+  turnstile.render('#turnstile-widget', {
+    sitekey: TURNSTILE_SITEKEY,
+    callback: t => { tsToken = t; }
+  });
+};
+async function doSignIn() {
+  const email = document.getElementById('auth-email').value.trim();
+  const pass  = document.getElementById('auth-pass').value;
+  const err   = document.getElementById('auth-error');
+  err.textContent = '';
+  if (!tsToken) { err.textContent = 'Complete the CAPTCHA.'; return; }
+  const { data, error } = await getSB().auth.signInWithPassword({ email, password: pass });
+  if (error) { err.textContent = error.message; tsToken = null; turnstile.reset('#turnstile-widget'); return; }
+  document.getElementById('auth-overlay').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('hub-auth').textContent = data.user?.email || '';
+  tabInitialized.add('vods');
+  initTab('vods');
+  setDefaultDate('inp-date');
+}
+
+// ── VODs tab ─────────────────────────────────────────────────────────────────
+let vodVideoId = null;
+let vodSession = [];
+
+function extractVideoId() {
+  const raw = document.getElementById('yt-url').value.trim();
+  const m = raw.match(/(?:v=|youtu\.be\/|embed\/|shorts\/)([\w-]{11})/);
+  vodVideoId = m ? m[1] : (raw.length === 11 ? raw : null);
+  document.getElementById('vid-id').textContent = vodVideoId ? 'ID: ' + vodVideoId : '';
+  const thumb = document.getElementById('thumb-preview');
+  const img   = document.getElementById('thumb-img');
+  if (vodVideoId) { img.src = `https://img.youtube.com/vi/${vodVideoId}/mqdefault.jpg`; thumb.style.display = 'block'; }
+  else { thumb.style.display = 'none'; }
+  if (vodVideoId) checkDups();
+}
+
+function clearUrl() {
+  document.getElementById('yt-url').value = '';
+  vodVideoId = null;
+  document.getElementById('vid-id').textContent = '';
+  document.getElementById('thumb-preview').style.display = 'none';
+}
+
+async function checkDups() {
+  if (!vodVideoId) return;
+  const { data } = await getSB().from('vods').select('id').eq('id', vodVideoId).maybeSingle();
+  const status = document.getElementById('vod-status');
+  if (data) { status.textContent = '⚠ This video ID already exists in Supabase.'; status.style.color = 'var(--gold)'; }
+  else { status.textContent = ''; }
+}
+
+async function generateTitle() {
+  const map   = document.getElementById('sel-map').value;
+  const agent = document.getElementById('sel-agent').value;
+  const player= document.getElementById('inp-player').value.trim();
+  if (!map || !agent) { alert('Select map and agent first.'); return; }
+  const btn = document.getElementById('gen-btn');
+  btn.disabled = true; btn.textContent = '...';
+  const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+  const title = [cap(player || 'Player'), '-', cap(agent), cap(map)].filter(Boolean).join(' ');
+  document.getElementById('inp-title').value = title;
+  btn.disabled = false; btn.textContent = 'AI';
 }
 
 async function saveVod() {
-  const map = document.getElementById("sel-map").value;
-  const agent = document.getElementById("sel-agent").value;
-  const player = document.getElementById("inp-player").value.trim();
-  const title = document.getElementById("inp-title").value.trim();
-  const date = document.getElementById("inp-date").value;
+  const id     = vodVideoId;
+  const map    = document.getElementById('sel-map').value;
+  const agent  = document.getElementById('sel-agent').value;
+  const player = document.getElementById('inp-player').value.trim();
+  const title  = document.getElementById('inp-title').value.trim();
+  const date   = document.getElementById('inp-date').value;
+  const status = document.getElementById('vod-status');
 
-  if (!currentVideoId) { setSaveStatus("Paste a valid YouTube URL first.", "#FF4655"); return; }
-  if (!map) { setSaveStatus("Select a map.", "#FF4655"); return; }
-  if (!agent) { setSaveStatus("Select an agent.", "#FF4655"); return; }
-  if (!player) { setSaveStatus("Enter the player name.", "#FF4655"); return; }
-  if (!title) { setSaveStatus("Generate or type a title first.", "#FF4655"); return; }
-
+  if (!id || !map || !agent || !player || !title || !date) {
+    status.textContent = 'Fill in all fields.'; status.style.color = 'var(--red)'; return;
+  }
   const token = await getAccessToken();
-  if (!token) { setSaveStatus("Sign in first.", "#FF4655"); return; }
-
-  setSaveStatus("Saving...", "var(--muted)");
-
-  try {
-    const res = await fetch("/api/admin-vod", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-      body: JSON.stringify({ map, agent, id: currentVideoId, title, player, date }),
-    });
-    const data = await res.json();
-    if (res.status === 409) { setSaveStatus("Duplicate — ID already in Supabase", "#FF4655"); return; }
-    if (!res.ok) { setSaveStatus("Error: " + (data.error || res.status), "#FF4655"); return; }
-
-    setSaveStatus(`✓ Saved — ${map} › ${agent} › ${player}`);
-    sessionLog.unshift({ map, agent, id: currentVideoId, title, player, date });
-    localStorage.setItem('fraglog-admin-log', JSON.stringify(sessionLog.slice(0, 50)));
-    renderLog();
-    loadExisting();
-    loadVodRecent();
-    clearForm();
-  } catch (err) {
-    setSaveStatus("Network error.", "#FF4655");
-  }
-}
-
-function clearForm() {
+  const res = await fetch('/api/admin-vod', {
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+    body:JSON.stringify({id, map_id:map, agent_id:agent, player, title, date})
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) { status.textContent = data.error || 'Error saving.'; status.style.color = 'var(--red)'; return; }
+  status.textContent = '✓ Saved!'; status.style.color = 'var(--green)';
+  vodSession.unshift({id, map_id:map, agent_id:agent, player, title, date});
+  renderVodSession();
   clearUrl();
-  document.getElementById("inp-player").value = "";
-  document.getElementById("inp-title").value = "";
-  document.getElementById("inp-date").value = "";
+  document.getElementById('inp-title').value = '';
 }
-
-function renderLog() {
-  const list = document.getElementById("entries-list");
-  document.getElementById("entry-count").textContent = sessionLog.length;
-  if (!sessionLog.length) {
-    list.innerHTML = '<div class="empty-state">No VODs saved yet — fill in the form above and hit Save.</div>';
-    return;
-  }
-  list.innerHTML = sessionLog.map(e => `
-    <div class="entry-item">
-      <div class="entry-text">${e.map} › ${e.agent} › ${e.player} · ${e.id}</div>
-    </div>
-  `).join("");
-}
-
-function clearSession() {
-  if (!sessionLog.length || confirm("Clear session log?")) {
-    sessionLog = [];
-    localStorage.removeItem('fraglog-admin-log');
-    renderLog();
-  }
-}
-
-// Set today's date as default (use local date string to avoid UTC offset shifting day)
-document.getElementById("inp-date").value = new Date().toLocaleDateString('en-CA');
-if (sessionLog.length) renderLog();
-
-document.addEventListener("keydown", e => {
-  if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) saveVod();
+document.addEventListener('keydown', e => {
+  if (e.ctrlKey && e.key === 'Enter') saveVod();
 });
 
-// Load existing IDs/titles once Supabase auth is ready (called from auth init below)
-window._loadExistingWhenReady = loadExisting;
-</script>
+function renderVodSession() {
+  const list = document.getElementById('session-list');
+  document.getElementById('entry-count').textContent = vodSession.length;
+  if (!vodSession.length) { list.innerHTML = '<div class="empty-state">No VODs saved yet.</div>'; return; }
+  list.innerHTML = vodSession.map(v =>
+    `<div class="entry-row"><div class="entry-main"><div class="entry-title">${v.title}</div><div class="entry-meta">${v.map_id} · ${v.agent_id} · ${v.player} · ${v.date}</div></div><a href="https://youtube.com/watch?v=${v.id}" target="_blank" class="entry-link">▶</a></div>`
+  ).join('');
+}
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>
-const SUPABASE_URL = "https://cvdtykmkajmhlxydhzzl.supabase.co";
-const SUPABASE_KEY = "sb_publishable_I16eAnYgsA9fd8ZMlmFQtA_RxepSaXi";
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+function clearSession() { vodSession = []; renderVodSession(); }
 
-// Auth init
-(async () => {
-  const { data: { session } } = await sb.auth.getSession();
-  const status = document.getElementById('auth-status');
-  if (session) {
-    status.textContent = `✓ ${session.user.email}`;
-    status.style.color = '#6BCF6B';
-    window._loadExistingWhenReady?.();
-  } else {
-    status.textContent = 'Not signed in';
-    status.style.color = '#FF4655';
-    document.getElementById('signin-card').style.display = 'block';
+async function loadVodRecent() {
+  const list = document.getElementById('vod-recent-list');
+  const { data, error } = await getSB().from('vods').select('*').order('created_at',{ascending:false}).limit(20);
+  if (error || !data) { list.innerHTML = '<div class="empty-state">Failed to load.</div>'; return; }
+  document.getElementById('vod-recent-count').textContent = data.length;
+  list.innerHTML = data.map(v =>
+    `<div class="entry-row"><div class="entry-main"><div class="entry-title">${v.title}</div><div class="entry-meta">${v.map_id} · ${v.agent_id} · ${v.player} · ${v.date}</div></div><a href="https://youtube.com/watch?v=${v.id}" target="_blank" class="entry-link">▶</a></div>`
+  ).join('');
+}
+
+// ── Pro tab ──────────────────────────────────────────────────────────────────
+const PRO_MAPS = ['Ascent','Bind','Haven','Split','Fracture','Pearl','Icebox','Breeze','Lotus','Sunset','Abyss','Corrode','Summit'];
+const ALL_MAPS_OPTS = PRO_MAPS.map(m => `<option value="${m.toLowerCase()}">${m}</option>`).join('');
+
+function buildProMaps() {
+  const wrap = document.getElementById('pro-maps-wrap');
+  if (wrap.children.length) return;
+  let html = '';
+  for (let i = 1; i <= 5; i++) {
+    const opt = i >= 4 ? ` <span style="color:var(--muted);font-size:11px">(Bo5 only)</span>` : '';
+    html += `<div class="section-label" style="margin-bottom:1.25rem">Map ${i}${opt}</div>
+    <div class="card">
+      <div class="row2"><div class="field"><label>Map</label><select id="pro-map${i}"><option value="">Skip</option>${ALL_MAPS_OPTS}</select></div><div class="field"><label>YouTube ID</label><input type="text" id="pro-yt${i}" placeholder="dQw4w9WgXcQ"></div></div>
+      <div class="field"><label>Start Time (seconds)</label><input type="number" id="pro-start${i}" placeholder="0"></div>
+    </div>`;
   }
-  document.getElementById('pro-date').value = new Date().toLocaleDateString('en-CA');
-  loadProRecent();
-  if (session) { loadVodRecent(); loadGameplanData(0); }
-})();
-
-function onTurnstileLoad() {}
-
-function getTurnstileToken() {
-  return new Promise((resolve, reject) => {
-    const el = document.getElementById('turnstile-widget');
-    el.innerHTML = '';
-    turnstile.render(el, {
-      sitekey: '0x4AAAAAADfLzeMlyfoAvDRy',
-      theme: 'dark',
-      callback: resolve,
-      'error-callback': (code) => reject(new Error(`CAPTCHA error: ${code}`)),
-    });
-  });
-}
-
-async function adminSignIn() {
-  const email = document.getElementById('auth-email').value.trim();
-  const pass = document.getElementById('auth-pass').value;
-  const errEl = document.getElementById('auth-error');
-  errEl.textContent = 'Verifying…';
-  let captchaToken;
-  try { captchaToken = await getTurnstileToken(); }
-  catch (e) { errEl.textContent = e.message; return; }
-  const { data, error } = await sb.auth.signInWithPassword({ email, password: pass, options: { captchaToken } });
-  if (error) { errEl.textContent = error.message; return; }
-  document.getElementById('auth-status').textContent = `✓ ${data.user.email}`;
-  document.getElementById('auth-status').style.color = '#6BCF6B';
-  document.getElementById('signin-card').style.display = 'none';
-  errEl.textContent = '';
-}
-
-const proYtIds = { '1': null, '2': null, '3': null, '4': null, '5': null };
-
-function proHandleYT(n) {
-  const val = document.getElementById(`pro-yt${n}`).value.trim();
-  const match = val.match(/(?:v=|youtu\.be\/|embed\/)([a-zA-Z0-9_-]{11})/);
-  const preview = document.getElementById(`pro-preview${n}`);
-  const idEl = document.getElementById(`pro-id${n}`);
-  if (match) {
-    proYtIds[n] = match[1];
-    document.getElementById(`pro-thumb${n}`).src = `https://img.youtube.com/vi/${match[1]}/mqdefault.jpg`;
-    idEl.textContent = `ID: ${match[1]}`;
-    preview.classList.add('visible');
-  } else if (val.length === 11 && /^[a-zA-Z0-9_-]+$/.test(val)) {
-    proYtIds[n] = val;
-    document.getElementById(`pro-thumb${n}`).src = `https://img.youtube.com/vi/${val}/mqdefault.jpg`;
-    idEl.textContent = `ID: ${val}`;
-    preview.classList.add('visible');
-  } else {
-    proYtIds[n] = null;
-    preview.classList.remove('visible');
-  }
-}
-
-function setProStatus(msg, color = '#6BCF6B') {
-  const el = document.getElementById('pro-status');
-  el.textContent = msg; el.style.color = color;
-  setTimeout(() => el.textContent = '', 4000);
-}
-
-function parseTimestamp(val) {
-  if (!val) return 0;
-  val = val.trim();
-  if (val.includes(':')) {
-    const parts = val.split(':').map(Number);
-    if (parts.length === 2) return parts[0] * 60 + parts[1];
-    if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
-  }
-  return parseInt(val) || 0;
+  wrap.innerHTML = html;
 }
 
 async function saveProMatch() {
   const team1 = document.getElementById('pro-team1').value.trim();
   const team2 = document.getElementById('pro-team2').value.trim();
   const event = document.getElementById('pro-event').value.trim();
-  const date = document.getElementById('pro-date').value;
-  const map1 = document.getElementById('pro-map1').value;
-  const map2 = document.getElementById('pro-map2').value;
-  const map3 = document.getElementById('pro-map3').value;
-  const map4 = document.getElementById('pro-map4').value;
-  const map5 = document.getElementById('pro-map5').value;
-
-  if (!team1 || !team2) { setProStatus('Enter both team names.', '#FF4655'); return; }
-  if (!event) { setProStatus('Enter the event name.', '#FF4655'); return; }
-  if (!map1 || !proYtIds['1']) { setProStatus('Map 1 needs a map and YouTube URL.', '#FF4655'); return; }
-  if (!map2 || !proYtIds['2']) { setProStatus('Map 2 needs a map and YouTube URL.', '#FF4655'); return; }
-
-  const { error } = await sb.from('pro_matches').insert({
-    team1, team2, event, date: date || null,
-    map1, map1_youtube_id: proYtIds['1'],
-    map1_start_time: parseTimestamp(document.getElementById('pro-ts1').value),
-    map2, map2_youtube_id: proYtIds['2'],
-    map2_start_time: parseTimestamp(document.getElementById('pro-ts2').value),
-    map3: map3 || null, map3_youtube_id: proYtIds['3'] || null,
-    map3_start_time: parseTimestamp(document.getElementById('pro-ts3').value),
-    map4: map4 || null, map4_youtube_id: proYtIds['4'] || null,
-    map4_start_time: parseTimestamp(document.getElementById('pro-ts4').value),
-    map5: map5 || null, map5_youtube_id: proYtIds['5'] || null,
-    map5_start_time: parseTimestamp(document.getElementById('pro-ts5').value),
-  });
-
-  if (error) { setProStatus('Error: ' + error.message, '#FF4655'); return; }
-  setProStatus('✓ Match saved!');
-  ['team1','team2','event'].forEach(f => document.getElementById(`pro-${f}`).value = '');
-  ['1','2','3','4','5'].forEach(n => {
-    document.getElementById(`pro-yt${n}`).value = '';
-    document.getElementById(`pro-preview${n}`).classList.remove('visible');
-    document.getElementById(`pro-map${n}`).value = '';
-    document.getElementById(`pro-ts${n}`).value = '';
-    proYtIds[n] = null;
-  });
-  loadProRecent();
-}
-
-async function loadVodRecent() {
-  const token = await getAccessToken();
-  if (!token) return;
-  const list = document.getElementById('vod-recent-list');
-  const count = document.getElementById('vod-recent-count');
-  try {
-    const res = await fetch('/api/admin-vod', { headers: { 'Authorization': `Bearer ${token}` } });
-    if (!res.ok) { list.innerHTML = '<div class="empty-state">Error loading VODs.</div>'; return; }
-    const { ids, titles } = await res.json();
-    count.textContent = ids.length;
-    if (!ids.length) { list.innerHTML = '<div class="empty-state">No VODs in database yet.</div>'; return; }
-    // Show last 20
-    const recent = ids.slice(0, 20);
-    list.innerHTML = recent.map((id, i) => `
-      <div class="entry-item">
-        <div class="entry-text">${titles[i] || id} · <span style="opacity:0.6">${id}</span></div>
-        <span class="entry-remove" onclick="deleteVod('${id}')">✕</span>
-      </div>
-    `).join('');
-  } catch { list.innerHTML = '<div class="empty-state">Failed to load.</div>'; }
-}
-
-async function deleteVod(id) {
-  if (!confirm(`Delete VOD ${id}?`)) return;
-  const token = await getAccessToken();
-  if (!token) return;
-  const res = await fetch('/api/admin-vod', {
-    method: 'DELETE',
-    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-    body: JSON.stringify({ id }),
-  });
-  if (res.ok) {
-    loadVodRecent();
-    loadExisting();
-  } else {
-    const d = await res.json().catch(() => ({}));
-    alert('Error: ' + (d.error || res.status));
+  const date  = document.getElementById('pro-date').value;
+  const status= document.getElementById('pro-status');
+  if (!team1 || !team2 || !event || !date) { status.textContent = 'Fill teams, event, and date.'; status.style.color = 'var(--red)'; return; }
+  const row = { team1, team2, event, date };
+  for (let i = 1; i <= 5; i++) {
+    const m = document.getElementById('pro-map'+i)?.value;
+    const y = document.getElementById('pro-yt'+i)?.value.trim();
+    const s = document.getElementById('pro-start'+i)?.value;
+    if (m) { row[`map${i}`] = m; row[`map${i}_youtube_id`] = y || null; row[`map${i}_start_time`] = s ? parseInt(s) : 0; }
   }
+  const { error } = await getSB().from('pro_matches').insert(row);
+  if (error) { status.textContent = error.message; status.style.color = 'var(--red)'; return; }
+  status.textContent = '✓ Saved!'; status.style.color = 'var(--green)';
+  loadProRecent();
 }
 
 async function loadProRecent() {
-  const { data } = await sb.from('pro_matches').select('*').order('created_at', { ascending: false }).limit(8);
   const list = document.getElementById('pro-recent-list');
-  const count = document.getElementById('pro-recent-count');
-  if (!data?.length) { list.innerHTML = '<div class="empty-state">No pro matches yet.</div>'; count.textContent = 0; return; }
-  count.textContent = data.length;
-  list.innerHTML = data.map(m => `
-    <div class="entry-item">
-      <div class="entry-text">${m.team1} vs ${m.team2} · ${m.event} · ${m.map1}${m.map2?', '+m.map2:''}${m.map3?', '+m.map3:''}${m.map4?', '+m.map4:''}${m.map5?', '+m.map5:''}</div>
-      <span class="entry-remove" onclick="deleteProMatch('${m.id}')">✕</span>
-    </div>
-  `).join('');
+  const { data } = await getSB().from('pro_matches').select('*').order('date',{ascending:false}).limit(10);
+  if (!data?.length) { list.innerHTML = '<div class="empty-state">No matches yet.</div>'; return; }
+  document.getElementById('pro-recent-count').textContent = data.length;
+  list.innerHTML = data.map(m =>
+    `<div class="entry-row"><div class="entry-main"><div class="entry-title">${m.team1} vs ${m.team2}</div><div class="entry-meta">${m.event} · ${m.date}</div></div></div>`
+  ).join('');
 }
 
-async function deleteProMatch(id) {
-  if (!confirm('Delete this match?')) return;
-  await sb.from('pro_matches').delete().eq('id', id);
-  loadProRecent();
-}
+// ── Lineups tab ───────────────────────────────────────────────────────────────
+const LU_AGENTS = ['Jett','Reyna','Raze','Neon','Phoenix','Yoru','Iso','Waylay','Omen','Viper','Brimstone','Astra','Harbor','Clove','Miks','Sage','Cypher','Killjoy','Chamber','Deadlock','Vyse','Veto','Sova','Breach','Skye','KAYO','Fade','Gekko','Tejo'];
+const AGENT_UTIL_TYPES = {
+  viper:['smoke','wall','molly','other'],omen:['smoke','flash','other','other'],brimstone:['smoke','molly','other','other'],
+  astra:['smoke','other','other','other'],harbor:['smoke','wall','other','other'],clove:['smoke','smoke','molly','other'],
+  miks:['smoke','smoke','other','other'],jett:['smoke','other','other','dash'],reyna:['other','flash','other','other'],
+  raze:['molly','other','other','other'],neon:['wall','other','other','other'],phoenix:['wall','flash','molly','other'],
+  yoru:['flash','other','other','other'],iso:['other','other','other','other'],waylay:['other','other','other','other'],
+  sage:['wall','molly','other','other'],cypher:['other','other','other','other'],killjoy:['molly','other','other','other'],
+  chamber:['other','other','other','other'],deadlock:['other','other','other','other'],vyse:['other','other','other','other'],
+  veto:['other','other','other','other'],sova:['dart','other','other','other'],breach:['flash','molly','other','other'],
+  skye:['flash','other','other','other'],kayo:['flash','molly','other','other'],fade:['other','other','other','other'],
+  gekko:['other','other','other','other'],tejo:['molly','other','other','other']
+};
+const LU_ABILITY_NAMES = {
+  viper:['Poison Cloud','Toxic Screen','Snake Bite','Viper\'s Pit'],
+  omen:['Shrouded Step','Paranoia','Dark Cover','From the Shadows'],
+  brimstone:['Incendiary','Stim Beacon','Sky Smoke','Orbital Strike'],
+  astra:['Nova Pulse','Nebula','Gravity Well','Cosmic Divide'],
+  harbor:['Cove','High Tide','Cascade','Reckoning'],
+  clove:['Pick-Me-Up','Meddle','Not Dead Yet','Ruse'],
+  miks:['Blip','Streak','other','other'],
+  jett:['Cloudburst','Updraft','Tailwind','Blade Storm'],
+  reyna:['Devour','Dismiss','Leer','Empress'],
+  raze:['Boom Bot','Blast Pack','Paint Shells','Showstopper'],
+  neon:['Fast Lane','Relay Bolt','High Gear','Overdrive'],
+  phoenix:['Blaze','Curveball','Hot Hands','Run it Back'],
+  yoru:['Blindside','Gatecrash','Fakeout','Dimensional Drift'],
+  iso:['Contingency','Undercut','Double Tap','Kill Contract'],
+  waylay:['Relay','Dash','Q','Ultimate'],
+  sage:['Barrier Orb','Slow Orb','Healing Orb','Resurrection'],
+  cypher:['Cyber Cage','Spycam','Trapwire','Neural Theft'],
+  killjoy:['Nanoswarm','Alarmbot','Turret','Lockdown'],
+  chamber:['Trademark','Headhunter','Rendezvous','Tour de Force'],
+  deadlock:['GravNet','Sonic Sensor','Barrier Mesh','Annihilation'],
+  vyse:['Shear','Arc Rose','Razorvine','Steel Garden'],
+  veto:['Q','Passive','E','Ultimate'],
+  sova:['Owl Drone','Shock Bolt','Recon Bolt','Hunter\'s Fury'],
+  breach:['Aftershock','Flashpoint','Fault Line','Rolling Thunder'],
+  skye:['Regrowth','Trailblazer','Guiding Light','Seekers'],
+  kayo:['FRAG/ment','FLASH/drive','ZERO/point','NULL/cmd'],
+  fade:['Prowler','Seize','Haunt','Nightfall'],
+  gekko:['Wingman','Dizzy','Mosh Pit','Thrash'],
+  tejo:['Stealth Drone','Special Delivery','Guided Salvo','Armageddon']
+};
 
-// ── Gameplan training data ────────────────────────────────────
-let gameplanOffset = 0;
-const GAMEPLAN_PAGE_SIZE = 10;
-let gameplanTotal = 0;
-let gameplanExpanded = new Set();
+let luMarkers = { stand:null, land:null, wallEnd:null };
+let luMode = 'stand';
+let luDragging = null;
+let luSelectedAgent = null;
+let luSelectedAbility = null;
+let luSelectedTags = new Set();
+let luEditId = null;
+let luSide = 'attack';
 
-async function loadGameplanData(offset) {
-  const token = await getAccessToken();
-  if (!token) return;
-  gameplanOffset = offset;
-  const card = document.getElementById('gameplan-data-card');
-  card.innerHTML = '<div class="empty-state">Loading...</div>';
-  try {
-    const res = await fetch(`/api/admin-gameplan-data?offset=${offset}&limit=${GAMEPLAN_PAGE_SIZE}`, {
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
-    if (!res.ok) { card.innerHTML = `<div class="empty-state">Error loading data (${res.status})</div>`; return; }
-    const { data, count } = await res.json();
-    gameplanTotal = count || 0;
-    document.getElementById('gameplan-count').textContent = gameplanTotal;
-    renderGameplanData(data || []);
-    const prevBtn = document.getElementById('gameplan-prev-btn');
-    const nextBtn = document.getElementById('gameplan-next-btn');
-    const pageInfo = document.getElementById('gameplan-page-info');
-    const page = Math.floor(offset / GAMEPLAN_PAGE_SIZE) + 1;
-    const totalPages = Math.max(1, Math.ceil(gameplanTotal / GAMEPLAN_PAGE_SIZE));
-    pageInfo.textContent = `Page ${page} of ${totalPages}`;
-    prevBtn.style.display = offset > 0 ? '' : 'none';
-    nextBtn.style.display = offset + GAMEPLAN_PAGE_SIZE < gameplanTotal ? '' : 'none';
-  } catch (e) {
-    card.innerHTML = '<div class="empty-state">Failed to load.</div>';
-  }
-}
-
-function gameplanPage(dir) {
-  loadGameplanData(Math.max(0, gameplanOffset + dir * GAMEPLAN_PAGE_SIZE));
-}
-
-function renderGameplanData(rows) {
-  const card = document.getElementById('gameplan-data-card');
-  if (!rows.length) { card.innerHTML = '<div class="empty-state">No gameplan data yet.</div>'; return; }
-  card.innerHTML = rows.map((row, i) => {
-    const goals = Array.isArray(row.goals) ? row.goals : [];
-    const goalSummary = goals.map(g => `${g.type}: ${g.title}`).join(' · ') || '(no goals)';
-    const date = row.created_at ? new Date(row.created_at).toLocaleString() : '';
-    const itemId = `gp-${row.id}`;
-    const schedule = row.routine?.schedule || [];
-    const scheduleHtml = schedule.map(s =>
-      `<div style="display:flex;gap:8px;margin-bottom:4px"><span style="color:var(--red);min-width:70px">${s.time}</span><span style="color:var(--muted);min-width:70px">${s.category}</span><span>${s.title}${s.count ? ' · '+s.count : ''}</span></div>`
-    ).join('');
-    const goalsHtml = goals.map(g => {
-      let line = `<b>${g.type}</b>: ${g.title}`;
-      if (g.current_value) line += ` · current: ${g.current_value}`;
-      if (g.target) line += ` → ${g.target}`;
-      if (g.notes) line += `<br><span style="color:var(--muted)">${g.notes}</span>`;
-      return `<div style="margin-bottom:6px">${line}</div>`;
-    }).join('');
-    return `
-    <div style="border:1px solid var(--border);border-radius:8px;margin-bottom:8px;overflow:hidden">
-      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;cursor:pointer;background:var(--darker)" onclick="toggleGameplanRow('${itemId}')">
-        <div style="font-size:12px;flex:1;min-width:0">
-          <span style="font-family:'DM Mono',monospace;color:var(--red);margin-right:8px">${date}</span>
-          <span style="color:var(--muted)">${row.agents || 'no agent'}</span>
-          <span style="color:var(--muted);margin:0 6px">·</span>
-          <span style="font-size:11px">${goalSummary}</span>
-        </div>
-        <span id="${itemId}-chevron" style="color:var(--muted);font-family:'DM Mono',monospace;font-size:11px;margin-left:8px">▶</span>
-      </div>
-      <div id="${itemId}" style="display:none;padding:14px;background:var(--surface);border-top:1px solid var(--border)">
-        <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Goals</div>
-        <div style="font-size:12px;margin-bottom:14px">${goalsHtml}</div>
-        ${row.time_per_day ? `<div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);margin-bottom:4px">TIME: ${row.time_per_day} min${row.wake_time ? ' · WAKE: '+row.wake_time : ''}${row.details ? ' · PREFS: '+row.details : ''}</div>` : ''}
-        <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin:12px 0 8px">Generated Schedule</div>
-        <div style="font-size:12px">${scheduleHtml || '(no schedule)'}</div>
-      </div>
+function luBuildAgentGrid() {
+  const grid = document.getElementById('lu-agent-grid');
+  if (grid.children.length) return;
+  grid.innerHTML = LU_AGENTS.map(a => {
+    const key = a.toLowerCase().replace('/','');
+    return `<div class="agent-cell" data-agent="${key}" title="${a}" onclick="luSelectAgent(this,'${key}','${a}')">
+      <img src="https://media.valorant-api.com/agents/${luAgentUUID(key)}/displayiconsmall.png" onerror="this.style.display='none'">
     </div>`;
   }).join('');
 }
 
-function toggleGameplanRow(id) {
-  const el = document.getElementById(id);
-  const chevron = document.getElementById(id + '-chevron');
-  const isOpen = el.style.display !== 'none';
-  el.style.display = isOpen ? 'none' : 'block';
-  if (chevron) chevron.textContent = isOpen ? '▶' : '▼';
+function luAgentUUID(key) {
+  const UUIDs = {jett:'add6443a-41bd-e414-f6ad-e58d267f4e95',reyna:'a3bfb853-43b2-7238-a4f1-ad90e9e46bcc',raze:'f94c3b30-42be-e959-889c-5aa313dba261',neon:'bb2a4828-46eb-8cd1-e765-15848195d751',phoenix:'eb93336a-449b-9c1e-0ac7-dfe9992400f6',yoru:'7f94d92c-4234-0a36-9646-3a87eb8b5c89',iso:'0e38b510-41a8-5780-5e8f-568b2a4f2d6c',waylay:'',omen:'8e253930-4c05-31dd-1b6c-968525494517',viper:'707eab51-4836-f488-046a-cda6bf494859',brimstone:'9f0d8ba5-4efd-7571-8880-3496965fa49e',astra:'41fb69c1-4189-7b37-f117-bcaf1e96f1bf',harbor:'95b78ed7-4637-86d9-7e41-71ba8c293152',clove:'1dbf2edd-4729-0984-3115-daa5eed44993',miks:'',sage:'569fdd95-4d10-43ab-ca70-79becc718b46',cypher:'117ed9e3-49f3-6512-3ccf-0cada7e3823b',killjoy:'1e58de9c-4950-5125-93e9-a0aee9f98746',chamber:'22697a3d-45bf-8dd7-4fec-84a9e28c69d4',deadlock:'cc8b64c8-4b25-4ff9-6e7f-37b4da43d235',vyse:'efba5359-4016-a1e5-7626-b1ae76895940',veto:'',sova:'320b2a48-4d9b-a075-30f1-1f93a9b638fa',breach:'5f8d3a7f-467b-97f3-062c-0416cd8c7594',skye:'6f2a04ca-43e0-4a58-a96c-d3ee2eced1ef',kayo:'601dbbe7-43ce-be57-2a40-4abd24953621',fade:'dade69b4-4f5a-8528-247b-219e5a1facd6',gekko:'e370fa57-4757-3604-3648-499e1f642d3f',tejo:'b444168c-4b94-a6fd-5b46-cda5dd5cb5b1'};
+  return UUIDs[key] || '';
 }
+
+function luSelectAgent(el, key, name) {
+  document.querySelectorAll('.agent-cell').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  luSelectedAgent = key;
+  luSelectedAbility = null;
+  document.getElementById('lu-agent-name').textContent = name;
+  document.getElementById('lu-ability-field').style.display = 'block';
+  const picker = document.getElementById('lu-ability-picker');
+  const abilities = LU_ABILITY_NAMES[key] || ['Q','E','C','X'];
+  picker.innerHTML = abilities.map((ab, i) =>
+    `<div class="ability-opt" data-slot="${i}" onclick="luSelectAbility(this,${i})">${ab}</div>`
+  ).join('');
+  const modeBtn = document.getElementById('lu-mode-wall');
+  const wallCoordItem = document.getElementById('lu-wall-coord-item');
+  const types = AGENT_UTIL_TYPES[key] || [];
+  const hasWall = types.includes('wall');
+  modeBtn.style.display = hasWall ? '' : 'none';
+  if (wallCoordItem) wallCoordItem.style.display = hasWall ? 'flex' : 'none';
+  luRenderMarkers();
+}
+
+function luSelectAbility(el, slot) {
+  document.querySelectorAll('.ability-opt').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  luSelectedAbility = slot;
+  document.getElementById('lu-ability-name').textContent = el.textContent;
+  luRenderMarkers();
+}
+
+function luSetMode(mode) {
+  luMode = mode;
+  ['stand','land','wall-end'].forEach(m => {
+    const btn = document.getElementById('lu-mode-' + m.replace('-end',''));
+    if (btn) { btn.classList.remove('active-stand','active-land','active-wall'); }
+  });
+  const cls = mode === 'stand' ? 'active-stand' : mode === 'land' ? 'active-land' : 'active-wall';
+  const btnId = mode === 'wall-end' ? 'lu-mode-wall' : 'lu-mode-' + mode;
+  document.getElementById(btnId)?.classList.add(cls);
+}
+
+function luSetSide(side) {
+  luSide = side;
+  document.getElementById('lu-side-attack').classList.toggle('active-stand', side === 'attack');
+  document.getElementById('lu-side-defense').classList.toggle('active-land', side === 'defense');
+}
+
+function luLoadMap() {
+  const map = document.getElementById('lu-sel-map').value;
+  const img = document.getElementById('lu-img');
+  const placeholder = document.getElementById('lu-placeholder');
+  if (!map) { img.style.display = 'none'; placeholder.style.display = 'flex'; return; }
+  img.src = `/maps/${map}-minimap.png`;
+  img.style.display = 'block';
+  placeholder.style.display = 'none';
+  luMarkers = { stand:null, land:null, wallEnd:null };
+  luUpdateCoordDisplay();
+  luRenderMarkers();
+}
+
+function luGetImageRect() {
+  const wrap = document.getElementById('lu-minimap-wrap');
+  const img  = document.getElementById('lu-img');
+  if (!img || img.style.display === 'none') return null;
+  const wR = wrap.getBoundingClientRect();
+  const iNat = img.naturalWidth / img.naturalHeight;
+  const wNat = wR.width / wR.height;
+  let iW, iH, iX, iY;
+  if (iNat > wNat) { iW = wR.width; iH = iW / iNat; iX = 0; iY = (wR.height - iH) / 2; }
+  else             { iH = wR.height; iW = iH * iNat; iY = 0; iX = (wR.width - iW) / 2; }
+  return { x:iX, y:iY, w:iW, h:iH };
+}
+
+function luMouseDown(e) {
+  const rect = luGetImageRect(); if (!rect) return;
+  const wrap = document.getElementById('lu-minimap-wrap').getBoundingClientRect();
+  const mx = e.clientX - wrap.left, my = e.clientY - wrap.top;
+  const fx = (mx - rect.x) / rect.w, fy = (my - rect.y) / rect.h;
+  if (fx < 0 || fx > 1 || fy < 0 || fy > 1) return;
+  // check if clicking near existing marker for drag
+  for (const [key, pos] of Object.entries(luMarkers)) {
+    if (!pos) continue;
+    const dx = (pos[0] - fx) * rect.w, dy = (pos[1] - fy) * rect.h;
+    if (Math.sqrt(dx*dx + dy*dy) < 14) { luDragging = key; return; }
+  }
+  // place new marker
+  const coord = [parseFloat(fx.toFixed(4)), parseFloat(fy.toFixed(4))];
+  if (luMode === 'stand')    luMarkers.stand   = coord;
+  if (luMode === 'land')     luMarkers.land    = coord;
+  if (luMode === 'wall-end') luMarkers.wallEnd = coord;
+  luUpdateCoordDisplay();
+  luRenderMarkers();
+}
+
+function luMouseMove(e) {
+  if (!luDragging) return;
+  const rect = luGetImageRect(); if (!rect) return;
+  const wrap = document.getElementById('lu-minimap-wrap').getBoundingClientRect();
+  const mx = e.clientX - wrap.left, my = e.clientY - wrap.top;
+  const fx = Math.max(0, Math.min(1, (mx - rect.x) / rect.w));
+  const fy = Math.max(0, Math.min(1, (my - rect.y) / rect.h));
+  luMarkers[luDragging] = [parseFloat(fx.toFixed(4)), parseFloat(fy.toFixed(4))];
+  luUpdateCoordDisplay();
+  luRenderMarkers();
+}
+
+function luMouseUp() { luDragging = null; }
+
+function luUpdateCoordDisplay() {
+  const fmt = pos => pos ? `${pos[0].toFixed(3)}, ${pos[1].toFixed(3)}` : 'not set';
+  document.getElementById('lu-stand-coords').textContent = fmt(luMarkers.stand);
+  document.getElementById('lu-land-coords').textContent  = fmt(luMarkers.land);
+  document.getElementById('lu-wall-coords').textContent  = fmt(luMarkers.wallEnd);
+}
+
+function luRenderMarkers() {
+  const canvas = document.getElementById('lu-canvas');
+  const rect   = luGetImageRect();
+  if (!canvas || !rect) return;
+  canvas.width  = rect.w;
+  canvas.height = rect.h;
+  canvas.style.left = rect.x + 'px';
+  canvas.style.top  = rect.y + 'px';
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  const toC = pos => pos ? [pos[0] * rect.w, pos[1] * rect.h] : null;
+  const stand   = toC(luMarkers.stand);
+  const land    = toC(luMarkers.land);
+  const wallEnd = toC(luMarkers.wallEnd);
+
+  // throw line
+  if (stand && land) {
+    ctx.strokeStyle = 'rgba(255,255,255,0.6)'; ctx.lineWidth = 1.5; ctx.setLineDash([4,3]);
+    ctx.beginPath(); ctx.moveTo(stand[0], stand[1]); ctx.lineTo(land[0], land[1]); ctx.stroke();
+  }
+  // wall line
+  if (stand && wallEnd) {
+    ctx.strokeStyle = 'rgba(168,85,247,0.7)'; ctx.lineWidth = 2; ctx.setLineDash([]);
+    ctx.beginPath(); ctx.moveTo(stand[0], stand[1]); ctx.lineTo(wallEnd[0], wallEnd[1]); ctx.stroke();
+  }
+  ctx.setLineDash([]);
+
+  // stand marker (blue circle + agent portrait)
+  if (stand) {
+    ctx.beginPath(); ctx.arc(stand[0], stand[1], 14, 0, Math.PI*2);
+    ctx.fillStyle = '#64C8FF'; ctx.fill();
+    if (luSelectedAgent) {
+      const uuid = luAgentUUID(luSelectedAgent);
+      if (uuid) {
+        const img = new Image();
+        img.src = `https://media.valorant-api.com/agents/${uuid}/displayiconsmall.png`;
+        img.onload = () => {
+          ctx.save(); ctx.beginPath(); ctx.arc(stand[0], stand[1], 13, 0, Math.PI*2);
+          ctx.clip(); ctx.drawImage(img, stand[0]-13, stand[1]-13, 26, 26); ctx.restore();
+        };
+      }
+    }
+  }
+  // land marker (orange dot)
+  if (land) {
+    ctx.beginPath(); ctx.arc(land[0], land[1], 8, 0, Math.PI*2);
+    ctx.fillStyle = '#FF7800'; ctx.fill();
+  }
+  // wall-end marker (purple dot)
+  if (wallEnd) {
+    ctx.beginPath(); ctx.arc(wallEnd[0], wallEnd[1], 6, 0, Math.PI*2);
+    ctx.fillStyle = '#A855F7'; ctx.fill();
+  }
+}
+
+function luClearMarkers() {
+  luMarkers = { stand:null, land:null, wallEnd:null };
+  luUpdateCoordDisplay(); luRenderMarkers();
+}
+
+function luHandleYT() {
+  const val = document.getElementById('lu-yt').value.trim();
+  const m = val.match(/(?:v=|youtu\.be\/|embed\/|shorts\/)([\w-]{11})/);
+  const id = m ? m[1] : (val.length === 11 ? val : null);
+  document.getElementById('lu-yt-id').textContent = id ? 'ID: ' + id : '';
+  const thumb = document.getElementById('lu-yt-thumb');
+  if (id) { thumb.src = `https://img.youtube.com/vi/${id}/mqdefault.jpg`; document.getElementById('lu-yt-preview').style.display = 'flex'; }
+  else { document.getElementById('lu-yt-preview').style.display = 'none'; }
+}
+
+function luToggleTag(el) {
+  const tag = el.dataset.tag;
+  if (luSelectedTags.has(tag)) { luSelectedTags.delete(tag); el.classList.remove('selected'); }
+  else { luSelectedTags.add(tag); el.classList.add('selected'); }
+}
+
+async function luSubmit() {
+  const map   = document.getElementById('lu-sel-map').value;
+  const yt    = document.getElementById('lu-yt').value.trim();
+  const title = document.getElementById('lu-title').value.trim();
+  const desc  = document.getElementById('lu-desc').value.trim();
+  const status= document.getElementById('lu-status');
+
+  if (!map || !luMarkers.stand || !luMarkers.land || !luSelectedAgent || !title) {
+    status.textContent = 'Map, agent, stand + land markers, and title required.'; status.style.color = 'var(--red)'; return;
+  }
+  const ytM = yt.match(/(?:v=|youtu\.be\/|embed\/|shorts\/)([\w-]{11})/);
+  const ytId = ytM ? ytM[1] : (yt.length === 11 ? yt : null);
+
+  const row = {
+    title, map: map, agent: luSelectedAgent,
+    x: luMarkers.stand[0], y: luMarkers.stand[1],
+    wall_end_x: luMarkers.wallEnd?.[0] ?? null, wall_end_y: luMarkers.wallEnd?.[1] ?? null,
+    type: luSelectedAbility != null ? (AGENT_UTIL_TYPES[luSelectedAgent]?.[luSelectedAbility] || 'other') : 'other',
+    image_url: ytId ? `https://img.youtube.com/vi/${ytId}/mqdefault.jpg` : null
+  };
+  let error;
+  if (luEditId) {
+    ({ error } = await getSB().from('lineups').update(row).eq('id', luEditId));
+  } else {
+    ({ error } = await getSB().from('lineups').insert(row));
+  }
+  if (error) { status.textContent = error.message; status.style.color = 'var(--red)'; return; }
+  status.textContent = luEditId ? '✓ Updated!' : '✓ Saved!'; status.style.color = 'var(--green)';
+  luCancelEdit(); luLoadRecent();
+}
+
+function luCancelEdit() {
+  luEditId = null;
+  document.getElementById('lu-form-title').textContent = 'Add Lineup';
+  document.getElementById('lu-submit-btn').textContent = 'Save Lineup';
+  document.getElementById('lu-cancel-btn').style.display = 'none';
+  document.getElementById('lu-title').value = '';
+  document.getElementById('lu-desc').value = '';
+  document.getElementById('lu-yt').value = '';
+  document.getElementById('lu-yt-preview').style.display = 'none';
+  luSelectedTags = new Set();
+  document.querySelectorAll('.lu-tag').forEach(t => t.classList.remove('selected'));
+  luClearMarkers();
+}
+
+let luRecentData = [];
+async function luLoadRecent() {
+  const list = document.getElementById('lu-recent-list');
+  const map  = document.getElementById('lu-sel-map').value;
+  let q = getSB().from('lineups').select('*').order('id',{ascending:false}).limit(20);
+  if (map) q = q.eq('map', map);
+  const { data } = await q;
+  luRecentData = data || [];
+  document.getElementById('lu-recent-count').textContent = luRecentData.length;
+  if (!luRecentData.length) { list.innerHTML = '<div class="empty-state" style="padding:12px;font-family:DM Mono,monospace;font-size:11px;color:var(--muted)">No lineups yet.</div>'; return; }
+  list.innerHTML = luRecentData.map((l, i) =>
+    `<div class="lu-recent-row">
+      <div class="lu-recent-info"><div class="lu-recent-title">${l.title}</div><div class="lu-recent-meta">${l.map} · ${l.agent} · ${l.type}</div></div>
+      <div class="lu-recent-actions">
+        <button onclick="luEdit(${i})" style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;padding:4px 10px;border-radius:4px;border:1px solid var(--border);background:none;color:var(--text);cursor:pointer">Edit</button>
+        <button onclick="luDelete('${l.id}')" style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;padding:4px 10px;border-radius:4px;border:1px solid rgba(255,70,85,0.3);background:none;color:var(--red);cursor:pointer">Del</button>
+      </div>
+    </div>`
+  ).join('');
+}
+
+function luEdit(i) {
+  const l = luRecentData[i];
+  luEditId = l.id;
+  document.getElementById('lu-form-title').textContent = 'Edit Lineup';
+  document.getElementById('lu-submit-btn').textContent = 'Update Lineup';
+  document.getElementById('lu-cancel-btn').style.display = 'block';
+  document.getElementById('lu-title').value = l.title || '';
+  document.getElementById('lu-desc').value  = l.description || '';
+  if (l.map) { document.getElementById('lu-sel-map').value = l.map; luLoadMap(); }
+  luMarkers.stand = l.x != null ? [l.x, l.y] : null;
+  luMarkers.land  = l.land_x != null ? [l.land_x, l.land_y] : null;
+  luMarkers.wallEnd = l.wall_end_x != null ? [l.wall_end_x, l.wall_end_y] : null;
+  luUpdateCoordDisplay(); luRenderMarkers();
+  document.getElementById('lu-status').textContent = '';
+}
+
+async function luDelete(id) {
+  if (!confirm('Delete this lineup?')) return;
+  const { error } = await getSB().from('lineups').delete().eq('id', id);
+  if (error) { alert(error.message); return; }
+  luLoadRecent();
+}
+
+// ── Data / Coaching ───────────────────────────────────────────────────────────
+let coachOffset = 0;
+const COACH_PAGE = 20;
+
+async function coachLoad(offset) {
+  coachOffset = offset;
+  const mode  = document.getElementById('coach-mode')?.value || '';
+  const agent = document.getElementById('coach-agent')?.value || '';
+  const token = await getAccessToken();
+  const params = new URLSearchParams({ limit: COACH_PAGE, offset });
+  if (mode)  params.append('mode', mode);
+  if (agent) params.append('agent', agent);
+  const res = await fetch('/api/admin-coaching?' + params, { headers:{'Authorization':'Bearer '+token} });
+  const { data, total } = await res.json().catch(() => ({ data:[], total:0 }));
+  document.getElementById('coach-stat').textContent = `${total} entries`;
+  renderCoachEntries(data || [], offset === 0);
+  const btn = document.getElementById('coach-load-more');
+  btn.style.display = (data?.length === COACH_PAGE) ? 'block' : 'none';
+}
+
+function coachReload() { coachLoad(0); }
+function coachLoadMore() { coachLoad(coachOffset + COACH_PAGE); }
+
+function renderCoachEntries(data, replace) {
+  const container = document.getElementById('coach-entries');
+  const html = data.map(e => `
+    <div class="data-entry">
+      <div class="data-head">
+        <div class="data-meta">
+          <div class="dtag dtag-mode">${e.mode || '—'}</div>
+          ${e.agent ? `<div class="dtag dtag-agent">${e.agent}</div>` : ''}
+          <div class="dtag dtag-date">${new Date(e.created_at||Date.now()).toLocaleDateString()}</div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="expand-btn" onclick="toggleDataEntry(this)">Expand</button>
+          <button class="del-btn" onclick="deleteCoachEntry('${e.id}',this)">Delete</button>
+        </div>
+      </div>
+      <div class="data-body collapsed">
+        <div style="margin-bottom:8px"><strong>Notes:</strong><br><pre>${(e.notes||'').replace(/</g,'&lt;')}</pre></div>
+        <div><strong>Coaching output:</strong><br><pre>${(e.coaching_output||'').replace(/</g,'&lt;')}</pre></div>
+      </div>
+    </div>`).join('');
+  if (replace) container.innerHTML = html || '<div class="empty-state">No entries found.</div>';
+  else container.insertAdjacentHTML('beforeend', html);
+}
+
+function toggleDataEntry(btn) {
+  const body = btn.closest('.data-entry').querySelector('.data-body');
+  body.classList.toggle('collapsed');
+  btn.textContent = body.classList.contains('collapsed') ? 'Expand' : 'Collapse';
+}
+
+async function deleteCoachEntry(id, btn) {
+  if (!confirm('Delete this entry?')) return;
+  const token = await getAccessToken();
+  const res = await fetch('/api/admin-coaching', {
+    method:'DELETE', headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+    body:JSON.stringify({id})
+  });
+  if (res.ok) btn.closest('.data-entry').remove();
+  else alert('Delete failed.');
+}
+
+// ── Data / Gameplan ───────────────────────────────────────────────────────────
+let gpCurrentPage = 0;
+const GP_PAGE = 10;
+
+async function loadGameplanData(page) {
+  gpCurrentPage = page;
+  const token = await getAccessToken();
+  const offset = page * GP_PAGE;
+  const res = await fetch(`/api/admin-gameplan?limit=${GP_PAGE}&offset=${offset}`, {
+    headers:{'Authorization':'Bearer '+token}
+  });
+  const { data, total } = await res.json().catch(() => ({data:[],total:0}));
+  document.getElementById('gp-count').textContent = total || 0;
+  const list = document.getElementById('gp-data-list');
+  if (!data?.length) { list.innerHTML = '<div class="empty-state">No routine data yet.</div>'; return; }
+  list.innerHTML = data.map(r => `
+    <div class="data-entry">
+      <div class="data-head">
+        <div class="data-meta">
+          <div class="dtag dtag-date">${new Date(r.generated_at||r.created_at||Date.now()).toLocaleDateString()}</div>
+          ${r.time_per_day ? `<div class="dtag dtag-mode">${r.time_per_day} min/day</div>` : ''}
+        </div>
+        <button class="expand-btn" onclick="toggleDataEntry(this)">Expand</button>
+      </div>
+      <div class="data-body collapsed"><pre>${JSON.stringify(r.tasks||r,null,2).replace(/</g,'&lt;')}</pre></div>
+    </div>`).join('');
+  const total_pages = Math.ceil((total||0) / GP_PAGE);
+  document.getElementById('gp-prev').style.display = page > 0 ? 'block' : 'none';
+  document.getElementById('gp-next').style.display = page + 1 < total_pages ? 'block' : 'none';
+  document.getElementById('gp-page-info').textContent = `Page ${page+1} of ${total_pages||1}`;
+}
+
+function gpPage(dir) { loadGameplanData(gpCurrentPage + dir); }
+
+// ── Roadmap ───────────────────────────────────────────────────────────────────
+function rmToggle(card) {
+  card.classList.toggle('open');
+  card.classList.toggle('expanded');
+  card.querySelector('.rm-chevron').textContent = card.classList.contains('open') ? '▴' : '▾';
+}
+function rmCountCards() {
+  [['shipped','rm-shipped'],['progress','rm-progress'],['planned','rm-planned'],['ideas','rm-ideas']].forEach(([id,elId]) => {
+    const el = document.getElementById(elId);
+    const count = el ? el.querySelectorAll('.rm-card').length : 0;
+    const counter = document.getElementById('rm-count-' + id);
+    if (counter) counter.textContent = count;
+  });
+}
+
+// ── Ideas ─────────────────────────────────────────────────────────────────────
+let ideasCurrentFilter = 'all';
+function ideasLoad() { return JSON.parse(localStorage.getItem('fraglog_ideas') || '[]'); }
+function ideasSave(list) { localStorage.setItem('fraglog_ideas', JSON.stringify(list)); }
+
+function ideasToggleForm() {
+  const form = document.getElementById('ideas-add-form');
+  form.classList.toggle('open');
+  if (form.classList.contains('open')) document.getElementById('idea-title').focus();
+}
+
+function ideasAdd() {
+  const title = document.getElementById('idea-title').value.trim();
+  const cat   = document.getElementById('idea-cat').value;
+  const notes = document.getElementById('idea-notes').value.trim();
+  if (!title) { alert('Title required.'); return; }
+  const list = ideasLoad();
+  list.unshift({ id: Date.now(), title, cat, notes, created: new Date().toISOString() });
+  ideasSave(list);
+  document.getElementById('idea-title').value = '';
+  document.getElementById('idea-notes').value = '';
+  ideasToggleForm();
+  ideasRender();
+}
+
+function ideasFilter(cat, btn) {
+  ideasCurrentFilter = cat;
+  document.querySelectorAll('.ideas-pill').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  ideasRender();
+}
+
+function ideasDelete(id) {
+  if (!confirm('Delete this idea?')) return;
+  ideasSave(ideasLoad().filter(i => i.id !== id));
+  ideasRender();
+}
+
+const ICAT_LABEL = { content:'Content', social:'Social', promo:'Promo', feature:'Feature', partner:'Partnership', other:'Other' };
+function ideasRender() {
+  const list = ideasLoad().filter(i => ideasCurrentFilter === 'all' || i.cat === ideasCurrentFilter);
+  const grid = document.getElementById('ideas-grid');
+  if (!list.length) { grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;padding:2rem">No ideas yet. Hit <strong>+ Add idea</strong> to start.</div>'; return; }
+  grid.innerHTML = list.map(i => `
+    <div class="idea-card">
+      <div class="idea-card-top">
+        <span class="icat icat-${i.cat}">${ICAT_LABEL[i.cat]||i.cat}</span>
+        <button onclick="ideasDelete(${i.id})" style="font-size:14px;background:none;border:none;color:var(--muted);cursor:pointer;line-height:1;padding:0">×</button>
+      </div>
+      <div class="idea-title">${i.title}</div>
+      ${i.notes ? `<div class="idea-notes">${i.notes.replace(/\n/g,'<br>')}</div>` : ''}
+      <div class="idea-date">${new Date(i.created).toLocaleDateString()}</div>
+    </div>`).join('');
+}
+
+// ── Init ─────────────────────────────────────────────────────────────────────
+window.addEventListener('load', () => {
+  // Check existing session
+  getSB().auth.getSession().then(({ data: { session } }) => {
+    if (session?.user) {
+      document.getElementById('auth-overlay').style.display = 'none';
+      document.getElementById('app').style.display = 'block';
+      document.getElementById('hub-auth').textContent = session.user.email || '';
+      tabInitialized.add('vods');
+      initTab('vods');
+    }
+  });
+  // Count roadmap cards on load (roadmap sub-tab may never open)
+  setTimeout(rmCountCards, 100);
+});
 </script>
 </body>
 </html>
+
+

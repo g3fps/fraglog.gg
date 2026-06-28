@@ -814,6 +814,33 @@ export const AGENT_KNOWLEDGE = {
       key_insight: "Remove obstacles for the entry — suppress the sentinel, clear the corner, flash the duelist in, then be ready to fight yourself."
     }
   },
+  veto: {
+    role: "Sentinel",
+    core_philosophy: "More aggressive than most sentinels. Veto's kit disrupts enemy utility and enables repositioning rather than anchoring angles passively. Interceptor shuts down incoming projectiles; Crosscut enables off-angles with an escape; Evolution makes him nearly unstoppable in a duel. Currently low in the meta.",
+    watch: [],
+    abilities: {
+      crosscut: {
+        mechanics: "Two charges at 200 credits each. Place a vortex on the ground — while in range and looking at it, reactivate to teleport to it. Can be reclaimed and redeployed during buy phase.",
+        usage: "Set up off-angles that would be suicidal without an escape — get the kill, teleport out before the trade. Redeploy during buy phase to adjust to how the defense is setting up. Range-limited, so placement relative to your intended position matters.",
+        key_insight: "The buy phase reclaim lets you adjust your TP position based on early round reads before committing to an angle."
+      },
+      chokehold: {
+        mechanics: "200 credits. Thrown fragment that deploys on impact, trapping enemies in place. Held enemies are Deafened and Decayed.",
+        usage: "Catch enemies in chokes or on pushes where they can't dodge. Trapped enemies are debuffed and can't escape — swing immediately to punish.",
+        key_insight: "Pairs with teammate damage util — a Decayed, trapped enemy dies to almost any follow-up."
+      },
+      interceptor: {
+        mechanics: "Signature, free, 30s recharge. Place the device, then activate it separately. Once active, destroys incoming utility — specifically projectiles that would bounce off players or that can be destroyed by gunfire.",
+        usage: "Counter to Sova darts, grenades, and other incoming projectiles. Place on angles where enemy utility typically lands before an execute. Activation timing matters — place early, activate when the push is imminent.",
+        key_insight: "Removes the utility enemies rely on to take space — an execute without their key util is significantly weaker."
+      },
+      evolution: {
+        mechanics: "Ult. Instantly mutates — grants combat stim, health regeneration, faster weapon handling, and full immunity to all debuffs. Flashes, stuns, and slows do nothing while active.",
+        usage: "Use to win a fight you'd normally lose, push through utility you can't avoid, or clutch a round. Debuff immunity means you can walk through enemy smokes, flashes, and mollies without consequence.",
+        key_insight: "Full debuff immunity changes what plays are available — pushing through a KAY/O knife, walking into a Viper pit, or tanking a Brimstone ult all become viable with Evolution active."
+      }
+    }
+  },
   iso: {
     role: "Duelist",
     core_philosophy: "A second-entry duelist like Reyna or Phoenix — built to win fights after first contact, not open space himself. Strong solo-carry option with good mechanics, but he needs someone else to make first contact so he can trade in with his shield active.",
@@ -1422,6 +1449,67 @@ export const GENERAL_KNOWLEDGE = {
       retakes: "Come from multiple angles at the same time. Ideal retake uses market, CT, and B main simultaneously so enemies can't hold all three.",
       timing: "Never push out alone before teammates are ready. A split push only works when both sides move at the same time — otherwise you're just feeding."
     },
+    sentinel_flank_watch: "All sentinel trips and traps — Cypher Trapwire, Chamber Trademark, Killjoy Turret (Alarmbot also works), Vyse Shear, Veto Chokehold — are reliable for watching flanks on attack. Place one behind your team so you can focus forward without splitting attention. Deadlock's Sonic Sensor is the exception: enemies can shift-walk past it silently, making it unreliable for passive flank coverage.",
+    attack_op_with_teammate: "If your teammate is attack oping, play slower and focus on setting them up for a kill. Getting an early pick gives your team a numbers advantage going into the round — build the pace around giving the OP holder a clean shot rather than rushing past them.",
+    when_team_struggles: {
+      summary: "When teammates are underperforming, identify what's missing and fill it — no calls: IGL (see igling section); no callouts: give info yourself; no entry pressure: create it; no economy coordination: push for a unified buy or save. Going for harder hero plays to compensate is counterproductive. Winning your own fights consistently does more than trying to outfrag everyone.",
+      win_your_fights: "You can't control how teammates play but you can win your individual duels. A 1v5 is very hard to win; a 1v1 after your team engages is very winnable. The most reliable carry is winning every fight your team's engagement creates, not going for plays that require everything to go right.",
+      adjust_your_play: "Position where you can trade or follow up, not where you rely on teammate execution. If teammates are dying out of position, slow the pace — faster plays demand coordination that a struggling team can't deliver.",
+      economy: "Mixed economy into a full-buy enemy loses rounds faster than any mechanical gap. When the team's credits are split, push for a unified decision — all buy or all save. One player forcing alone while the team saves is feeding weapons.",
+      mental: "Better players compound over many games. Tilting into hero plays amplifies losses rather than compensating for them. Playing your cleanest game on a bad team is how the rank differential shows up over time."
+    },
+  },
+  igling: {
+    core: "The IGL's job is making a decision, not the perfect decision. Indecision kills rounds faster than bad calls — a late call with the team half-committed is worse than the wrong call delivered early. Call in buy phase so everyone has time to position.",
+    reading_the_defense: {
+      summary: "Every round gives information: footsteps in opening zones, util spent, deaths on the minimap, and what the enemy repeated last round. Most teams run the same setup for 3-4 rounds before adjusting — build that picture before you execute.",
+      sources: [
+        "Sound: footsteps and ability sounds in opening zones locate defenders without peeking",
+        "Util spent: if they smoked and flashed a site early, that site may be light on resources mid-round",
+        "Kill feed: where your team dies locates the defense; an early pick away from site suggests aggression or a lurk",
+        "Minimap: enemy players tagged by util show real-time positions — glance it every time someone dies",
+        "Round history: teams repeat setups; a site they haven't touched in three rounds is likely where they stack next"
+      ]
+    },
+    play_options: [
+      "Fast hit / rush — 4-5 through one entry to overwhelm before defenders set up or rotate",
+      "Split — e.g. 3+2 converging on one site from two angles simultaneously",
+      "Default / slow — spread 1-1-1-1-1 for info then commit off what you learn",
+      "Info setup (3-1-1) — group 3 in one area, spread 1 and 1 to read where the defense is weak",
+      "Fake / pressure — apply pressure on one site until defenders commit, then cancel or switch",
+      "Lurk — one player opposite side for flank/info while the team applies pressure",
+      "Attack OP slow play — play slow and set your OP teammate up for a pick to get a numbers advantage"
+    ],
+    making_the_call: {
+      timing: "Call in buy phase. Mid-round calls work for adjustments off a default, not for full executes — by the time you have a clear read mid-round you often have 20 seconds to act on it.",
+      commit: "Once the execute starts, don't change it. Pulling the call after half the team commits splits bodies and removes the timing advantage. Call the abort before the point of no return, not during.",
+      when_to_hit_what: {
+        fast_hit: "When you read that a site is light — rotators caught mid-map, low presence on minimap, enemies out of position. Speed is the advantage here, not util.",
+        split: "When you have time, two viable entry points, and enough util to pressure both simultaneously. Assign positions in buy phase — a split called mid-execute rarely lands.",
+        fake_pressure: "Apply pressure on one site until defenders commit, then cancel or switch. Forces rotations and creates information about the defense's tendencies."
+      }
+    },
+    mid_round_adjustments: {
+      summary: "Mid-round is for reading what the default gave you and acting on it. Did they stack A? Go B. Did they burn all util early? Execute now. Did your teammate die and reveal a position? Call the site they're not at.",
+      key_insight: "A mid-round call is only valuable if it's made before the team spreads too thin. Two going one way and three going another is worse than committing to either."
+    },
+    economy_as_igl: {
+      summary: "Economy decisions belong to the IGL, not just individuals. Call buy or save at round start — a mixed economy into a full-buy enemy loses before the round begins. Track loss bonuses and project when the team can full buy.",
+      drops: "Drop credits or guns to teammates who need them. A teammate with a pistol while you have 6000 credits wastes the round."
+    },
+    conditioning: {
+      summary: "Running the same play multiple rounds sets up the break. Opponents adjust to stop what worked — they stack the site, play for your split, or hold your fake. Read their adjustment and exploit it on the round you call the break.",
+      key_insight: "Plan the break when you call the pattern. If you hit A three rounds in a row to set up B, know which round you're breaking before you start the conditioning."
+    },
+    common_mistakes: [
+      "Calling too late — team is already spread and can't group in time to execute",
+      "Changing the execute mid-commit — splits the team and removes the timing advantage",
+      "Calling into a confirmed stack without enough bodies or util to overwhelm the defense",
+      "Not tracking enemy ults — executing into a KJ lockdown or Brimstone ult wastes the round",
+      "IGLing off personal preference rather than what the team's current lineup can actually execute"
+    ],
+    gamesense_accelerator: "IGLing fast-tracks gamesense faster than any other habit. You're forced to read the game at a macro level every single round — tracking enemy util, reading rotations, identifying patterns. Non-IGLs can autopilot their role; IGLs can't. The feedback loop is also tighter: a bad call produces a lost round, and you can trace exactly why. Most players improve passively by playing; IGLs improve actively by making and reviewing decisions every round.",
+    starting_out: "If no one is making calls, be the one who calls. A simple 'fast B, all go' beats silence every time. You don't need perfect reads to IGL — you need a decision and a commitment. The team adjusts from a call; a round played without one can't be recovered."
   }
 };
 
@@ -1513,7 +1601,9 @@ export const ECONOMY_KNOWLEDGE = {
     "You lost a buy round with heavy spend and cannot afford a meaningful weapon next round"
   ],
   eco_rounds: {
-    summary: "Full save opponents will likely have pistols and sheriffs only. Anti-eco rounds are not throw rounds — losing one is an economy disaster."
+    summary: "Full save opponents will likely have pistols and sheriffs only. Anti-eco rounds are not throw rounds — losing one is an economy disaster.",
+    attack: "Fight as a team — don't push individually and hand over rifles for free. Play together, take the site, and win the round without giving the enemy anything to pick up.",
+    defense: "Scoped guns like the Outlaw are strong on defense anti-eco — you don't need to push and engage at close range, so the slow handling is less of a liability. Hold angles and let them come to you."
   }
 };
 
