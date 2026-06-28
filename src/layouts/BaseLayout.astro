@@ -38,7 +38,7 @@ const TURNSTILE_SITE_KEY = import.meta.env.TURNSTILE_SITE_KEY || '';
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   {jsonLd && <script type="application/ld+json" set:html={jsonLd} />}
   <script defer src="https://cdn.vercel-insights.com/v1/script.js"></script>
-  <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" is:inline></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" is:inline></script>
 </head>
 <body>
   <script define:vars={{ premiumEnabled: PREMIUM_ENABLED }}>window.__premiumEnabled = premiumEnabled; window.__isPremium = false;</script>
