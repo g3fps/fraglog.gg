@@ -1155,8 +1155,15 @@ const TURNSTILE_SITE_KEY = import.meta.env.TURNSTILE_SITE_KEY || '';
 
     // General notes panel
     html += `<div class="vm-notes-panel active" id="vm-panel-general" style="flex:0 0 50%;min-height:0;overflow:hidden">
-      <div class="vm-notes-label" style="margin-bottom:4px">General Notes</div>
-      <textarea class="vm-notes-textarea" id="vm-textarea" placeholder="Overall observations, patterns, things to study..." style="flex:1">${savedGeneral}</textarea>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;flex-shrink:0">
+        <div class="vm-notes-label" style="margin-bottom:0">General Notes</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <a class="vm-md-link" href="https://www.markdownguide.org/basic-syntax/" target="_blank" rel="noopener" title="Markdown guide">md?</a>
+          <button class="vm-preview-toggle" id="vm-preview-toggle" onclick="vmTogglePreview()">Preview</button>
+        </div>
+      </div>
+      <textarea class="vm-notes-textarea" id="vm-textarea" placeholder="Supports markdown — **bold**, *italic*, ## headings, - lists..." style="flex:1">${savedGeneral}</textarea>
+      <div class="vm-notes-preview" id="vm-notes-preview" style="display:none;flex:1"></div>
     </div>`;
 
     // Drag divider
@@ -1345,6 +1352,53 @@ const TURNSTILE_SITE_KEY = import.meta.env.TURNSTILE_SITE_KEY || '';
   function vmResetModalSize() {
     const modal = document.querySelector('.video-modal');
     if (modal) { modal.style.width = ''; modal.style.height = ''; }
+  }
+
+  function vmTogglePreview() {
+    const ta = document.getElementById('vm-textarea');
+    const preview = document.getElementById('vm-notes-preview');
+    const btn = document.getElementById('vm-preview-toggle');
+    if (!ta || !preview || !btn) return;
+    const isEdit = ta.style.display !== 'none';
+    if (isEdit) {
+      preview.innerHTML = vmRenderMarkdown(ta.value);
+      ta.style.display = 'none';
+      preview.style.display = '';
+      btn.textContent = 'Edit';
+      btn.classList.add('active');
+    } else {
+      ta.style.display = '';
+      preview.style.display = 'none';
+      btn.textContent = 'Preview';
+      btn.classList.remove('active');
+      ta.focus();
+    }
+  }
+
+  function vmRenderMarkdown(text) {
+    if (!text.trim()) return '<p class="vm-preview-empty">No notes yet.</p>';
+    function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+    function inline(s) {
+      return esc(s)
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.+?)\*/g, '<em>$1</em>')
+        .replace(/`(.+?)`/g, '<code>$1</code>');
+    }
+    let html = '', inUl = false, inOl = false;
+    function closeList() {
+      if (inUl) { html += '</ul>'; inUl = false; }
+      if (inOl) { html += '</ol>'; inOl = false; }
+    }
+    for (const line of text.split('\n')) {
+      if (/^---+$/.test(line.trim())) { closeList(); html += '<hr>'; }
+      else if (/^#{1,3} /.test(line)) { closeList(); html += `<h4>${inline(line.replace(/^#+\s*/, ''))}</h4>`; }
+      else if (/^[-*] /.test(line)) { if (!inUl) { closeList(); html += '<ul>'; inUl = true; } html += `<li>${inline(line.slice(2))}</li>`; }
+      else if (/^\d+\. /.test(line)) { if (!inOl) { closeList(); html += '<ol>'; inOl = true; } html += `<li>${inline(line.replace(/^\d+\. /, ''))}</li>`; }
+      else if (!line.trim()) { closeList(); html += '<div class="vm-preview-gap"></div>'; }
+      else { closeList(); html += `<p>${inline(line)}</p>`; }
+    }
+    closeList();
+    return html;
   }
 
   function vmToggleVideo() {
