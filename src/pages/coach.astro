@@ -111,7 +111,10 @@ async function loadData() {
       const { data: migrated } = await sb.from('conversations')
         .insert({ user_id: currentUser.id, title, history: gc.history })
         .select('id, title, updated_at').single();
-      if (migrated) conversations = [migrated];
+      if (migrated) {
+        conversations = [migrated];
+        await sb.from('general_chat').delete().eq('user_id', currentUser.id);
+      }
     }
   }
 
