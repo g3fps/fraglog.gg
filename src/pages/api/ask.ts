@@ -52,7 +52,7 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
   const allLibVods = await getAllVods();
   const libVodMap = new Map(allLibVods.map((v: any) => [v.id, v]));
 
-  const [{ data: videoNotes }, { data: userVods }, { data: otherConvs }] = await Promise.all([
+  const [{ data: videoNotes }, { data: userVods }, { data: otherConvs }, { data: profileData }] = await Promise.all([
     sb.from('notes').select('video_id, content').eq('user_id', verifiedUserId).limit(30),
     sb.from('user_vods').select('video_id, title, map_id, agent_id').eq('user_id', verifiedUserId),
     // Other conversations (exclude current) for cross-conversation context
@@ -61,7 +61,9 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
       .eq('user_id', verifiedUserId)
       .order('updated_at', { ascending: false })
       .limit(8),
+    sb.from('profiles').select('share_coaching').eq('id', verifiedUserId).maybeSingle(),
   ]);
+  const shareCoaching = profileData?.share_coaching === true;
 
   const userVodMap = new Map((userVods || []).map((v: any) => [v.video_id, v]));
 
@@ -182,6 +184,20 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
       { onConflict: 'user_id,date' }
     );
   }
+
+  // Log training data
+  try {
+    await sb.from('coaching_training_data').insert({
+      user_id: verifiedUserId,
+      notes: safeQuestion || null,
+      agent: null,
+      map: null,
+      mode: 'ask',
+      coaching_output: text,
+      share_coaching: shareCoaching,
+      created_at: new Date().toISOString()
+    });
+  } catch { /* non-fatal */ }
 
   // contextLocked = free user has premium context that's being stripped
   const contextLocked = locked && crossContext !== '';
