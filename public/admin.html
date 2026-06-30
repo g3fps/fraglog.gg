@@ -429,6 +429,11 @@ pre{white-space:pre-wrap;word-break:break-word;font-family:'DM Mono',monospace;f
       <div class="lu-form-title" id="lu-form-title">Add Lineup</div>
       <div class="field"><label>Agent</label><div class="agent-grid" id="lu-agent-grid"></div><div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--red);margin-top:5px;min-height:14px" id="lu-agent-name"></div></div>
       <div class="field" id="lu-ability-field" style="display:none"><label>Ability</label><div class="ability-picker" id="lu-ability-picker"></div><div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--red);margin-top:5px;min-height:14px" id="lu-ability-name"></div></div>
+      <div class="field" id="lu-throw-field" style="display:none"><label>Throw Type</label><div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="mode-btn active-stand" data-throw="stand" onclick="luSelectThrow(this)">Stand</button>
+        <button class="mode-btn" data-throw="crouch" onclick="luSelectThrow(this)">Crouch</button>
+        <button class="mode-btn" data-throw="jump" onclick="luSelectThrow(this)">Jump</button>
+      </div></div>
       <div class="field"><label>YouTube URL or ID</label><input type="text" id="lu-yt" placeholder="https://youtube.com/..." oninput="luHandleYT()"><div class="lu-yt-preview" id="lu-yt-preview"><img id="lu-yt-thumb" src="" alt=""><div class="lu-yt-id" id="lu-yt-id"></div></div></div>
       <div class="field"><label>Title</label><input type="text" id="lu-title" placeholder="e.g. Viper B site default from spawn"></div>
       <div class="field"><label>Description</label><textarea id="lu-desc" placeholder="e.g. Wall covering A main and CT"></textarea></div>
@@ -680,7 +685,10 @@ function initTab(id) {
 }
 function setDefaultDate(id) {
   const el = document.getElementById(id);
-  if (el && !el.value) el.value = new Date().toISOString().slice(0,10);
+  if (el && !el.value) {
+    const now = new Date();
+    el.value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+  }
 }
 
 // sub-tab helpers
@@ -712,7 +720,7 @@ async function doSignIn() {
   const err   = document.getElementById('auth-error');
   err.textContent = '';
   if (!tsToken) { err.textContent = 'Complete the CAPTCHA.'; return; }
-  const { data, error } = await getSB().auth.signInWithPassword({ email, password: pass });
+  const { data, error } = await getSB().auth.signInWithPassword({ email, password: pass, options: { captchaToken: tsToken } });
   if (error) { err.textContent = error.message; tsToken = null; turnstile.reset('#turnstile-widget'); return; }
   document.getElementById('auth-overlay').style.display = 'none';
   document.getElementById('app').style.display = 'block';
@@ -724,7 +732,7 @@ async function doSignIn() {
 
 // ── VODs tab ─────────────────────────────────────────────────────────────────
 let vodVideoId = null;
-let vodSession = [];
+let vodSession = JSON.parse(localStorage.getItem('fraglog-admin-log') || '[]');
 
 function extractVideoId() {
   const raw = document.getElementById('yt-url').value.trim();
@@ -754,16 +762,32 @@ async function checkDups() {
 }
 
 async function generateTitle() {
-  const map   = document.getElementById('sel-map').value;
-  const agent = document.getElementById('sel-agent').value;
-  const player= document.getElementById('inp-player').value.trim();
-  if (!map || !agent) { alert('Select map and agent first.'); return; }
+  const map    = document.getElementById('sel-map').value;
+  const agent  = document.getElementById('sel-agent').value;
+  const player = document.getElementById('inp-player').value.trim();
+  if (!vodVideoId || !map || !agent || !player) {
+    alert('Paste a YouTube URL and fill in map, agent, and player first.'); return;
+  }
   const btn = document.getElementById('gen-btn');
   btn.disabled = true; btn.textContent = '...';
-  const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
-  const title = [cap(player || 'Player'), '-', cap(agent), cap(map)].filter(Boolean).join(' ');
-  document.getElementById('inp-title').value = title;
-  btn.disabled = false; btn.textContent = 'AI';
+  try {
+    const token = await getAccessToken();
+    const res = await fetch('/api/generate-title', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ videoId: vodVideoId, map, agent, player, accessToken: token })
+    });
+    const data = await res.json().catch(() => ({}));
+    if (res.ok && data.title) {
+      document.getElementById('inp-title').value = data.title;
+    } else {
+      alert(data.error || 'Title generation failed.');
+    }
+  } catch (e) {
+    alert('Request failed: ' + e.message);
+  } finally {
+    btn.disabled = false; btn.textContent = 'AI';
+  }
 }
 
 async function saveVod() {
@@ -782,15 +806,19 @@ async function saveVod() {
   const res = await fetch('/api/admin-vod', {
     method:'POST',
     headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
-    body:JSON.stringify({id, map_id:map, agent_id:agent, player, title, date})
+    body:JSON.stringify({id, map, agent, player, title, date})
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) { status.textContent = data.error || 'Error saving.'; status.style.color = 'var(--red)'; return; }
   status.textContent = '✓ Saved!'; status.style.color = 'var(--green)';
-  vodSession.unshift({id, map_id:map, agent_id:agent, player, title, date});
+  vodSession.unshift({id, map, agent, player, title, date});
+  localStorage.setItem('fraglog-admin-log', JSON.stringify(vodSession));
   renderVodSession();
   clearUrl();
+  document.getElementById('inp-player').value = '';
   document.getElementById('inp-title').value = '';
+  document.getElementById('inp-date').value = '';
+  setDefaultDate('inp-date');
 }
 document.addEventListener('keydown', e => {
   if (e.ctrlKey && e.key === 'Enter') saveVod();
@@ -801,25 +829,45 @@ function renderVodSession() {
   document.getElementById('entry-count').textContent = vodSession.length;
   if (!vodSession.length) { list.innerHTML = '<div class="empty-state">No VODs saved yet.</div>'; return; }
   list.innerHTML = vodSession.map(v =>
-    `<div class="entry-row"><div class="entry-main"><div class="entry-title">${v.title}</div><div class="entry-meta">${v.map_id} · ${v.agent_id} · ${v.player} · ${v.date}</div></div><a href="https://youtube.com/watch?v=${v.id}" target="_blank" class="entry-link">▶</a></div>`
+    `<div class="entry-row"><div class="entry-main"><div class="entry-title">${v.title}</div><div class="entry-meta">${v.map} · ${v.agent} · ${v.player} · ${v.date}</div></div><a href="https://youtube.com/watch?v=${v.id}" target="_blank" class="entry-link">▶</a></div>`
   ).join('');
 }
 
-function clearSession() { vodSession = []; renderVodSession(); }
+function clearSession() { vodSession = []; localStorage.removeItem('fraglog-admin-log'); renderVodSession(); }
 
 async function loadVodRecent() {
   const list = document.getElementById('vod-recent-list');
-  const { data, error } = await getSB().from('vods').select('*').order('created_at',{ascending:false}).limit(20);
-  if (error || !data) { list.innerHTML = '<div class="empty-state">Failed to load.</div>'; return; }
-  document.getElementById('vod-recent-count').textContent = data.length;
-  list.innerHTML = data.map(v =>
-    `<div class="entry-row"><div class="entry-main"><div class="entry-title">${v.title}</div><div class="entry-meta">${v.map_id} · ${v.agent_id} · ${v.player} · ${v.date}</div></div><a href="https://youtube.com/watch?v=${v.id}" target="_blank" class="entry-link">▶</a></div>`
-  ).join('');
+  const token = await getAccessToken();
+  if (!token) return;
+  try {
+    const res = await fetch('/api/admin-vod', { headers: { 'Authorization': 'Bearer ' + token } });
+    if (!res.ok) { list.innerHTML = '<div class="empty-state">Error loading VODs.</div>'; return; }
+    const { ids, titles } = await res.json();
+    document.getElementById('vod-recent-count').textContent = ids.length;
+    if (!ids.length) { list.innerHTML = '<div class="empty-state">No VODs in database yet.</div>'; return; }
+    list.innerHTML = ids.slice(0, 20).map((id, i) =>
+      `<div class="entry-row"><div class="entry-main"><div class="entry-title">${titles[i] || id}</div><div class="entry-meta">${id}</div></div><a href="https://youtube.com/watch?v=${id}" target="_blank" class="entry-link">▶</a><span class="entry-remove" onclick="deleteVod('${id}')">✕</span></div>`
+    ).join('');
+  } catch { list.innerHTML = '<div class="empty-state">Failed to load.</div>'; }
+}
+
+async function deleteVod(id) {
+  if (!confirm(`Delete VOD ${id}?`)) return;
+  const token = await getAccessToken();
+  const res = await fetch('/api/admin-vod', {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+    body: JSON.stringify({ id })
+  });
+  if (res.ok) loadVodRecent();
+  else alert('Delete failed.');
 }
 
 // ── Pro tab ──────────────────────────────────────────────────────────────────
 const PRO_MAPS = ['Ascent','Bind','Haven','Split','Fracture','Pearl','Icebox','Breeze','Lotus','Sunset','Abyss','Corrode','Summit'];
 const ALL_MAPS_OPTS = PRO_MAPS.map(m => `<option value="${m.toLowerCase()}">${m}</option>`).join('');
+
+const proYtIds = {'1':null,'2':null,'3':null,'4':null,'5':null};
 
 function buildProMaps() {
   const wrap = document.getElementById('pro-maps-wrap');
@@ -829,11 +877,42 @@ function buildProMaps() {
     const opt = i >= 4 ? ` <span style="color:var(--muted);font-size:11px">(Bo5 only)</span>` : '';
     html += `<div class="section-label" style="margin-bottom:1.25rem">Map ${i}${opt}</div>
     <div class="card">
-      <div class="row2"><div class="field"><label>Map</label><select id="pro-map${i}"><option value="">Skip</option>${ALL_MAPS_OPTS}</select></div><div class="field"><label>YouTube ID</label><input type="text" id="pro-yt${i}" placeholder="dQw4w9WgXcQ"></div></div>
-      <div class="field"><label>Start Time (seconds)</label><input type="number" id="pro-start${i}" placeholder="0"></div>
+      <div class="row2">
+        <div class="field"><label>Map</label><select id="pro-map${i}"><option value="">Skip</option>${ALL_MAPS_OPTS}</select></div>
+        <div class="field"><label>YouTube URL</label><input type="text" id="pro-yt${i}" placeholder="https://youtube.com/..." oninput="proHandleYT('${i}')"></div>
+      </div>
+      <div class="field"><label>Start Time (MM:SS or seconds)</label><input type="text" id="pro-ts${i}" placeholder="0:00 or 0"></div>
+      <div class="thumb-preview" id="pro-preview${i}"><img id="pro-thumb${i}" src="" alt=""><div class="vid-id" id="pro-id${i}"></div></div>
     </div>`;
   }
   wrap.innerHTML = html;
+}
+
+function proHandleYT(n) {
+  const val = document.getElementById(`pro-yt${n}`).value.trim();
+  const m = val.match(/(?:v=|youtu\.be\/|embed\/|shorts\/)([\w-]{11})/);
+  const id = m ? m[1] : (val.length === 11 && /^[\w-]+$/.test(val) ? val : null);
+  proYtIds[n] = id;
+  const preview = document.getElementById(`pro-preview${n}`);
+  if (id) {
+    document.getElementById(`pro-thumb${n}`).src = `https://img.youtube.com/vi/${id}/mqdefault.jpg`;
+    document.getElementById(`pro-id${n}`).textContent = 'ID: ' + id;
+    preview.style.display = 'block';
+  } else {
+    preview.style.display = 'none';
+  }
+}
+
+function parseTimestamp(val) {
+  if (!val) return 0;
+  val = val.trim();
+  if (val.includes(':')) {
+    const parts = val.split(':').map(Number);
+    if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
+    if (parts.length === 2) return parts[0] * 60 + parts[1];
+    return 0;
+  }
+  return parseInt(val) || 0;
 }
 
 async function saveProMatch() {
@@ -843,27 +922,54 @@ async function saveProMatch() {
   const date  = document.getElementById('pro-date').value;
   const status= document.getElementById('pro-status');
   if (!team1 || !team2 || !event || !date) { status.textContent = 'Fill teams, event, and date.'; status.style.color = 'var(--red)'; return; }
-  const row = { team1, team2, event, date };
-  for (let i = 1; i <= 5; i++) {
-    const m = document.getElementById('pro-map'+i)?.value;
-    const y = document.getElementById('pro-yt'+i)?.value.trim();
-    const s = document.getElementById('pro-start'+i)?.value;
-    if (m) { row[`map${i}`] = m; row[`map${i}_youtube_id`] = y || null; row[`map${i}_start_time`] = s ? parseInt(s) : 0; }
+
+  const map1 = document.getElementById('pro-map1').value;
+  const map2 = document.getElementById('pro-map2').value;
+  if (!map1 || !proYtIds['1']) { status.textContent = 'Map 1 needs a map and YouTube URL.'; status.style.color = 'var(--red)'; return; }
+  if (!map2 || !proYtIds['2']) { status.textContent = 'Map 2 needs a map and YouTube URL.'; status.style.color = 'var(--red)'; return; }
+
+  const row = {
+    team1, team2, event, date: date || null,
+    map1, map1_youtube_id: proYtIds['1'],
+    map1_start_time: parseTimestamp(document.getElementById('pro-ts1').value),
+    map2, map2_youtube_id: proYtIds['2'],
+    map2_start_time: parseTimestamp(document.getElementById('pro-ts2').value),
+  };
+  for (let i = 3; i <= 5; i++) {
+    const m = document.getElementById(`pro-map${i}`)?.value;
+    row[`map${i}`] = m || null;
+    row[`map${i}_youtube_id`] = proYtIds[String(i)] || null;
+    row[`map${i}_start_time`] = parseTimestamp(document.getElementById(`pro-ts${i}`)?.value);
   }
+
   const { error } = await getSB().from('pro_matches').insert(row);
   if (error) { status.textContent = error.message; status.style.color = 'var(--red)'; return; }
   status.textContent = '✓ Saved!'; status.style.color = 'var(--green)';
+  ['team1','team2','event'].forEach(f => document.getElementById(`pro-${f}`).value = '');
+  for (let i = 1; i <= 5; i++) {
+    document.getElementById(`pro-yt${i}`).value = '';
+    document.getElementById(`pro-map${i}`).value = '';
+    document.getElementById(`pro-ts${i}`).value = '';
+    document.getElementById(`pro-preview${i}`).style.display = 'none';
+    proYtIds[String(i)] = null;
+  }
   loadProRecent();
 }
 
 async function loadProRecent() {
   const list = document.getElementById('pro-recent-list');
-  const { data } = await getSB().from('pro_matches').select('*').order('date',{ascending:false}).limit(10);
+  const { data } = await getSB().from('pro_matches').select('*').order('created_at',{ascending:false}).limit(8);
   if (!data?.length) { list.innerHTML = '<div class="empty-state">No matches yet.</div>'; return; }
   document.getElementById('pro-recent-count').textContent = data.length;
   list.innerHTML = data.map(m =>
-    `<div class="entry-row"><div class="entry-main"><div class="entry-title">${m.team1} vs ${m.team2}</div><div class="entry-meta">${m.event} · ${m.date}</div></div></div>`
+    `<div class="entry-row"><div class="entry-main"><div class="entry-title">${m.team1} vs ${m.team2}</div><div class="entry-meta">${m.event} · ${[m.map1,m.map2,m.map3,m.map4,m.map5].filter(Boolean).join(', ')}</div></div><span class="entry-remove" onclick="deleteProMatch('${m.id}')">✕</span></div>`
   ).join('');
+}
+
+async function deleteProMatch(id) {
+  if (!confirm('Delete this match?')) return;
+  await getSB().from('pro_matches').delete().eq('id', id);
+  loadProRecent();
 }
 
 // ── Lineups tab ───────────────────────────────────────────────────────────────
@@ -917,9 +1023,11 @@ let luMode = 'stand';
 let luDragging = null;
 let luSelectedAgent = null;
 let luSelectedAbility = null;
+let luSelectedThrow = 'stand';
 let luSelectedTags = new Set();
 let luEditId = null;
 let luSide = 'attack';
+let luIsWallUtil = false;
 
 function luBuildAgentGrid() {
   const grid = document.getElementById('lu-agent-grid');
@@ -949,12 +1057,8 @@ function luSelectAgent(el, key, name) {
   picker.innerHTML = abilities.map((ab, i) =>
     `<div class="ability-opt" data-slot="${i}" onclick="luSelectAbility(this,${i})">${ab}</div>`
   ).join('');
-  const modeBtn = document.getElementById('lu-mode-wall');
-  const wallCoordItem = document.getElementById('lu-wall-coord-item');
-  const types = AGENT_UTIL_TYPES[key] || [];
-  const hasWall = types.includes('wall');
-  modeBtn.style.display = hasWall ? '' : 'none';
-  if (wallCoordItem) wallCoordItem.style.display = hasWall ? 'flex' : 'none';
+  document.getElementById('lu-ability-field').style.display = 'block';
+  document.getElementById('lu-throw-field').style.display = 'block';
   luRenderMarkers();
 }
 
@@ -963,7 +1067,20 @@ function luSelectAbility(el, slot) {
   el.classList.add('selected');
   luSelectedAbility = slot;
   document.getElementById('lu-ability-name').textContent = el.textContent;
+  const utilType = AGENT_UTIL_TYPES[luSelectedAgent]?.[slot];
+  luIsWallUtil = utilType === 'wall';
+  const wallBtn = document.getElementById('lu-mode-wall');
+  const wallItem = document.getElementById('lu-wall-coord-item');
+  wallBtn.style.display = luIsWallUtil ? '' : 'none';
+  if (wallItem) wallItem.style.display = luIsWallUtil ? 'flex' : 'none';
+  if (!luIsWallUtil) luMarkers.wallEnd = null;
   luRenderMarkers();
+}
+
+function luSelectThrow(btn) {
+  document.querySelectorAll('[data-throw]').forEach(b => b.className = 'mode-btn');
+  btn.classList.add('active-stand');
+  luSelectedThrow = btn.dataset.throw;
 }
 
 function luSetMode(mode) {
@@ -979,8 +1096,9 @@ function luSetMode(mode) {
 
 function luSetSide(side) {
   luSide = side;
-  document.getElementById('lu-side-attack').classList.toggle('active-stand', side === 'attack');
-  document.getElementById('lu-side-defense').classList.toggle('active-land', side === 'defense');
+  document.getElementById('lu-side-attack').className = 'mode-btn' + (side === 'attack' ? ' active-stand' : '');
+  document.getElementById('lu-side-defense').className = 'mode-btn' + (side === 'defense' ? ' active-land' : '');
+  if (document.getElementById('lu-sel-map').value) luLoadMap();
 }
 
 function luLoadMap() {
@@ -988,7 +1106,7 @@ function luLoadMap() {
   const img = document.getElementById('lu-img');
   const placeholder = document.getElementById('lu-placeholder');
   if (!map) { img.style.display = 'none'; placeholder.style.display = 'flex'; return; }
-  img.src = `/maps/${map}-minimap.png`;
+  img.src = `/maps/${map}-${luSide}.png`;
   img.style.display = 'block';
   placeholder.style.display = 'none';
   luMarkers = { stand:null, land:null, wallEnd:null };
@@ -1072,10 +1190,10 @@ function luRenderMarkers() {
     ctx.strokeStyle = 'rgba(255,255,255,0.6)'; ctx.lineWidth = 1.5; ctx.setLineDash([4,3]);
     ctx.beginPath(); ctx.moveTo(stand[0], stand[1]); ctx.lineTo(land[0], land[1]); ctx.stroke();
   }
-  // wall line
-  if (stand && wallEnd) {
-    ctx.strokeStyle = 'rgba(168,85,247,0.7)'; ctx.lineWidth = 2; ctx.setLineDash([]);
-    ctx.beginPath(); ctx.moveTo(stand[0], stand[1]); ctx.lineTo(wallEnd[0], wallEnd[1]); ctx.stroke();
+  // wall line (from land spot to wall end)
+  if (land && wallEnd) {
+    ctx.strokeStyle = '#43E07A'; ctx.lineWidth = 3; ctx.setLineDash([]);
+    ctx.beginPath(); ctx.moveTo(land[0], land[1]); ctx.lineTo(wallEnd[0], wallEnd[1]); ctx.stroke();
   }
   ctx.setLineDash([]);
 
@@ -1109,7 +1227,7 @@ function luRenderMarkers() {
 
 function luClearMarkers() {
   luMarkers = { stand:null, land:null, wallEnd:null };
-  luUpdateCoordDisplay(); luRenderMarkers();
+  luUpdateCoordDisplay(); luRenderMarkers(); luSetMode('stand');
 }
 
 function luHandleYT() {
@@ -1130,23 +1248,34 @@ function luToggleTag(el) {
 
 async function luSubmit() {
   const map   = document.getElementById('lu-sel-map').value;
-  const yt    = document.getElementById('lu-yt').value.trim();
   const title = document.getElementById('lu-title').value.trim();
-  const desc  = document.getElementById('lu-desc').value.trim();
   const status= document.getElementById('lu-status');
+  const ytRaw = document.getElementById('lu-yt').value.trim();
+  const ytM = ytRaw.match(/(?:v=|youtu\.be\/|embed\/|shorts\/)([\w-]{11})/);
+  const ytId = ytM ? ytM[1] : (ytRaw.length === 11 ? ytRaw : null);
 
-  if (!map || !luMarkers.stand || !luMarkers.land || !luSelectedAgent || !title) {
-    status.textContent = 'Map, agent, stand + land markers, and title required.'; status.style.color = 'var(--red)'; return;
-  }
-  const ytM = yt.match(/(?:v=|youtu\.be\/|embed\/|shorts\/)([\w-]{11})/);
-  const ytId = ytM ? ytM[1] : (yt.length === 11 ? yt : null);
+  if (!map)               { status.textContent = 'Select a map.'; status.style.color='var(--red)'; return; }
+  if (!luSelectedAgent)   { status.textContent = 'Select an agent.'; status.style.color='var(--red)'; return; }
+  if (luSelectedAbility == null) { status.textContent = 'Select an ability.'; status.style.color='var(--red)'; return; }
+  if (!luMarkers.stand)   { status.textContent = 'Set a stand position.'; status.style.color='var(--red)'; return; }
+  if (!luMarkers.land)    { status.textContent = 'Set a landing spot.'; status.style.color='var(--red)'; return; }
+  if (!ytId)              { status.textContent = 'Paste a YouTube URL.'; status.style.color='var(--red)'; return; }
+  if (!title)             { status.textContent = 'Add a title.'; status.style.color='var(--red)'; return; }
 
+  const tags = [...luSelectedTags];
   const row = {
-    title, map: map, agent: luSelectedAgent,
-    x: luMarkers.stand[0], y: luMarkers.stand[1],
-    wall_end_x: luMarkers.wallEnd?.[0] ?? null, wall_end_y: luMarkers.wallEnd?.[1] ?? null,
-    type: luSelectedAbility != null ? (AGENT_UTIL_TYPES[luSelectedAgent]?.[luSelectedAbility] || 'other') : 'other',
-    image_url: ytId ? `https://img.youtube.com/vi/${ytId}/mqdefault.jpg` : null
+    title, map, agent: luSelectedAgent,
+    stand_x: luMarkers.stand[0], stand_y: luMarkers.stand[1],
+    land_x: luMarkers.land[0], land_y: luMarkers.land[1],
+    wall_end_x: luIsWallUtil ? (luMarkers.wallEnd?.[0] ?? null) : null,
+    wall_end_y: luIsWallUtil ? (luMarkers.wallEnd?.[1] ?? null) : null,
+    util_type: luSelectedAbility != null ? (AGENT_UTIL_TYPES[luSelectedAgent]?.[luSelectedAbility] || 'other') : 'other',
+    ability_slot: luSelectedAbility,
+    throw_type: luSelectedThrow,
+    side: luSide,
+    youtube_id: ytId || null,
+    description: document.getElementById('lu-desc').value.trim(),
+    tags
   };
   let error;
   if (luEditId) {
@@ -1168,8 +1297,14 @@ function luCancelEdit() {
   document.getElementById('lu-desc').value = '';
   document.getElementById('lu-yt').value = '';
   document.getElementById('lu-yt-preview').style.display = 'none';
+  document.getElementById('lu-status').textContent = '';
   luSelectedTags = new Set();
+  luSelectedAbility = null;
+  luSelectedThrow = 'stand';
   document.querySelectorAll('.lu-tag').forEach(t => t.classList.remove('selected'));
+  document.querySelectorAll('.ability-opt').forEach(o => o.classList.remove('selected'));
+  document.querySelectorAll('[data-throw]').forEach(b => { b.className = 'mode-btn'; if (b.dataset.throw === 'stand') b.classList.add('active-stand'); });
+  document.getElementById('lu-ability-name').textContent = '';
   luClearMarkers();
 }
 
@@ -1202,12 +1337,52 @@ function luEdit(i) {
   document.getElementById('lu-cancel-btn').style.display = 'block';
   document.getElementById('lu-title').value = l.title || '';
   document.getElementById('lu-desc').value  = l.description || '';
-  if (l.map) { document.getElementById('lu-sel-map').value = l.map; luLoadMap(); }
-  luMarkers.stand = l.x != null ? [l.x, l.y] : null;
-  luMarkers.land  = l.land_x != null ? [l.land_x, l.land_y] : null;
-  luMarkers.wallEnd = l.wall_end_x != null ? [l.wall_end_x, l.wall_end_y] : null;
-  luUpdateCoordDisplay(); luRenderMarkers();
-  document.getElementById('lu-status').textContent = '';
+  // side
+  if (l.side) luSetSide(l.side);
+  // map + markers
+  if (l.map) {
+    document.getElementById('lu-sel-map').value = l.map;
+    const img = document.getElementById('lu-img');
+    document.getElementById('lu-placeholder').style.display = 'none';
+    img.style.display = 'block';
+    const place = () => {
+      luMarkers.stand   = l.stand_x != null ? [l.stand_x, l.stand_y] : null;
+      luMarkers.land    = l.land_x  != null ? [l.land_x,  l.land_y]  : null;
+      luMarkers.wallEnd = l.wall_end_x != null ? [l.wall_end_x, l.wall_end_y] : null;
+      luUpdateCoordDisplay(); luRenderMarkers();
+    };
+    img.onload = place;
+    img.src = `/maps/${l.map}-${luSide}.png`;
+    setTimeout(place, 250);
+  }
+  // agent + ability
+  if (l.agent) {
+    luBuildAgentGrid();
+    const cell = document.querySelector(`.agent-cell[data-agent="${l.agent}"]`);
+    if (cell) luSelectAgent(cell, l.agent, l.agent);
+    if (l.ability_slot != null) {
+      setTimeout(() => {
+        const opt = document.querySelector(`.ability-opt[data-slot="${l.ability_slot}"]`);
+        if (opt) luSelectAbility(opt, l.ability_slot);
+      }, 50);
+    }
+  }
+  // throw type
+  if (l.throw_type) {
+    luSelectedThrow = l.throw_type;
+    document.querySelectorAll('[data-throw]').forEach(b => {
+      b.className = 'mode-btn' + (b.dataset.throw === l.throw_type ? ' active-stand' : '');
+    });
+  }
+  // youtube
+  document.getElementById('lu-yt').value = l.youtube_id || '';
+  luHandleYT();
+  // tags
+  luSelectedTags = new Set(l.tags || []);
+  document.querySelectorAll('.lu-tag').forEach(t => t.classList.toggle('selected', luSelectedTags.has(t.dataset.tag)));
+
+  document.getElementById('lu-status').textContent = 'Editing — adjust and click Update Lineup.';
+  document.getElementById('lu-status').style.color = 'var(--green)';
 }
 
 async function luDelete(id) {
@@ -1219,19 +1394,19 @@ async function luDelete(id) {
 
 // ── Data / Coaching ───────────────────────────────────────────────────────────
 let coachOffset = 0;
-const COACH_PAGE = 20;
+const COACH_PAGE = 25;
 
 async function coachLoad(offset) {
   coachOffset = offset;
   const mode  = document.getElementById('coach-mode')?.value || '';
   const agent = document.getElementById('coach-agent')?.value || '';
   const token = await getAccessToken();
-  const params = new URLSearchParams({ limit: COACH_PAGE, offset });
+  const params = new URLSearchParams({ offset });
   if (mode)  params.append('mode', mode);
   if (agent) params.append('agent', agent);
   const res = await fetch('/api/admin-coaching?' + params, { headers:{'Authorization':'Bearer '+token} });
-  const { data, total } = await res.json().catch(() => ({ data:[], total:0 }));
-  document.getElementById('coach-stat').textContent = `${total} entries`;
+  const { data, count } = await res.json().catch(() => ({ data:[], count:0 }));
+  document.getElementById('coach-stat').textContent = `${count ?? 0} entries`;
   renderCoachEntries(data || [], offset === 0);
   const btn = document.getElementById('coach-load-more');
   btn.style.display = (data?.length === COACH_PAGE) ? 'block' : 'none';
@@ -1273,12 +1448,15 @@ function toggleDataEntry(btn) {
 async function deleteCoachEntry(id, btn) {
   if (!confirm('Delete this entry?')) return;
   const token = await getAccessToken();
-  const res = await fetch('/api/admin-coaching', {
-    method:'DELETE', headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
-    body:JSON.stringify({id})
+  const res = await fetch(`/api/admin-coaching?id=${encodeURIComponent(id)}`, {
+    method:'DELETE', headers:{'Authorization':'Bearer '+token}
   });
-  if (res.ok) btn.closest('.data-entry').remove();
-  else alert('Delete failed.');
+  if (res.ok) {
+    btn.closest('.data-entry').remove();
+    const stat = document.getElementById('coach-stat');
+    const m = stat.textContent.match(/\d+/);
+    if (m) stat.textContent = `${Math.max(0, parseInt(m[0]) - 1)} entries`;
+  } else alert('Delete failed.');
 }
 
 // ── Data / Gameplan ───────────────────────────────────────────────────────────
@@ -1289,11 +1467,11 @@ async function loadGameplanData(page) {
   gpCurrentPage = page;
   const token = await getAccessToken();
   const offset = page * GP_PAGE;
-  const res = await fetch(`/api/admin-gameplan?limit=${GP_PAGE}&offset=${offset}`, {
+  const res = await fetch(`/api/admin-gameplan-data?limit=${GP_PAGE}&offset=${offset}`, {
     headers:{'Authorization':'Bearer '+token}
   });
-  const { data, total } = await res.json().catch(() => ({data:[],total:0}));
-  document.getElementById('gp-count').textContent = total || 0;
+  const { data, count } = await res.json().catch(() => ({data:[],count:0}));
+  document.getElementById('gp-count').textContent = count || 0;
   const list = document.getElementById('gp-data-list');
   if (!data?.length) { list.innerHTML = '<div class="empty-state">No routine data yet.</div>'; return; }
   list.innerHTML = data.map(r => `
@@ -1307,7 +1485,7 @@ async function loadGameplanData(page) {
       </div>
       <div class="data-body collapsed"><pre>${JSON.stringify(r.tasks||r,null,2).replace(/</g,'&lt;')}</pre></div>
     </div>`).join('');
-  const total_pages = Math.ceil((total||0) / GP_PAGE);
+  const total_pages = Math.ceil((count||0) / GP_PAGE);
   document.getElementById('gp-prev').style.display = page > 0 ? 'block' : 'none';
   document.getElementById('gp-next').style.display = page + 1 < total_pages ? 'block' : 'none';
   document.getElementById('gp-page-info').textContent = `Page ${page+1} of ${total_pages||1}`;

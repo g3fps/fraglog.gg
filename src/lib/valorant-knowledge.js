@@ -2,7 +2,7 @@ export const AGENT_KNOWLEDGE = {
   jett: {
     role: "Duelist",
     core_philosophy: "Jett's job is making space and info for teammates, not kills. Dash is both entry and escape: get onto site through a smoke, close distance on an angle, or escape pressure. Entry, clear angles, get info — teammates follow into the space you made.",
-    watch: [],
+    watch: ["florescent", "OXY"],
     abilities: {
       cloudburst: {
         mechanics: "Throwable smoke that can be curved midair by holding the activation key and moving the mouse — you don't need to look at the target area. Small smoke cloud on landing.",
@@ -272,7 +272,7 @@ export const AGENT_KNOWLEDGE = {
   reyna: {
     role: "Duelist",
     core_philosophy: "Reyna is a self-sufficient, mechanics-first duelist built around 1v1 fights and snowballing. Without kills her kit does nothing but the flash. Massive solo carry potential, almost nothing for the team beyond a flash. Her ult is arguably the worst in the game at high elo.",
-    watch: [],
+    watch: ["haeyoday", "OXY"],
     abilities: {
       leer: {
         mechanics: "Unlimited range. Nearsights anyone who looks at it — not a full blind. Active for two seconds if unbroken. Throw low for a fast close-range pop; throw high so enemies must flick up to break it. Nearsight indicator shows over enemies behind boxes.",
@@ -305,7 +305,7 @@ export const AGENT_KNOWLEDGE = {
   omen: {
     role: "Controller",
     core_philosophy: "Omen is one of the most aggressive controllers in the game, not a passive support. His blind, hollow smokes, and two TPs create space for creative plays. After using utility, Omen takes fights and makes space — if you only want to sit back and smoke, other controllers do it better.",
-    watch: [],
+    watch: ["Zander"],
     abilities: {
       paranoia: {
         mechanics: "Large projectile that nearsights and deafens everyone who sees it. Wide spread — target center of grouped enemies. Slow; wait for it to reach enemies before peeking. Nearsight indicator appears above boxes to detect hidden enemies.",
@@ -500,7 +500,7 @@ export const AGENT_KNOWLEDGE = {
   astra: {
     role: "Controller",
     core_philosophy: "The most complex controller in the game, but the fundamentals are simple — global utility affecting any part of the map. Requires pre-planning and comms; every piece must be placed before you need it.",
-    watch: [],
+    watch: ["Zander"],
     abilities: {
       nova_pulse: {
         mechanics: "Star placed in astral form that concusses an area when activated. Placeable anywhere on the map.",
@@ -817,7 +817,7 @@ export const AGENT_KNOWLEDGE = {
   veto: {
     role: "Sentinel",
     core_philosophy: "More aggressive than most sentinels. Veto's kit disrupts enemy utility and enables repositioning rather than anchoring angles passively. Interceptor shuts down incoming projectiles; Crosscut enables off-angles with an escape; Evolution makes him nearly unstoppable in a duel. Currently low in the meta.",
-    watch: [],
+    watch: ["blueberry"],
     abilities: {
       crosscut: {
         mechanics: "Two charges at 200 credits each. Place a vortex on the ground — while in range and looking at it, reactivate to teleport to it. Can be reclaimed and redeployed during buy phase.",
