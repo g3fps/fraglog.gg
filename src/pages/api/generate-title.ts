@@ -49,13 +49,13 @@ Format: [TEAM] Player Agent Map DESCRIPTOR
 - TEAM prefix: if the YouTube title contains an esports org or team name/abbreviation appearing before or near the player name, extract the abbreviation and prepend it (e.g. "Cloud9 OXY..." → "C9", "NRG s0m..." → "NRG", "Paper Rex f0rsakeN..." → "PRX"). Omit if no team is clearly present.
 - Player name: copy it EXACTLY as given — do not alter capitalization, spelling, or punctuation
 - Agent and Map in Title Case
-- End with 2-3 ALL CAPS words from the approved descriptor lists below. ONLY use words from these lists — do not invent descriptors. RADIANT may be used as the first word (e.g. "RADIANT ACE", "RADIANT OPERATOR") but is not required — vary the ending across titles for uniqueness.
+- End with 2-3 ALL CAPS words. Default to RADIANT as the first word (e.g. "RADIANT ACE", "RADIANT OPERATOR"). Omit RADIANT only when the descriptor is already multi-word (e.g. "FRAG REEL", "POST PLANT", "UTIL DUMP"). Never end with a single word alone. ONLY use words from the approved lists below — do not invent descriptors.
 - Pick the descriptor that best fits the agent's role:
-  - Duelists (Jett, Reyna, Raze, Neon, Phoenix, Yoru, Iso, Waylay): ENTRY, OPERATOR, RIFLE, ACE, CLUTCH, DUELS, FRAG REEL, AGGRESSIVE, PEEK
-  - Initiators (Sova, Breach, Skye, KAY/O, Fade, Gekko, Tejo): ENTRY, RETAKE, UTIL DUMP, INFO, SUPPORT, FLANK, ACE, CLUTCH
+  - Duelists (Jett, Reyna, Raze, Neon, Phoenix, Yoru, Iso, Waylay): ENTRY, OPERATOR, RIFLE, ACE, CLUTCH, DUELS, AGGRESSIVE, PEEK
+  - Initiators (Sova, Breach, Skye, KAY/O, Fade, Gekko, Tejo): ENTRY, RETAKE, INFO, SUPPORT, FLANK, ACE, CLUTCH
   - Controllers (Omen, Viper, Brimstone, Astra, Harbor, Clove, Miks): SMOKES, LURK, CONTROL, SETUP, POST PLANT, ROTATE, ACE, CLUTCH
   - Sentinels (Sage, Cypher, Killjoy, Chamber, Deadlock, Vyse, Veto): ANCHOR, LOCKDOWN, SITE HOLD, RETAKE, SENTINEL PLAY, SETUPS, TRIPS, ACE, CLUTCH
-  - Any role: RADIANT, RANKED, MVP, DOMINATION, COMEBACK, OVERTIME, ACE, CLUTCH
+  - Any role: RADIANT, RANKED, MVP, DOMINATION, COMEBACK, OVERTIME, ACE, CLUTCH, GAMEPLAY
 - If the YouTube title mentions a specific kill count (e.g. "40 kills"), round number (e.g. "30 BOMB"), or game situation, use that as the descriptor instead (e.g. "40 KILLS", "30 BOMB")
 - Max 65 chars, no quotes
 

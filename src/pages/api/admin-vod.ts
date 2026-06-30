@@ -30,7 +30,7 @@ export async function GET({ request }: { request: Request }) {
   }
 
   const sb = sbService();
-  const { data } = await sb.from('vods').select('id,title').limit(5000);
+  const { data } = await sb.from('vods').select('id,title').order('created_at', { ascending: false }).limit(5000);
   const ids = (data || []).map((v: any) => v.id);
   const titles = (data || []).map((v: any) => v.title);
   return new Response(JSON.stringify({ ids, titles }), { headers: { 'Content-Type': 'application/json' } });

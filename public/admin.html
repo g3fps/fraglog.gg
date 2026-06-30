@@ -6,12 +6,13 @@
 <title>fraglog.gg — Admin</title>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onTurnstileLoad" async defer></script>
 <style>
 :root {
-  --red:#FF4655; --darker:#080E14; --surface:#151E27; --surface2:#1C2733;
-  --border:rgba(255,255,255,0.08); --text:#ECE8E1; --muted:#7B8FA1;
-  --green:#6BCF6B; --gold:#E8C547; --blue:#5B9CF6;
+  --red:#FF4655; --darker:#F4F3F0; --surface:#FFFFFF; --surface2:#ECEAE6;
+  --border:rgba(0,0,0,0.09); --text:#1A1A1A; --muted:#888;
+  --green:#2A7D32; --gold:#9A7200; --blue:#1558C0;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--darker);color:var(--text);font-family:'Barlow',sans-serif;min-height:100vh}
@@ -25,7 +26,7 @@ body{background:var(--darker);color:var(--text);font-family:'Barlow',sans-serif;
 .auth-error{font-family:'DM Mono',monospace;font-size:11px;color:var(--red);margin-top:8px;min-height:14px}
 
 /* ── Hub header ── */
-.hub-header{position:sticky;top:0;z-index:100;background:rgba(8,14,20,0.97);border-bottom:1px solid var(--border);backdrop-filter:blur(8px);display:flex;align-items:center;height:48px;padding:0 20px}
+.hub-header{position:sticky;top:0;z-index:100;background:rgba(244,243,240,0.97);border-bottom:1px solid var(--border);backdrop-filter:blur(8px);display:flex;align-items:center;height:48px;padding:0 20px}
 .hub-logo{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text);margin-right:20px;flex-shrink:0}
 .hub-logo span{color:var(--red)}
 .hub-tabs{display:flex;height:100%;gap:0}
@@ -43,14 +44,14 @@ body{background:var(--darker);color:var(--text);font-family:'Barlow',sans-serif;
 /* ── Sub-tabs ── */
 .sub-tabs{display:flex;gap:4px;margin-bottom:20px}
 .sub-tab{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;padding:6px 14px;border-radius:6px;border:1px solid var(--border);background:none;color:var(--muted);cursor:pointer;transition:all .15s}
-.sub-tab.active{background:var(--surface2);color:var(--text);border-color:rgba(255,255,255,0.15)}
+.sub-tab.active{background:var(--surface);color:var(--text);border-color:rgba(0,0,0,0.2);box-shadow:0 1px 3px rgba(0,0,0,0.07)}
 .sub-tab:hover:not(.active){color:var(--text)}
 .sub-panel{display:none}
 .sub-panel.active{display:block}
 
 /* ── Shared form styles ── */
 .section-label{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
-.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1.25rem 1.5rem;margin-bottom:1.25rem}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1.25rem 1.5rem;margin-bottom:1.25rem;box-shadow:0 1px 4px rgba(0,0,0,0.06)}
 .field{margin-bottom:1.1rem}
 .field:last-child{margin-bottom:0}
 label{display:block;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
@@ -171,9 +172,9 @@ textarea{resize:vertical;min-height:70px;line-height:1.5}
 .rm-col-title{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--muted)}
 .rm-count{margin-left:auto;font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);background:var(--surface2);padding:2px 7px;border-radius:10px;border:1px solid var(--border)}
 .rm-cards{display:flex;flex-direction:column;gap:7px}
-.rm-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 14px;cursor:pointer;transition:border-color .15s;user-select:none}
-.rm-card:hover{border-color:rgba(255,255,255,0.15)}
-.rm-card.expanded{border-color:rgba(255,255,255,0.2)}
+.rm-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 14px;cursor:pointer;transition:border-color .15s,box-shadow .15s;user-select:none;box-shadow:0 1px 3px rgba(0,0,0,0.06)}
+.rm-card:hover{border-color:rgba(0,0,0,0.18);box-shadow:0 2px 6px rgba(0,0,0,0.1)}
+.rm-card.expanded{border-color:rgba(0,0,0,0.2)}
 .rm-card-top{display:flex;align-items:flex-start;gap:6px}
 .rm-card-title{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:600;color:var(--text);flex:1;line-height:1.2}
 .rm-chevron{color:var(--muted);font-size:10px;transition:transform .2s;flex-shrink:0;margin-top:3px}
@@ -196,7 +197,7 @@ textarea{resize:vertical;min-height:70px;line-height:1.5}
 .cmp-table td{padding:10px 16px;border-top:1px solid var(--border);font-size:13px;vertical-align:middle}
 .cmp-table td:not(:first-child){text-align:center;font-family:'DM Mono',monospace;font-size:12px}
 .cmp-table td.td-prem{background:rgba(255,70,85,0.04)}
-.cmp-table tr:hover td{background:rgba(255,255,255,0.02)}
+.cmp-table tr:hover td{background:rgba(0,0,0,0.02)}
 .cmp-table tr:hover td.td-prem{background:rgba(255,70,85,0.06)}
 .cmp-sec-row td{background:var(--surface)!important;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);padding:8px 16px!important}
 .cmp-yes{color:var(--red);font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700}
@@ -225,9 +226,9 @@ textarea{resize:vertical;min-height:70px;line-height:1.5}
 .ideas-add-form.open{display:block}
 .ideas-filters{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:1.25rem;align-items:center}
 .ideas-pill{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;padding:5px 12px;border-radius:20px;border:1px solid var(--border);background:none;color:var(--muted);cursor:pointer;transition:all .15s}
-.ideas-pill.active{background:var(--surface2);color:var(--text);border-color:rgba(255,255,255,0.2)}
+.ideas-pill.active{background:var(--text);color:var(--surface);border-color:var(--text)}
 .ideas-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
-.idea-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;display:flex;flex-direction:column;gap:8px}
+.idea-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;display:flex;flex-direction:column;gap:8px;box-shadow:0 1px 4px rgba(0,0,0,0.06)}
 .idea-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
 .idea-title{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:600;color:var(--text);line-height:1.2}
 .idea-del{background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px;flex-shrink:0;opacity:.5;transition:opacity .15s;padding:0}
@@ -237,10 +238,18 @@ textarea{resize:vertical;min-height:70px;line-height:1.5}
 .icat{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:2px 7px;border-radius:4px}
 .icat-feature{background:rgba(91,156,246,0.12);color:var(--blue);border:1px solid rgba(91,156,246,0.2)}
 .icat-social{background:rgba(107,207,107,0.1);color:var(--green);border:1px solid rgba(107,207,107,0.2)}
-.icat-content{background:rgba(232,197,71,0.1);color:var(--gold);border:1px solid rgba(232,197,71,0.2)}
-.icat-promo{background:rgba(255,70,85,0.1);color:var(--red);border:1px solid rgba(255,70,85,0.2)}
-.icat-partner{background:rgba(168,85,247,0.1);color:#c084fc;border:1px solid rgba(168,85,247,0.2)}
+.icat-video{background:rgba(255,70,85,0.1);color:var(--red);border:1px solid rgba(255,70,85,0.2)}
 .icat-other{background:var(--surface2);color:var(--muted);border:1px solid var(--border)}
+.idea-notes-md{font-size:13px;color:var(--text);line-height:1.6}
+.idea-notes-md h1,.idea-notes-md h2,.idea-notes-md h3,.idea-notes-md h4{font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:.5px;color:var(--text);margin:14px 0 4px;line-height:1.2}
+.idea-notes-md h1{font-size:20px}.idea-notes-md h2{font-size:17px}.idea-notes-md h3{font-size:15px}
+.idea-notes-md h1:first-child,.idea-notes-md h2:first-child,.idea-notes-md h3:first-child{margin-top:0}
+.idea-notes-md p{margin:0 0 8px}.idea-notes-md p:last-child{margin-bottom:0}
+.idea-notes-md a{color:var(--blue);text-decoration:underline}
+.idea-notes-md code{font-family:'DM Mono',monospace;font-size:11px;background:var(--surface2);padding:1px 4px;border-radius:3px}
+.idea-notes-md ul,.idea-notes-md ol{margin:4px 0 8px;padding-left:18px}.idea-notes-md li{margin-bottom:3px}
+.idea-notes-md strong{color:var(--text);font-weight:600}
+.idea-notes-md hr{border:none;border-top:1px solid var(--border);margin:12px 0}
 .idea-date{margin-left:auto;font-family:'DM Mono',monospace;font-size:10px;color:var(--muted)}
 .ideas-empty{text-align:center;padding:3rem;color:var(--muted);font-family:'DM Mono',monospace;font-size:12px;grid-column:1/-1}
 
@@ -534,15 +543,10 @@ pre{white-space:pre-wrap;word-break:break-word;font-family:'DM Mono',monospace;f
         <div class="rm-cards" id="rm-progress"></div>
       </div>
       <div class="rm-col">
-        <div class="rm-col-head"><div class="rm-dot dot-planned"></div><span class="rm-col-title">Planned</span><span class="rm-count" id="rm-count-planned"></span></div>
+        <div class="rm-col-head"><div class="rm-dot dot-planned"></div><span class="rm-col-title">Planned / Ideas</span><span class="rm-count" id="rm-count-planned"></span></div>
         <div class="rm-cards" id="rm-planned">
           <div class="rm-card" onclick="rmToggle(this)"><div class="rm-card-top"><span class="rm-card-title">Learn Hub</span><span class="rm-chevron">▾</span></div><div class="rm-badges"><span class="rb rb-free">Free</span><span class="rb rb-page">/learn</span><span class="rb rb-page">/learn/[slug]</span></div><div class="rm-body"><p>Hosted patch notes and guides. Index at <code>/learn</code> with cards by category. Individual pages at <code>/learn/[slug]</code> with markdown content. <code>guides</code> table: id, slug, title, excerpt, content, category, published_at.</p></div></div>
           <div class="rm-card" onclick="rmToggle(this)"><div class="rm-card-top"><span class="rm-card-title">Pattern Detection</span><span class="rm-chevron">▾</span></div><div class="rm-badges"><span class="rb rb-prem">Premium</span><span class="rb rb-ai">AI</span></div><div class="rm-body"><p>Cross-note AI analysis to surface recurring mistakes across a user's VOD notes history.</p></div></div>
-        </div>
-      </div>
-      <div class="rm-col">
-        <div class="rm-col-head"><div class="rm-dot dot-idea"></div><span class="rm-col-title">Ideas</span><span class="rm-count" id="rm-count-ideas"></span></div>
-        <div class="rm-cards" id="rm-ideas">
           <div class="rm-card" onclick="rmToggle(this)"><div class="rm-card-top"><span class="rm-card-title">AI-Curated Playlists</span><span class="rm-chevron">▾</span></div><div class="rm-badges"><span class="rb rb-prem">Premium</span><span class="rb rb-ai">AI</span></div><div class="rm-body"><p>User describes what they want to study and AI builds a custom playlist from the VOD library.</p></div></div>
           <div class="rm-card" onclick="rmToggle(this)"><div class="rm-card-top"><span class="rm-card-title">Team Function</span><span class="rm-chevron">▾</span></div><div class="rm-badges"><span class="rb rb-prem">Premium</span></div><div class="rm-body"><p>Collaborative teams: shared notes, shared uploaded VODs, members can contribute to shared resources.</p></div></div>
           <div class="rm-card" onclick="rmToggle(this)"><div class="rm-card-top"><span class="rm-card-title">Stats Page</span><span class="rm-chevron">▾</span></div><div class="rm-badges"><span class="rb rb-prem">Premium</span></div><div class="rm-body"><p>Agent tier list by ranked winrate per rank, rank distribution. Needs Riot API or Henrik Dev's unofficial API.</p></div></div>
@@ -614,34 +618,30 @@ pre{white-space:pre-wrap;word-break:break-word;font-family:'DM Mono',monospace;f
   <div class="hub-panel" id="tab-ideas">
   <div class="panel-wide">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem">
-      <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted)">Content &amp; promotion ideas — saved locally</span>
+      <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted)">Ideas — saved locally</span>
       <button class="btn btn-primary btn-sm" onclick="ideasToggleForm()">+ Add idea</button>
     </div>
     <div class="ideas-add-form" id="ideas-add-form">
       <div class="row2" style="margin-bottom:1rem">
-        <div class="field" style="margin-bottom:0"><label>Title</label><input type="text" id="idea-title" placeholder="e.g. Tweet about clip timestamps"></div>
-        <div class="field" style="margin-bottom:0"><label>Category</label><select id="idea-cat">
-          <option value="content">Content</option>
+        <div class="field" style="margin-bottom:0"><label>Title</label><input type="text" id="idea-title" placeholder="e.g. Tweet about clip timestamps" oninput="ideasAutosave()"></div>
+        <div class="field" style="margin-bottom:0"><label>Category</label><select id="idea-cat" onchange="ideasAutosave()">
+          <option value="video">Video</option>
           <option value="social">Social</option>
-          <option value="promo">Promo</option>
           <option value="feature">Feature</option>
-          <option value="partner">Partnership</option>
           <option value="other">Other</option>
         </select></div>
       </div>
-      <div class="field"><label>Notes</label><textarea id="idea-notes" placeholder="Any details, links, inspiration..."></textarea></div>
+      <div class="field"><label>Notes</label><textarea id="idea-notes" placeholder="Any details, links, inspiration..." oninput="ideasAutosave()" onmouseup="ideaSaveHeight(this)"></textarea></div>
       <div style="display:flex;gap:8px">
-        <button class="btn btn-primary" onclick="ideasAdd()">Save idea</button>
-        <button class="btn btn-secondary" onclick="ideasToggleForm()">Cancel</button>
+        <button class="btn btn-primary" id="ideas-save-btn" onclick="ideasAdd()">Save idea</button>
+        <button class="btn btn-secondary" onclick="ideasCancelForm()">Cancel</button>
       </div>
     </div>
     <div class="ideas-filters" id="ideas-filters">
       <button class="ideas-pill active" onclick="ideasFilter('all',this)">All</button>
-      <button class="ideas-pill" onclick="ideasFilter('content',this)">Content</button>
+      <button class="ideas-pill" onclick="ideasFilter('video',this)">Video</button>
       <button class="ideas-pill" onclick="ideasFilter('social',this)">Social</button>
-      <button class="ideas-pill" onclick="ideasFilter('promo',this)">Promo</button>
       <button class="ideas-pill" onclick="ideasFilter('feature',this)">Feature</button>
-      <button class="ideas-pill" onclick="ideasFilter('partner',this)">Partnership</button>
       <button class="ideas-pill" onclick="ideasFilter('other',this)">Other</button>
     </div>
     <div class="ideas-grid" id="ideas-grid"></div>
@@ -673,10 +673,11 @@ function switchTab(id, btn) {
   document.querySelectorAll('.hub-panel').forEach(p => p.classList.remove('active'));
   btn.classList.add('active');
   document.getElementById('tab-' + id).classList.add('active');
+  localStorage.setItem('fraglog-admin-tab', id);
   if (!tabInitialized.has(id)) { tabInitialized.add(id); initTab(id); }
 }
 function initTab(id) {
-  if (id === 'vods')     { loadVodRecent(); setDefaultDate('inp-date'); }
+  if (id === 'vods')     { loadVodRecent(); setDefaultDate('inp-date'); renderVodSession(); }
   if (id === 'pro')      { buildProMaps(); loadProRecent(); setDefaultDate('pro-date'); }
   if (id === 'lineups')  { luBuildAgentGrid(); }
   if (id === 'data')     { coachLoad(0); }
@@ -1500,7 +1501,7 @@ function rmToggle(card) {
   card.querySelector('.rm-chevron').textContent = card.classList.contains('open') ? '▴' : '▾';
 }
 function rmCountCards() {
-  [['shipped','rm-shipped'],['progress','rm-progress'],['planned','rm-planned'],['ideas','rm-ideas']].forEach(([id,elId]) => {
+  [['shipped','rm-shipped'],['progress','rm-progress'],['planned','rm-planned']].forEach(([id,elId]) => {
     const el = document.getElementById(elId);
     const count = el ? el.querySelectorAll('.rm-card').length : 0;
     const counter = document.getElementById('rm-count-' + id);
@@ -1510,13 +1511,80 @@ function rmCountCards() {
 
 // ── Ideas ─────────────────────────────────────────────────────────────────────
 let ideasCurrentFilter = 'all';
+let ideasEditingId = null;
+let ideasAutosaveTimer = null;
 function ideasLoad() { return JSON.parse(localStorage.getItem('fraglog_ideas') || '[]'); }
 function ideasSave(list) { localStorage.setItem('fraglog_ideas', JSON.stringify(list)); }
+
+function ideaSaveHeight(el) {
+  if (el.style.height) localStorage.setItem('idea-notes-height', el.style.height);
+}
+function ideaRestoreHeight() {
+  const h = localStorage.getItem('idea-notes-height');
+  const el = document.getElementById('idea-notes');
+  if (h && el) el.style.height = h;
+}
+
+function ideasAutosave() {
+  clearTimeout(ideasAutosaveTimer);
+  ideasAutosaveTimer = setTimeout(() => {
+    if (ideasEditingId !== null) {
+      // Autosave edit in-place
+      const title = document.getElementById('idea-title').value.trim();
+      const cat   = document.getElementById('idea-cat').value;
+      const notes = document.getElementById('idea-notes').value.trim();
+      if (!title) return;
+      const list = ideasLoad();
+      const idx = list.findIndex(i => i.id === ideasEditingId);
+      if (idx !== -1) { list[idx] = { ...list[idx], title, cat, notes }; ideasSave(list); ideasRender(); }
+    } else {
+      // Save draft for new idea
+      localStorage.setItem('fraglog_ideas_draft', JSON.stringify({
+        title: document.getElementById('idea-title').value,
+        cat:   document.getElementById('idea-cat').value,
+        notes: document.getElementById('idea-notes').value,
+      }));
+    }
+  }, 800);
+}
 
 function ideasToggleForm() {
   const form = document.getElementById('ideas-add-form');
   form.classList.toggle('open');
-  if (form.classList.contains('open')) document.getElementById('idea-title').focus();
+  if (form.classList.contains('open')) {
+    const draft = JSON.parse(localStorage.getItem('fraglog_ideas_draft') || 'null');
+    if (draft) {
+      document.getElementById('idea-title').value = draft.title || '';
+      document.getElementById('idea-cat').value   = draft.cat   || 'video';
+      document.getElementById('idea-notes').value = draft.notes || '';
+    }
+    ideaRestoreHeight();
+    document.getElementById('idea-title').focus();
+  }
+}
+
+function ideasCancelForm() {
+  ideasEditingId = null;
+  clearTimeout(ideasAutosaveTimer);
+  document.getElementById('idea-title').value = '';
+  document.getElementById('idea-cat').value = 'video';
+  document.getElementById('idea-notes').value = '';
+  document.getElementById('ideas-save-btn').textContent = 'Save idea';
+  document.getElementById('ideas-add-form').classList.remove('open');
+}
+
+function ideasEdit(id) {
+  const idea = ideasLoad().find(i => i.id === id);
+  if (!idea) return;
+  ideasEditingId = id;
+  document.getElementById('idea-title').value = idea.title;
+  document.getElementById('idea-cat').value = idea.cat;
+  document.getElementById('idea-notes').value = idea.notes || '';
+  document.getElementById('ideas-save-btn').textContent = 'Update idea';
+  const form = document.getElementById('ideas-add-form');
+  form.classList.add('open');
+  ideaRestoreHeight();
+  document.getElementById('idea-title').focus();
 }
 
 function ideasAdd() {
@@ -1525,11 +1593,15 @@ function ideasAdd() {
   const notes = document.getElementById('idea-notes').value.trim();
   if (!title) { alert('Title required.'); return; }
   const list = ideasLoad();
-  list.unshift({ id: Date.now(), title, cat, notes, created: new Date().toISOString() });
+  if (ideasEditingId !== null) {
+    const idx = list.findIndex(i => i.id === ideasEditingId);
+    if (idx !== -1) list[idx] = { ...list[idx], title, cat, notes };
+  } else {
+    list.unshift({ id: Date.now(), title, cat, notes, created: new Date().toISOString() });
+  }
   ideasSave(list);
-  document.getElementById('idea-title').value = '';
-  document.getElementById('idea-notes').value = '';
-  ideasToggleForm();
+  localStorage.removeItem('fraglog_ideas_draft');
+  ideasCancelForm();
   ideasRender();
 }
 
@@ -1546,7 +1618,7 @@ function ideasDelete(id) {
   ideasRender();
 }
 
-const ICAT_LABEL = { content:'Content', social:'Social', promo:'Promo', feature:'Feature', partner:'Partnership', other:'Other' };
+const ICAT_LABEL = { video:'Video', social:'Social', feature:'Feature', other:'Other' };
 function ideasRender() {
   const list = ideasLoad().filter(i => ideasCurrentFilter === 'all' || i.cat === ideasCurrentFilter);
   const grid = document.getElementById('ideas-grid');
@@ -1555,10 +1627,13 @@ function ideasRender() {
     <div class="idea-card">
       <div class="idea-card-top">
         <span class="icat icat-${i.cat}">${ICAT_LABEL[i.cat]||i.cat}</span>
-        <button onclick="ideasDelete(${i.id})" style="font-size:14px;background:none;border:none;color:var(--muted);cursor:pointer;line-height:1;padding:0">×</button>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button onclick="ideasEdit(${i.id})" style="font-size:12px;background:none;border:none;color:var(--muted);cursor:pointer;line-height:1;padding:0;opacity:.5;transition:opacity .15s" onmouseover="this.style.opacity=1;this.style.color='var(--text)'" onmouseout="this.style.opacity='.5';this.style.color='var(--muted)'">✎</button>
+          <button onclick="ideasDelete(${i.id})" style="font-size:14px;background:none;border:none;color:var(--muted);cursor:pointer;line-height:1;padding:0;opacity:.5;transition:opacity .15s" onmouseover="this.style.opacity=1;this.style.color='var(--red)'" onmouseout="this.style.opacity='.5';this.style.color='var(--muted)'">×</button>
+        </div>
       </div>
       <div class="idea-title">${i.title}</div>
-      ${i.notes ? `<div class="idea-notes">${i.notes.replace(/\n/g,'<br>')}</div>` : ''}
+      ${i.notes ? `<div class="idea-notes idea-notes-md">${marked.parse(i.notes, { breaks: true })}</div>` : ''}
       <div class="idea-date">${new Date(i.created).toLocaleDateString()}</div>
     </div>`).join('');
 }
@@ -1571,8 +1646,9 @@ window.addEventListener('load', () => {
       document.getElementById('auth-overlay').style.display = 'none';
       document.getElementById('app').style.display = 'block';
       document.getElementById('hub-auth').textContent = session.user.email || '';
-      tabInitialized.add('vods');
-      initTab('vods');
+      const lastTab = localStorage.getItem('fraglog-admin-tab') || 'vods';
+      const tabBtn = document.querySelector(`.hub-tab[onclick*="'${lastTab}'"]`);
+      if (tabBtn) { switchTab(lastTab, tabBtn); } else { tabInitialized.add('vods'); initTab('vods'); }
     }
   });
   // Count roadmap cards on load (roadmap sub-tab may never open)
