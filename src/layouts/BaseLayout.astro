@@ -86,6 +86,19 @@ const TURNSTILE_SITE_KEY = import.meta.env.TURNSTILE_SITE_KEY || '';
     </div>
   </div>
 
+  <!-- Confirm Email Popup -->
+  <div class="coaching-share-backdrop" id="confirm-email-modal">
+    <div class="coaching-share-modal">
+      <div class="coaching-share-icon">📧</div>
+      <h3 class="coaching-share-title">Confirm your email</h3>
+      <p class="coaching-share-body">We sent a confirmation link to <strong id="confirm-email-address"></strong>. Click it to activate your account, then sign in.</p>
+      <div class="coaching-share-actions">
+        <button class="coaching-share-btn secondary" onclick="closeConfirmEmailModal()">Got it</button>
+        <button class="coaching-share-btn primary" id="resend-confirm-btn" onclick="resendConfirmEmail()">Resend email</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Playlist picker (premium add-to-playlist) -->
   <div class="pp-backdrop" id="playlist-picker" onclick="closePlaylistPicker(event)">
     <div class="pp-modal">
@@ -579,6 +592,7 @@ const TURNSTILE_SITE_KEY = import.meta.env.TURNSTILE_SITE_KEY || '';
 
     btn.textContent = "Please wait..."; btn.disabled = true;
     let error;
+    let needsEmailConfirm = false;
     if (authMode === "register") {
       if (pass !== confirm) { errEl.textContent = "Passwords don't match."; errEl.style.display = "block"; btn.textContent = "Create Account"; btn.disabled = false; return; }
       if (pass.length < 6) { errEl.textContent = "Password must be at least 6 characters."; errEl.style.display = "block"; btn.textContent = "Create Account"; btn.disabled = false; return; }
@@ -590,6 +604,10 @@ const TURNSTILE_SITE_KEY = import.meta.env.TURNSTILE_SITE_KEY || '';
         // so the popup stays open and the user gets feedback.
         if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
           error = { message: "An account with this email already exists. Try signing in instead." };
+        } else if (!data.session) {
+          // "Confirm email" is enabled server-side — account exists but has no
+          // session until the user clicks the link, so don't treat as logged in.
+          needsEmailConfirm = true;
         } else {
           currentUser = data.user;
         }
@@ -598,17 +616,44 @@ const TURNSTILE_SITE_KEY = import.meta.env.TURNSTILE_SITE_KEY || '';
       const { data, error: e } = await sb.auth.signInWithPassword({ email, password: pass, options: authOpts });
       error = e;
       if (!e) currentUser = data.user;
+      else if (/email.*not.*confirm/i.test(e.message || "")) needsEmailConfirm = true;
     }
     // Reset the widget so a retry always gets a fresh token (tokens are single-use)
     if (tsEl && window.turnstile && authTurnstileId !== null) { try { window.turnstile.reset(authTurnstileId); } catch (e) {} }
     btn.disabled = false;
     btn.textContent = authMode==="login" ? "Sign In" : "Create Account";
+    if (needsEmailConfirm) {
+      closeAuthModalDirect();
+      openConfirmEmailModal(email);
+      return;
+    }
     if (error) { errEl.textContent = error.message; errEl.style.display = "block"; return; }
     await loadUserData();
     syncSessionCookies((await sb.auth.getSession()).data.session);
     closeAuthModalDirect();
     renderNav();
     if (typeof onAuthChange === 'function') onAuthChange();
+  }
+
+  // ── Confirm-email popup (shown when Supabase requires email confirmation) ──
+  let resendConfirmUntil = 0;
+  function openConfirmEmailModal(email) {
+    document.getElementById("confirm-email-address").textContent = email;
+    document.getElementById("confirm-email-modal").classList.add("open");
+  }
+  function closeConfirmEmailModal() {
+    document.getElementById("confirm-email-modal").classList.remove("open");
+  }
+  async function resendConfirmEmail() {
+    if (Date.now() < resendConfirmUntil) return;
+    const email = document.getElementById("confirm-email-address").textContent;
+    const btn = document.getElementById("resend-confirm-btn");
+    btn.disabled = true;
+    const sb = initSupabase();
+    const { error } = await sb.auth.resend({ type: "signup", email });
+    btn.textContent = error ? "Try again later" : "Sent!";
+    resendConfirmUntil = Date.now() + 30000;
+    setTimeout(() => { btn.disabled = false; btn.textContent = "Resend email"; }, 30000);
   }
 
   async function signOut() {

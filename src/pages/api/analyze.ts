@@ -18,11 +18,13 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
 
   let verifiedUserId: string | null = null;
   let verifiedUserEmail: string | null = null;
+  let verifiedEmailConfirmed = false;
   if (accessToken) {
     try {
       const { data: { user } } = await sb.auth.getUser(accessToken);
       verifiedUserId = user?.id || null;
       verifiedUserEmail = user?.email || null;
+      verifiedEmailConfirmed = !!user?.email_confirmed_at;
     } catch {
       // Token invalid or expired
     }
@@ -34,13 +36,24 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
 
   const isAdmin = isAdminEmail(verifiedUserEmail);
   const { isPremium } = await getPremium(sb, verifiedUserId, isAdmin);
+  const { coaching: coachingLimit, followup: followupLimit } = getLimits(isPremium);
+
+  if (!isAdmin && !verifiedEmailConfirmed) {
+    return new Response(JSON.stringify({ error: 'Please verify your email before using the AI coach — check your inbox for a confirmation link.' }), { status: 403 });
+  }
 
   // ── Burst rate limit (serverless-safe, Postgres-backed) ──────
   if (!isAdmin) {
     const ip = getClientIp(request, clientAddress);
     const okUser = await checkRateLimit(sb, `analyze:user:${verifiedUserId}`, 10, 60);
     const okIp = await checkRateLimit(sb, `analyze:ip:${ip}`, 20, 60);
-    if (!okUser || !okIp) {
+    // Daily per-IP ceiling — stops one IP churning through throwaway accounts
+    // to stack daily quotas. Keyed + sized per tier (3x that tier's combined
+    // coaching+followup allowance) so premium households aren't capped at the
+    // free-tier abuse threshold.
+    const tier = isPremium ? 'premium' : 'free';
+    const okIpDaily = await checkRateLimit(sb, `analyze:ip:daily:${tier}:${ip}`, (coachingLimit + followupLimit) * 3, 86400);
+    if (!okUser || !okIp || !okIpDaily) {
       return new Response(JSON.stringify({ error: 'Too many requests. Slow down and try again in a minute.' }), { status: 429 });
     }
   }
@@ -51,8 +64,6 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
   // ── Per-user daily rate limit ─────────────────────────────
   const today = new Date().toISOString().slice(0, 10);
   const isFollowup = mode === 'followup';
-  const coachingLimit = getLimits(isPremium).coaching;
-  const followupLimit = getLimits(isPremium).followup;
 
   const { data: usage } = await sb
     .from('coaching_usage')

@@ -18,16 +18,22 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
 
 let verifiedUserId: string | null = null;
   let isAdmin = false;
+  let verifiedEmailConfirmed = false;
   if (accessToken) {
     try {
       const { data: { user } } = await sb.auth.getUser(accessToken);
       verifiedUserId = user?.id || null;
       isAdmin = isAdminEmail(user?.email);
+      verifiedEmailConfirmed = !!user?.email_confirmed_at;
     } catch {}
   }
 
   if (!verifiedUserId) {
     return new Response(JSON.stringify({ error: 'Sign in to generate a gameplan.' }), { status: 401 });
+  }
+
+  if (!isAdmin && !verifiedEmailConfirmed) {
+    return new Response(JSON.stringify({ error: 'Please verify your email before generating a gameplan — check your inbox for a confirmation link.' }), { status: 403 });
   }
 
   const { isPremium } = await getPremium(sb, verifiedUserId, isAdmin);
@@ -39,7 +45,11 @@ let verifiedUserId: string | null = null;
     const ip = getClientIp(request, clientAddress);
     const okUser = await checkRateLimit(sb, `genroutine:user:${verifiedUserId}`, 10, 60);
     const okIp = await checkRateLimit(sb, `genroutine:ip:${ip}`, 20, 60);
-    if (!okUser || !okIp) {
+    // Per-tier daily IP ceiling (3x that tier's combined generate+finetune
+    // allowance) — keeps premium households from sharing the free-tier pool.
+    const tier = isPremium ? 'premium' : 'free';
+    const okIpDaily = await checkRateLimit(sb, `genroutine:ip:daily:${tier}:${ip}`, (generateLimit + finetuneLimit) * 3, 86400);
+    if (!okUser || !okIp || !okIpDaily) {
       return new Response(JSON.stringify({ error: 'Too many requests. Try again in a minute.' }), { status: 429 });
     }
   }

@@ -18,11 +18,13 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
 
   let verifiedUserId: string | null = null;
   let verifiedUserEmail: string | null = null;
+  let verifiedEmailConfirmed = false;
   if (accessToken) {
     try {
       const { data: { user } } = await sb.auth.getUser(accessToken);
       verifiedUserId = user?.id || null;
       verifiedUserEmail = user?.email || null;
+      verifiedEmailConfirmed = !!user?.email_confirmed_at;
     } catch {
       // Token invalid or expired
     }
@@ -36,11 +38,19 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
   const { isPremium } = await getPremium(sb, verifiedUserId, isAdmin);
   const DAILY_ASK_LIMIT = getLimits(isPremium).ask;
 
+  if (!isAdmin && !verifiedEmailConfirmed) {
+    return new Response(JSON.stringify({ error: 'Please verify your email before using Ask AI — check your inbox for a confirmation link.' }), { status: 403 });
+  }
+
   if (!isAdmin) {
     const ip = getClientIp(request, clientAddress);
     const okUser = await checkRateLimit(sb, `ask:user:${verifiedUserId}`, 15, 60);
     const okIp = await checkRateLimit(sb, `ask:ip:${ip}`, 30, 60);
-    if (!okUser || !okIp) {
+    // Per-tier daily IP ceiling (3x that tier's daily ask allowance) — keeps
+    // premium households from sharing the free-tier abuse threshold.
+    const tier = isPremium ? 'premium' : 'free';
+    const okIpDaily = await checkRateLimit(sb, `ask:ip:daily:${tier}:${ip}`, DAILY_ASK_LIMIT * 3, 86400);
+    if (!okUser || !okIp || !okIpDaily) {
       return new Response(JSON.stringify({ error: 'Too many questions. Slow down and try again in a minute.' }), { status: 429 });
     }
   }
